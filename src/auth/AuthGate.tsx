@@ -85,7 +85,7 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
       const { data, error: signupError } = await supabase!.auth.signUp({
         email: normalizedEmail,
         password,
-        options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.origin },
+        options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.href },
       })
       if (signupError) throw signupError
       if (data.session) {

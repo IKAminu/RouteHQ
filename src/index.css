@@ -1243,3 +1243,29 @@
   :root .metrics-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   :root .page { padding: 1.2rem .9rem 2rem; }
 }
+
+
+/* Dashboard revenue panel */
+:root .revenue-panel { margin: 0 0 1rem; overflow: hidden; border: 1px solid var(--color-line); border-radius: 12px; background: var(--color-surface); padding: 1.05rem 1.15rem .85rem; }
+:root .revenue-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+:root .revenue-panel-head .eyebrow { color: #85858d; font-size: .61rem; font-weight: 650; letter-spacing: .08em; }
+:root .revenue-panel-head h2 { margin: .28rem 0 0; color: var(--color-ink); font-size: 1.55rem; font-weight: 620; letter-spacing: -.045em; font-variant-numeric: tabular-nums; }
+:root .revenue-panel-head p { margin: .2rem 0 0; color: var(--color-muted); font-size: .67rem; }
+:root .revenue-period { border: 1px solid var(--color-line); border-radius: 6px; padding: .28rem .5rem; color: var(--color-muted); font-size: .63rem; }
+:root .revenue-chart { display: grid; height: 118px; grid-template-columns: repeat(7,minmax(0,1fr)); align-items: end; gap: .8rem; margin-top: .75rem; border-bottom: 1px solid var(--color-line); background: repeating-linear-gradient(to bottom,transparent 0,transparent 28px,var(--color-line) 29px,transparent 30px); }
+:root .revenue-day { display: flex; height: 100%; min-width: 0; flex-direction: column; align-items: center; justify-content: flex-end; gap: .35rem; }
+:root .revenue-bar-track { display: flex; width: min(100%,2.1rem); height: 88px; align-items: flex-end; }
+:root .revenue-bar { width: 100%; min-height: 2px; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg,#d6d6dc,#777780); transition: height .2s ease; }
+:root .revenue-day:first-child .revenue-bar, :root .revenue-day:last-child .revenue-bar { background: linear-gradient(180deg,#f1a56b,#c66b2c); }
+:root .revenue-day > span { padding-bottom: .25rem; color: var(--color-muted); font-size: .61rem; }
+:root[data-theme='dark'] .revenue-panel { border-color: #252529; background: #111114; }
+:root[data-theme='dark'] .revenue-panel-head h2 { color: #f4f4f5; }
+:root[data-theme='dark'] .revenue-panel-head p,
+:root[data-theme='dark'] .revenue-panel-head .eyebrow,
+:root[data-theme='dark'] .revenue-day > span { color: #898991; }
+:root[data-theme='dark'] .revenue-period { border-color: #303036; color: #92929b; }
+:root[data-theme='dark'] .revenue-chart { border-color: #252529; background: repeating-linear-gradient(to bottom,transparent 0,transparent 28px,#242428 29px,transparent 30px); }
+@media (max-width: 720px) {
+  :root .revenue-chart { gap: .35rem; }
+  :root .revenue-bar-track { width: min(100%,1.45rem); }
+}

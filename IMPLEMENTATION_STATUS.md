@@ -1,0 +1,66 @@
+# Implementation status
+
+## Implemented
+
+- Responsive application shell, route structure, dashboard and all requested primary modules.
+- Coherent Nigerian demonstration records and derived dashboard/financial calculations.
+- Global search without passport data, filters, notifications, mobile navigation and quick actions.
+- Session-working forms for leads, customers (including historical), bookings, payments and travellers.
+- Traveller records can optionally link to an existing customer profile while dependants remain traveller-only records.
+- Customer and traveller tables show their explicit profile relationships; primary mock travellers are linked to their customer profiles.
+- Traveller operations include booking-specific family/group summaries, member counts, document-readiness totals and individual travel statuses. Each traveller retains their own name independently of an optional linked customer profile.
+- Traveller document readiness is tracked separately from travel status.
+- Payment confirmation validates the booking's remaining balance, including when confirming a previously pending payment.
+- Payment and supplier transaction forms validate positive finite amounts and required transaction dates; supplier costs also validate their due date and optional booking reference.
+- Supplier disbursement history records confirmed and voided payment records with a required reason; voiding an incorrect or failed record restores the related supplier obligation and recalculates its status.
+- Recording a supplier payment from an individual supplier-cost row preselects that exact cost, reducing the risk of allocating money to the wrong obligation.
+- The demonstration supplier ledger is seeded with sample payment entries that reconcile to the paid totals shown on its supplier costs.
+- Lead conversion carries the latest edited contact details into the lead record and creates a linked customer only when one does not already exist for that lead.
+- Lead and package status filters include all supported statuses, with explicit empty states when no package matches the current search or filter.
+- Dashboard follow-up alerts now exclude converted, lost and not-interested leads; dashboard lists show clear empty states instead of blank sections.
+- Header notifications are generated from current follow-ups, upcoming departures and overdue supplier costs rather than hardcoded demo messages; alerts navigate to the relevant module and can be dismissed with Escape.
+- Mobile usability refinements improve table horizontal scrolling, touch target sizes, modal sizing and sticky form actions. These are responsive CSS changes and have not yet been manually tested on a physical phone.
+- Operational date calculations and newly created record dates now use the Africa/Lagos calendar date, avoiding UTC date shifts around midnight.
+- Bookings now store a traveller party size. Creating a package booking reserves that number of places; increasing a party or moving an enquiry into a reserving status checks remaining capacity, while cancellation or returning a booking to Enquiry releases the reserved places. Completed bookings remain counted as consumed capacity.
+- Package availability status is recalculated when reservations change, including returning a package from Fully Booked to Active when places are released.
+- Supplier cost paid totals are recalculated from confirmed supplier-payment ledger entries when adding/voiding payments and editing a supplier cost, reducing drift between the ledger and summary totals.
+- Added `public/brand/README.md` as the designated location and instructions for the future logo asset. Public-folder files are not suitable for private customer documents.
+- Payment and supplier-cost forms validate date values before saving; upcoming-departure dashboard counts exclude cancelled and completed bookings.
+- New bookings can only select active packages with available places; package price, estimated cost and availability values are validated, and booking dates must be valid and ordered.
+- Document links must use valid HTTPS URLs, and the related record reference is required. Links remain references only; files are not uploaded or permission-checked by the app.
+- Customer payment history labels payment corrections as reversals, while supplier disbursement corrections are labelled as voided records.
+- Traveller overview metrics are presented in responsive summary cards, with supporting descriptions and a distinct attention state.
+- Package price snapshots, confirmed/reversed payment rules and separate supplier obligations.
+- Supabase client/service boundary, PWA manifest and GitHub Pages workflow.
+
+## Data modes and access
+
+- Live Mode is available only after an authorised Supabase account signs in and completes TOTP multi-factor authentication.
+- Demo Mode is available from the sign-in screen. It uses the sample records bundled in `src/data/mockData.ts`; it does not query or write business data to Supabase.
+- Demo edits exist only in React memory and reset when the guest leaves or refreshes.
+- Live Mode loads rows marked `is_demo=false` and saves live changes to Supabase.
+- Public/anonymous database table privileges have been revoked. RLS policies require an AAL2 session and one of the two authorised email addresses for live rows.
+- Google Drive links are sample references only.
+
+## Partially implemented
+
+- Tables provide search and status filters; full column sorting and server pagination await the data backend.
+- Main creation flows work; complete edit/archive/convert/reversal/group-management detail workflows need persisted transactions.
+- Traveller-to-customer links currently exist in the mock-data model only; they are not persisted to Supabase until the database schema and service layer are implemented.
+- Authentication uses Supabase Auth, with TOTP MFA required before the live workspace mounts. Account provisioning remains limited to the two manually created users.
+
+## Not configured
+
+- Automated database backups and restore testing. Supabase leaked-password protection is currently disabled and should be enabled in Auth password settings.
+- Website submission endpoint, Google Drive API and Meta Conversions API.
+- Production custom domain and DNS.
+
+Before entering real customer data, complete the security review for sensitive traveller information, verify backups and restore procedures, enable leaked-password protection, and test live read/write behaviour with both authorised accounts.
+
+
+## Customer and booking detail views
+- Customer records now open a detail panel showing contact information, all bookings, travellers attached to those bookings, and the customer's full payment history (including pending and reversed entries).
+- Booking records now open a detail panel showing the booking owner, agreed price, confirmed payments, outstanding balance, supplier, status, travelling party, and linked payment history.
+- Booking creation validates the customer relationship and supports selecting an existing package or entering a custom arrangement. The agreed price remains the booking's own snapshot.
+- Booking owner is intentionally fixed after creation. Changing it later would require a controlled transfer of associated payments and traveller relationships.
+- Detail views use the active store. Live Mode persists edits in Supabase; Demo Mode keeps edits in session memory only.

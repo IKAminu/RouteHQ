@@ -15,7 +15,7 @@ export function Dashboard() {
     supabase?.auth.getUser().then(({ data }) => {
       const email = data.user?.email?.toLowerCase()
       if (!active || !email) return
-      setGreetingName(email === 'ikaminumail@gmail.com' ? 'Ik' : email === 'dandurguairtravels@gmail.com' ? 'Aliyu' : (data.user?.user_metadata?.full_name || data.user?.user_metadata?.name || email.split('@')[0]))
+      setGreetingName(data.user?.user_metadata?.full_name || data.user?.user_metadata?.name || email.split('@')[0])
     })
     return () => { active = false }
   }, [mode])
@@ -38,7 +38,7 @@ export function Dashboard() {
   ]
 
   return <div className="page">
-    <PageHeader title={`${greeting}, ${greetingName}`} description="Here is what needs attention across Dandurgu today." action={<div className="date-chip"><CalendarDays size={16} /> {shortDate(todayDate())}</div>} />
+    <PageHeader title={`${greeting}, ${greetingName}`} description="Here is what needs attention across your agency today." action={<div className="date-chip"><CalendarDays size={16} /> {shortDate(todayDate())}</div>} />
     {mode === 'demo' && <section className="demo-banner"><div><strong>Demo workspace</strong><span>Sample records only. Changes stay in this session and are discarded when you leave.</span></div><Link to="/settings">View workspace settings <ArrowRight size={15} /></Link></section>}
     <section className="metrics-grid">{metrics.map(({ label, value, detail, icon: Icon, to }) => <Link className="metric" to={to} key={label}><div className="metric-head"><span>{label}</span><Icon size={18} /></div><strong>{value}</strong><p>{detail}</p></Link>)}</section>
     <div className="dashboard-grid">

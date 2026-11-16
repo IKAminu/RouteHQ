@@ -42,9 +42,23 @@ export function Dashboard() {
   const chartY = (amount: number) => 116 - (amount / chartMax) * 88
   const bookedPoints = bookingTrend.map((day, index) => ({ ...day, x: 28 + index * (904 / 6), y: chartY(day.bookedAmount) }))
   const paidPoints = bookingTrend.map((day, index) => ({ ...day, x: 28 + index * (904 / 6), y: chartY(day.paidAmount) }))
-  const bookedLine = bookedPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
-  const paidLine = paidPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
-  const outstandingArea = `${bookedPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')} ${[...paidPoints].reverse().map((point) => `L ${point.x} ${point.y}`).join(' ')} Z`
+  const smoothPath = (points: typeof bookedPoints) => {
+    if (points.length < 2) return ''
+    return points.reduce((path, point, index) => {
+      if (index === 0) return `M ${point.x} ${point.y}`
+      const previous = points[index - 1]
+      const beforePrevious = points[index - 2] || previous
+      const next = points[index + 1] || point
+      const cp1x = previous.x + (point.x - beforePrevious.x) / 6
+      const cp1y = previous.y + (point.y - beforePrevious.y) / 6
+      const cp2x = point.x - (next.x - previous.x) / 6
+      const cp2y = point.y - (next.y - previous.y) / 6
+      return `${path} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${point.x} ${point.y}`
+    }, '')
+  }
+  const bookedLine = smoothPath(bookedPoints)
+  const paidLine = smoothPath(paidPoints)
+  const outstandingArea = `${bookedLine} ${smoothPath([...paidPoints].reverse()).replace(/^M/, 'L')} Z`
   const hour = Number(new Intl.DateTimeFormat('en-NG', { timeZone: 'Africa/Lagos', hour: '2-digit', hourCycle: 'h23' }).format(new Date()))
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
@@ -75,14 +89,14 @@ export function Dashboard() {
         <svg viewBox="0 0 960 132" preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <linearGradient id="outstandingGapFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#7897f7" stopOpacity=".20" /><stop offset="100%" stopColor="#7897f7" stopOpacity=".035" /></linearGradient>
-            <filter id="bookingLineGlow" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="2.2" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+            <filter id="bookingLineGlow" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="1.1" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
           </defs>
           {[28, 72, 116].map((y) => <line key={y} x1="28" x2="932" y1={y} y2={y} className="chart-gridline" />)}
           <path d={outstandingArea} fill="url(#outstandingGapFill)" />
-          <path d={bookedLine} fill="none" className="chart-booked-line" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" filter="url(#bookingLineGlow)" vectorEffect="non-scaling-stroke" />
+          <path d={bookedLine} fill="none" className="chart-booked-line" strokeWidth="1.45" strokeLinecap="round" strokeLinejoin="round" filter="url(#bookingLineGlow)" vectorEffect="non-scaling-stroke" />
           <path d={paidLine} fill="none" className="chart-paid-line" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" filter="url(#bookingLineGlow)" vectorEffect="non-scaling-stroke" />
-          {bookedPoints.map((point) => <g key={`booked-${point.key}`}><circle cx={point.x} cy={point.y} r="3.1" className="chart-booked-dot" /><title>{`${point.label}: booking value ${money(point.bookedAmount)}`}</title></g>)}
-          {paidPoints.map((point) => <g key={`paid-${point.key}`}><circle cx={point.x} cy={point.y} r="3.1" className="chart-paid-dot" /><title>{`${point.label}: confirmed payments ${money(point.paidAmount)}`}</title></g>)}
+          {bookedPoints.map((point) => <g key={`booked-${point.key}`}><circle cx={point.x} cy={point.y} r="2.5" className="chart-booked-dot" /><title>{`${point.label}: booking value ${money(point.bookedAmount)}`}</title></g>)}
+          {paidPoints.map((point) => <g key={`paid-${point.key}`}><circle cx={point.x} cy={point.y} r="2.5" className="chart-paid-dot" /><title>{`${point.label}: confirmed payments ${money(point.paidAmount)}`}</title></g>)}
         </svg>
         <div className="revenue-axis">{bookingTrend.map((day) => <span key={day.key}>{day.label}</span>)}</div>
       </div>

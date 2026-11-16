@@ -24,6 +24,7 @@ type AgencyContext = {
   role_code: string
   is_owner: boolean
   plan_code: string | null
+  plan_name: string | null
   subscription_status: string | null
 }
 

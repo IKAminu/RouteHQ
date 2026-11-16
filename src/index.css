@@ -1864,3 +1864,58 @@
   outline: 2px solid #e8a36d;
   outline-offset: 3px;
 }
+
+
+/* RouteHQ agency onboarding and platform operations */
+.auth-info,.onboarding-info{margin:.2rem 0;padding:.75rem .85rem;border-radius:.45rem;background:#edf7f0;color:#23633d;font-size:.76rem;line-height:1.5}
+.auth-back{display:block;width:100%;margin-top:.8rem;border:0;background:transparent;color:var(--color-brand-700);font-size:.75rem;font-weight:650;cursor:pointer}
+.onboarding-shell{min-height:100vh;background:var(--color-canvas);padding:2rem max(1rem,calc((100vw - 70rem)/2));color:var(--color-ink)}
+.onboarding-brand{display:flex;align-items:center;gap:.65rem;margin:0 auto 2.2rem;max-width:58rem;font-weight:750;letter-spacing:-.03em}
+.onboarding-brand img{width:2.2rem;height:2.2rem;object-fit:contain}
+.onboarding-card{width:min(42rem,100%);margin:0 auto;border-radius:.7rem;background:var(--color-surface);padding:clamp(1.25rem,4vw,2.25rem);box-shadow:0 1rem 3rem rgb(0 0 0 / 5%)}
+.onboarding-eyebrow{display:block;color:var(--color-brand-600);font-size:.65rem;font-weight:800;letter-spacing:.12em}
+.onboarding-card h1,.platform-heading h1{margin:.45rem 0 0;font-size:1.65rem;letter-spacing:-.04em;line-height:1.15}
+.onboarding-copy{margin:.75rem 0 1.4rem;color:var(--color-muted);font-size:.82rem;line-height:1.65}
+.onboarding-form{display:grid;gap:1rem}
+.onboarding-form .field-group,.application-actions .field-group{display:flex;flex-direction:column;gap:.35rem;color:var(--color-ink);font-size:.73rem;font-weight:650}
+.onboarding-form .field,.application-actions .field{width:100%;min-height:2.65rem;border:1px solid var(--color-line);border-radius:.35rem;background:var(--color-surface);padding:.55rem .7rem;color:var(--color-ink);font:inherit;font-weight:450}
+.onboarding-form button{width:100%;min-height:2.7rem;margin-top:.3rem}
+.onboarding-error{padding:.75rem .85rem;border-radius:.4rem;background:#fff0ee;color:#a3332c;font-size:.76rem;line-height:1.5}
+.onboarding-foot{margin:2rem auto 0;max-width:58rem;color:var(--color-muted);font-size:.68rem;text-align:center}
+.application-status{display:inline-flex;margin-top:1rem;border-radius:2rem;background:#f2eee6;padding:.35rem .7rem;color:#62543d;font-size:.68rem;font-weight:750;text-transform:capitalize}
+.status-approved{background:#eaf5ed;color:#27643a}.status-rejected{background:#fff0ee;color:#a3332c}
+.review-note{margin-top:1rem;border-left:2px solid var(--color-brand-500);padding:.65rem .8rem;background:color-mix(in srgb,var(--color-brand-50) 65%,transparent);color:var(--color-muted);font-size:.75rem;line-height:1.5}
+.review-note p{margin:.25rem 0 0}
+.platform-heading{display:flex;max-width:70rem;margin:0 auto 1.5rem;align-items:center;justify-content:space-between;gap:1rem}
+.platform-heading p,.platform-list-head p,.application-row-head p{margin:.35rem 0 0;color:var(--color-muted);font-size:.75rem}
+.platform-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem;max-width:70rem;margin:0 auto 1.2rem}
+.platform-stats>div{display:flex;min-height:5.2rem;flex-direction:column;justify-content:center;gap:.25rem;border-radius:.5rem;background:var(--color-surface);padding:1rem}
+.platform-stats strong{font-size:1.35rem;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.platform-stats span{color:var(--color-muted);font-size:.7rem}
+.platform-list{max-width:70rem;margin:0 auto;border-radius:.65rem;background:var(--color-surface);padding:1.2rem}
+.platform-list-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem}
+.platform-list-head h2{margin:0;font-size:1rem;letter-spacing:-.02em}
+.application-row{border-top:1px solid var(--color-line);padding:1.1rem 0}
+.application-row-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+.application-row-head h3{margin:0;font-size:.92rem}
+.application-details{display:flex;flex-wrap:wrap;gap:.5rem 1.25rem;margin:.8rem 0;color:var(--color-muted);font-size:.7rem}
+.application-details strong{color:var(--color-ink)}
+.application-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:.8rem;align-items:end;margin-top:.9rem}
+.application-buttons{display:flex;gap:.5rem;grid-column:1/-1}
+.application-buttons button{min-width:8rem}
+@media(max-width:640px){.onboarding-shell{padding:1.2rem .85rem}.platform-heading{align-items:flex-start}.platform-stats{gap:.45rem}.platform-stats>div{padding:.75rem}.platform-stats strong{font-size:1.05rem}.platform-stats span{font-size:.62rem}.platform-list{padding:.85rem}.application-actions{grid-template-columns:1fr}.application-buttons{grid-column:auto}.application-buttons button{flex:1}.application-row-head{flex-direction:column}}
+:root[data-theme='dark'] .onboarding-shell{background:#0b0b0e;color:#f4f4f5}
+:root[data-theme='dark'] .onboarding-card,:root[data-theme='dark'] .platform-list,:root[data-theme='dark'] .platform-stats>div{background:#141418;box-shadow:none}
+:root[data-theme='dark'] .onboarding-card h1,:root[data-theme='dark'] .platform-heading h1,:root[data-theme='dark'] .platform-list h2,:root[data-theme='dark'] .application-row-head h3,:root[data-theme='dark'] .application-details strong{color:#f4f4f5}
+:root[data-theme='dark'] .onboarding-form .field,:root[data-theme='dark'] .application-actions .field{border-color:#29292f;background:#1a1a1f;color:#f4f4f5}
+:root[data-theme='dark'] .onboarding-info,:root[data-theme='dark'] .auth-info{background:#13291c;color:#a8e2b8}
+:root[data-theme='dark'] .onboarding-error,:root[data-theme='dark'] .auth-error{background:#321b1b;color:#ffb8b0}
+:root[data-theme='dark'] .application-status{background:#28251f;color:#e8d7b5}
+:root[data-theme='dark'] .status-approved{background:#173322;color:#a8e2b8}
+:root[data-theme='dark'] .status-rejected{background:#321b1b;color:#ffb8b0}
+:root[data-theme='dark'] .review-note{background:#211b15;color:#c9c2b8}
+:root[data-theme='dark'] .application-row{border-color:#29292f}
+:root[data-theme='dark'] .auth-screen{background:#0b0b0e}
+:root[data-theme='dark'] .auth-panel{border-color:#29292f;background:#141418}
+:root[data-theme='dark'] .auth-panel h1{color:#f4f4f5}
+:root[data-theme='dark'] .auth-description,:root[data-theme='dark'] .auth-footnote{color:#b4b4bd}

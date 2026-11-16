@@ -191,6 +191,8 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
   const [authError, setAuthError] = useState('')
 
   useEffect(() => {
+    // Public preview builds use local demo data and must not initialise Supabase auth.
+    if (import.meta.env.VITE_USE_MOCK_DATA === 'true' || !supabase) return
     let alive = true
     const checkSession = async (current: Session | null) => {
       if (!alive) return
@@ -239,6 +241,7 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
     return () => { alive = false; listener.subscription.unsubscribe() }
   }, [])
 
+  if (import.meta.env.VITE_USE_MOCK_DATA === 'true') return <>{children('demo')}</>
   if (!supabase) return <div className="auth-screen"><section className="auth-panel"><h1>Configuration required</h1><p>Supabase connection settings are missing. Contact the app administrator.</p></section></div>
   if (!ready) return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}brand/logo.png`} alt="" /><span>Preparing secure workspace</span><i /></div>
   if (authError) return <div className="auth-screen"><section className="auth-panel"><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section></div>

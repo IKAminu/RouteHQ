@@ -1,23 +1,26 @@
-name: Validate RouteHQ application
+name: Validate RouteHQ
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
-      - import/agency-managerdan
+      - main
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: routehq-validation
+  group: routehq-validation-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out RouteHQ application
+      - name: Check out RouteHQ
         uses: actions/checkout@v4
 
       - name: Set up pnpm
@@ -37,7 +40,7 @@ jobs:
       - name: Check TypeScript
         run: pnpm typecheck
 
-      - name: Build preview
+      - name: Build demo preview
         run: pnpm build
         env:
           VITE_BASE_PATH: /RouteHQ/

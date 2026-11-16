@@ -1,49 +1,99 @@
-# Supabase operations and setup
+# RouteHQ Supabase setup
 
-Supabase is connected to the live Dandurgu Headquarters application. This document describes the current deployment rather than the original prototype plan.
+RouteHQ now has a separate commercial Supabase project. It is not the Dandurgu Agency Manager project.
 
-## Current application connection
+- Project name: RouteHQ
+- Project ref: `viohesitrhrtkulcdnqk`
+- Region: EU Central (Frankfurt)
+- Database migrations: `supabase/migrations/`
 
-The browser application uses the Supabase JavaScript client with a public publishable key:
+## Safe local demo
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_PUBLISHABLE_KEY`
+1. Install Node.js 22 and pnpm 10.
+2. Run `pnpm install --frozen-lockfile`.
+3. Copy `.env.example` to `.env.local`.
+4. Keep `VITE_USE_MOCK_DATA=true`.
+5. Run `pnpm dev`.
 
-For backward compatibility, `VITE_SUPABASE_ANON_KEY` is still accepted if the publishable-key variable is absent. Prefer the publishable key for new configuration.
+The demo uses synthetic browser data. It does not connect to a customer database.
 
-Set these values in a local `.env.local` file for development and as GitHub Actions repository or environment variables for Pages deployment. Never commit real environment files or place a Supabase secret/service-role key in a `VITE_*` variable. Browser variables are public by design.
+## Local authenticated development
 
-## Authentication and access
+Only use the RouteHQ project settings, never Dandurgu's project settings.
 
-- Live access uses Supabase email/password authentication.
-- The application checks an explicit authorised-account allowlist.
-- Authenticator-based TOTP MFA is required; live data access requires AAL2.
-- Database Row Level Security independently checks the authenticated role, AAL2 assurance, authorised email claim, and `is_demo = false`.
-- Anonymous users have no direct table grants.
-- Guest/demo mode uses bundled sample records and does not write to the live database. Notes created in Demo Mode are held only in the current browser session.
+Set these values in your untracked `.env.local`:
 
-The frontend allowlist is a user-experience gate, not the security boundary. Supabase RLS is the database enforcement layer. Keep the frontend allowlist and database policies in agreement when authorised accounts change.
+- `VITE_USE_MOCK_DATA=false`
+- `VITE_SUPABASE_URL=https://viohesitrhrtkulcdnqk.supabase.co`
+- `VITE_SUPABASE_PUBLISHABLE_KEY=<RouteHQ publishable key>`
 
-## Live data model
+The publishable key is intended for browser use. Never use a Supabase secret key or service-role key in a `VITE_*` variable, committed file, or frontend bundle.
 
-The live public schema currently contains the agency operations tables, including leads, customers, packages, bookings, travellers, payments, supplier costs, supplier payments, documents, suppliers, lead activities and the shared `agency_notes` workspace. All public tables must retain RLS.
+## Supabase Authentication settings
 
-The current policy grants live access only to the approved MFA accounts. Do not replace these policies with a generic `TO authenticated` policy: authenticated role membership alone is not sufficient authorisation.
+In the RouteHQ Supabase dashboard:
 
-## Deployment
+1. Open Authentication → URL Configuration.
+2. Set the Site URL to the exact application origin used for testing.
+3. Add the local development callback URL (for Vite, usually `http://localhost:5173`) to Redirect URLs.
+4. When staging/production hosting is established, add those exact HTTPS callback URLs too.
+5. Keep email confirmation enabled for new accounts.
+6. Keep TOTP MFA enabled. RouteHQ currently requires AAL2 before entering authenticated platform flows.
+7. Enable leaked-password protection in Authentication → Settings → Password Security.
 
-The GitHub Actions workflow installs from the committed pnpm lockfile, runs TypeScript checks, builds the application, and deploys the static output to GitHub Pages.
+The current public GitHub Pages deployment is intentionally built with `VITE_USE_MOCK_DATA=true`. It remains a demo preview and does not expose the commercial signup or admin console. Do not change the public preview to live mode until a dedicated staging/production host and its redirect URLs are configured.
 
-After changing Supabase configuration variables, rerun the deployment workflow so the values are included in the browser build. The publishable key is safe to expose; a secret/service-role key is not.
+## Current database model
 
-## Operational safeguards and remaining work
+Platform tables:
+- `agencies`, `agency_applications`, `platform_admins`
+- `agency_memberships`, `agency_invitations`
+- `roles`, `permissions`, `role_permissions`, `member_permissions`
+- `plans`, `subscriptions`, `agency_entitlements`
+- `platform_audit_logs`
 
-- Keep a verified database backup schedule and periodically test restoration.
-- Enable Supabase leaked-password protection in Authentication → Settings → Password Security.
-- Review RLS policies and database advisors after schema changes.
-- Schema changes should be reviewed and committed as SQL migrations. The remote database migration history includes the initial operations schema, the authorised-MFA RLS policy optimisation and the shared agency notes workspace. The applied migrations are preserved under `supabase/migrations`.
-- The browser store currently loads records in pages and persists table snapshots. Deletions are serialised with pending saves, but multi-table writes are not atomic. A future server-side transactional persistence layer is recommended before introducing concurrent staff editing or complex workflows.
+Agency operational tables:
+- `leads`, `lead_activities`, `customers`, `packages`, `bookings`
+- `travellers`, `payments`, `payment_reversals`
+- `suppliers`, `supplier_costs`, `supplier_payments`
+- `documents`, `agency_notes`, `tasks`, `activity_logs`
+- `agency_integrations`, `integration_events`, `webhook_events`
 
-## Document handling
+All public application tables have RLS enabled. Agency-owned rows are tenant-scoped by `agency_id`. The app must never use frontend filtering as a substitute for RLS.
 
-The app stores secure document links; it does not upload passport files or receipts to Google Drive. Do not use public links for passports, identity documents or other sensitive traveller information. Configure private storage and explicit access controls before adding file uploads.
+## Onboarding workflow currently implemented
+
+- Account creation with email/password.
+- TOTP MFA enrollment and challenge.
+- Agency application submission.
+- Applicant can see their own application status.
+- Platform administrators can review applications.
+- Approval transaction creates the agency, owner membership, requested plan subscription (pending) and plan entitlements.
+- Rejection is audited.
+- Platform admin dashboard reads applications only after the account has been provisioned in `platform_admins`.
+
+The first platform administrator must be provisioned by a trusted database administrator after the user has created and confirmed their Auth account. Never add a self-service "make me admin" button or bootstrap RPC.
+
+## Important current limitations
+
+- The operational modules are not yet mapped to the new RouteHQ schema. The old live-store adapter expects the legacy Dandurgu column names and must not be enabled against this project.
+- Approved agencies are deliberately shown a safe holding screen until the operational data adapter is migrated and tenant-isolation tests pass.
+- Team invitation creation/acceptance and settings permission editor are not yet wired into the app.
+- Subscription status is set to `pending` on approval. Billing and subscription activation are not yet implemented.
+- Passport values must be encrypted before storing in `travellers.passport_number_encrypted`. Plaintext passport numbers must never be written.
+- Private files belong in the private `routehq-documents` bucket with an agency UUID as the first object path segment.
+- Financial operations need server-side transactions before real use.
+
+## Migration discipline
+
+The SQL files in `supabase/migrations/` preserve the migrations applied to the RouteHQ database. Apply future schema changes through new, versioned migrations and commit the exact SQL. Do not edit old migrations after they have been applied.
+
+## Never do these things
+
+- Do not connect RouteHQ to the Dandurgu Supabase project.
+- Do not copy Dandurgu or customer records into this public repository.
+- Do not expose service-role keys or secrets to the browser.
+- Do not disable RLS to make the UI work.
+- Do not approve agencies by direct browser-side table writes.
+- Do not let the frontend choose an arbitrary `agency_id` and trust it.
+- Do not onboard real agencies until cross-tenant isolation, roles, invitations, financial transactions, backups and restore have been tested.

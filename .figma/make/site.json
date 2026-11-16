@@ -1,0 +1,7 @@
+{
+  "title": "RouteHQ",
+  "description": "Travel agency operations platform for managing enquiries, bookings, travellers and payments.",
+  "language": "en",
+  "robots": { "index": false },
+  "icons": { "icon": "/app-icon.svg" }
+}

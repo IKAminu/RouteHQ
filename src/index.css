@@ -1410,7 +1410,6 @@
   box-shadow: 0 0 0 .2rem rgb(133 133 141 / 13%);
 }
 
-
 /* Two-series booking performance chart and uploaded RouteHQ wordmark. */
 :root .brand-logo {
   display: block;
@@ -1457,4 +1456,268 @@
   :root .revenue-legend { gap: .55rem .75rem; }
   :root .revenue-legend span { font-size: .58rem; }
   :root .revenue-line-chart svg { height: 118px; }
+}
+
+
+/* Night-mode readability corrections for secondary text and interactive surfaces. */
+:root[data-theme='dark'] {
+  --color-muted: #a6a6af;
+  --color-line: #303036;
+}
+:root[data-theme='dark'] .nav-group > p,
+:root[data-theme='dark'] .metric-head,
+:root[data-theme='dark'] .list-row span,
+:root[data-theme='dark'] .list-row small,
+:root[data-theme='dark'] .metric p,
+:root[data-theme='dark'] .cell-sub,
+:root[data-theme='dark'] .page-header p,
+:root[data-theme='dark'] .section-title p,
+:root[data-theme='dark'] .settings-section > p,
+:root[data-theme='dark'] .global-search,
+:root[data-theme='dark'] .global-search input::placeholder,
+:root[data-theme='dark'] .search-results span,
+:root[data-theme='dark'] .notifications span,
+:root[data-theme='dark'] .search-results p,
+:root[data-theme='dark'] .revenue-axis,
+:root[data-theme='dark'] .revenue-legend span,
+:root[data-theme='dark'] .table-footer,
+:root[data-theme='dark'] .empty p,
+:root[data-theme='dark'] .form-hint,
+:root[data-theme='dark'] .field-label,
+:root[data-theme='dark'] .settings-section dt,
+:root[data-theme='dark'] .account-detail span,
+:root[data-theme='dark'] .account-identity span,
+:root[data-theme='dark'] .manual-chapter-header p,
+:root[data-theme='dark'] .manual-practice-grid p {
+  color: #a6a6af;
+}
+:root[data-theme='dark'] .nav-group a { color: #d0d0d6; }
+:root[data-theme='dark'] .nav-group > p { color: #a0a0a8; }
+:root[data-theme='dark'] .lead-followup-item-meta time,
+:root[data-theme='dark'] .lead-followup-item p,
+:root[data-theme='dark'] .note-main > p,
+:root[data-theme='dark'] .manual-hero-copy > p,
+:root[data-theme='dark'] .guide-subsection li,
+:root[data-theme='dark'] .manual-explain-card li,
+:root[data-theme='dark'] .manual-impact li,
+:root[data-theme='dark'] .manual-step-list p {
+  color: #c4c4cb;
+}
+:root[data-theme='dark'] .field,
+:root[data-theme='dark'] input,
+:root[data-theme='dark'] select,
+:root[data-theme='dark'] textarea {
+  color: #f0f0f2;
+}
+:root[data-theme='dark'] .field::placeholder,
+:root[data-theme='dark'] input::placeholder,
+:root[data-theme='dark'] textarea::placeholder {
+  color: #92929c;
+  opacity: 1;
+}
+:root[data-theme='dark'] th { color: #c8c8d0; }
+:root[data-theme='dark'] td { color: #dedee3; }
+:root[data-theme='dark'] .badge-neutral { color: #dedee3; }
+:root[data-theme='dark'] .revenue-axis { color: #9999a3; }
+:root[data-theme='dark'] .chart-booked-line,
+:root[data-theme='dark'] .chart-paid-line { filter: none; }
+:root[data-theme='dark'] .button-secondary:disabled,
+:root[data-theme='dark'] button:disabled { color: #85858e; opacity: .8; }
+:root[data-theme='dark'] .chart-gridline { stroke: rgb(180 180 190 / 16%); }
+
+
+/* Final night-mode legibility pass for small labels and secondary metadata. */
+:root[data-theme='dark'] .brand span,
+:root[data-theme='dark'] .sidebar-foot span,
+:root[data-theme='dark'] .revenue-panel-head .eyebrow,
+:root[data-theme='dark'] .revenue-period,
+:root[data-theme='dark'] .theme-option small,
+:root[data-theme='dark'] .manual-screen-top small,
+:root[data-theme='dark'] .guide-index a,
+:root[data-theme='dark'] .guide-index span,
+:root[data-theme='dark'] .manual-id-name span,
+:root[data-theme='dark'] .manual-id-parts span {
+  color: #a6a6af;
+}
+:root[data-theme='dark'] .manual-step-number {
+  color: #f0c18d;
+}
+
+
+/* Dynamic booking chart Y-axis labels and Notes search field alignment. */
+:root .revenue-line-chart svg { height: 180px; }
+:root .chart-y-label {
+  fill: #777780;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+:root .chart-gridline { stroke: rgb(128 128 138 / 16%); stroke-width: 1; stroke-dasharray: 3 6; vector-effect: non-scaling-stroke; }
+:root[data-theme='dark'] .chart-y-label { fill: #a6a6af; }
+:root[data-theme='dark'] .notes-search {
+  border-color: #303036;
+  background: linear-gradient(180deg, #19191e, #151518);
+  color: #a6a6af;
+}
+:root[data-theme='dark'] .notes-search .field {
+  border: 0;
+  background: transparent;
+  color: #f0f0f2;
+  box-shadow: none;
+}
+:root[data-theme='dark'] .notes-search .field::placeholder { color: #92929c; }
+@media (max-width: 720px) {
+  :root .revenue-line-chart svg { height: 170px; }
+}
+
+
+/* RouteHQ operation manual: keep every handbook surface in the graphite palette. */
+:root[data-theme='dark'] .operator-guide,
+:root[data-theme='dark'] .guide-header,
+:root[data-theme='dark'] .guide-header > div,
+:root[data-theme='dark'] .guide-intro,
+:root[data-theme='dark'] .guide-search,
+:root[data-theme='dark'] .guide-index a,
+:root[data-theme='dark'] .guide-index span,
+:root[data-theme='dark'] .guide-section,
+:root[data-theme='dark'] .guide-section-heading,
+:root[data-theme='dark'] .guide-section-heading > span,
+:root[data-theme='dark'] .manual-overview,
+:root[data-theme='dark'] .manual-hero,
+:root[data-theme='dark'] .manual-id-section,
+:root[data-theme='dark'] .manual-practices,
+:root[data-theme='dark'] .manual-chapter,
+:root[data-theme='dark'] .manual-chapter-header,
+:root[data-theme='dark'] .manual-practice-grid > div,
+:root[data-theme='dark'] .manual-callout,
+:root[data-theme='dark'] .manual-warning,
+:root[data-theme='dark'] .manual-flow-card,
+:root[data-theme='dark'] .manual-impact,
+:root[data-theme='dark'] .manual-explain-card,
+:root[data-theme='dark'] .manual-id-card,
+:root[data-theme='dark'] .manual-uuid,
+:root[data-theme='dark'] .manual-branch,
+:root[data-theme='dark'] .manual-screen-field,
+:root[data-theme='dark'] .manual-screen-top,
+:root[data-theme='dark'] .manual-step-list li,
+:root[data-theme='dark'] .manual-flow,
+:root[data-theme='dark'] .guide-flow,
+:root[data-theme='dark'] .settings-guide-link,
+:root[data-theme='dark'] .settings-guide-icon {
+  border-color: #303036;
+  background-color: #17171b;
+  color: #e4e4e8;
+}
+:root[data-theme='dark'] .manual-explain-card.automated,
+:root[data-theme='dark'] .manual-explain-card.operator,
+:root[data-theme='dark'] .manual-impact > div,
+:root[data-theme='dark'] .manual-warning,
+:root[data-theme='dark'] .manual-callout,
+:root[data-theme='dark'] .guide-intro {
+  background: #19191e;
+  color: #e4e4e8;
+}
+:root[data-theme='dark'] .guide-header h1,
+:root[data-theme='dark'] .guide-section-heading h2,
+:root[data-theme='dark'] .manual-hero h1,
+:root[data-theme='dark'] .manual-chapter-header h2,
+:root[data-theme='dark'] .manual-overview h2,
+:root[data-theme='dark'] .manual-id-section h2,
+:root[data-theme='dark'] .manual-practices h2 {
+  color: #f4f4f5;
+}
+:root[data-theme='dark'] .guide-header p,
+:root[data-theme='dark'] .guide-section-heading p,
+:root[data-theme='dark'] .manual-chapter-header p,
+:root[data-theme='dark'] .manual-practice-grid p,
+:root[data-theme='dark'] .manual-hero-copy p,
+:root[data-theme='dark'] .manual-overview p,
+:root[data-theme='dark'] .manual-id-section p,
+:root[data-theme='dark'] .manual-practices p,
+:root[data-theme='dark'] .manual-explain-card li,
+:root[data-theme='dark'] .manual-step-list p,
+:root[data-theme='dark'] .guide-subsection li {
+  color: #c4c4cb;
+}
+:root[data-theme='dark'] .guide-eyebrow,
+:root[data-theme='dark'] .settings-guide-arrow {
+  color: #e8a36d;
+}
+:root[data-theme='dark'] .guide-search input {
+  background: transparent;
+  color: #f4f4f5;
+}
+
+
+/* Dashboard chart range selector. */
+:root .revenue-period-select {
+  min-height: 2rem;
+  max-width: 9.5rem;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  background: var(--color-surface);
+  padding: .35rem .55rem;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: .68rem;
+  cursor: pointer;
+}
+:root .revenue-period-select:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+:root[data-theme='dark'] .revenue-period-select {
+  border: 0;
+  background: rgb(255 255 255 / 6%);
+  color: #e4e4e8;
+}
+:root[data-theme='dark'] .revenue-period-select option {
+  background: #17171b;
+  color: #f4f4f5;
+}
+@media (max-width: 560px) {
+  :root .revenue-panel-head { flex-wrap: wrap; }
+  :root .revenue-period-select { max-width: none; }
+}
+
+
+/* Dashboard chart range selector. */
+:root .revenue-period-select {
+  min-height: 2rem;
+  max-width: 9.5rem;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  background: var(--color-surface);
+  padding: .35rem .55rem;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: .68rem;
+  cursor: pointer;
+}
+:root .revenue-period-select:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+:root[data-theme='dark'] .revenue-period-select {
+  border: 0;
+  background: rgb(255 255 255 / 6%);
+  color: #e4e4e8;
+}
+:root[data-theme='dark'] .revenue-period-select option {
+  background: #17171b;
+  color: #f4f4f5;
+}
+@media (max-width: 560px) {
+  :root .revenue-panel-head { flex-wrap: wrap; }
+  :root .revenue-period-select { max-width: none; }
+}
+
+
+/* Keep the dashboard timeline control visually consistent across browsers. */
+:root .revenue-period-select {
+  appearance: auto;
+  min-width: 8.5rem;
+  line-height: 1.25;
+}
+:root[data-theme='dark'] .revenue-period-select:focus-visible {
+  outline-color: #8b9ff0;
 }

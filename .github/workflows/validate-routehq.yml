@@ -1,0 +1,44 @@
+name: Validate RouteHQ application
+
+on:
+  push:
+    branches:
+      - import/agency-managerdan
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: routehq-validation
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out RouteHQ application
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check TypeScript
+        run: pnpm typecheck
+
+      - name: Build preview
+        run: pnpm build
+        env:
+          VITE_BASE_PATH: /RouteHQ/
+          VITE_USE_MOCK_DATA: "true"

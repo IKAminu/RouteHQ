@@ -25,6 +25,15 @@ export function Dashboard() {
   const abroad = travellers.filter((traveller) => traveller.status === 'Abroad')
   const outstanding = bookings.reduce((sum, booking) => sum + bookingBalance(booking, payments), 0)
   const received = payments.filter((payment) => payment.status === 'Confirmed').reduce((sum, payment) => sum + payment.amount, 0)
+  const weeklyRevenue = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date()
+    day.setDate(day.getDate() - (6 - index))
+    const key = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
+    const amount = payments.filter((payment) => payment.status === 'Confirmed' && payment.date === key).reduce((sum, payment) => sum + payment.amount, 0)
+    return { key, label: day.toLocaleDateString('en-NG', { weekday: 'short' }), amount }
+  })
+  const weeklyMax = Math.max(1, ...weeklyRevenue.map((day) => day.amount))
+  const weeklyTotal = weeklyRevenue.reduce((sum, day) => sum + day.amount, 0)
   const hour = Number(new Intl.DateTimeFormat('en-NG', { timeZone: 'Africa/Lagos', hour: '2-digit', hourCycle: 'h23' }).format(new Date()))
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
@@ -41,6 +50,10 @@ export function Dashboard() {
     <PageHeader title={`${greeting}, ${greetingName}`} description="Here is what needs attention across your agency today." action={<div className="date-chip"><CalendarDays size={16} /> {shortDate(todayDate())}</div>} />
     {mode === 'demo' && <section className="demo-banner"><div><strong>Demo workspace</strong><span>Sample records only. Changes stay in this session and are discarded when you leave.</span></div><Link to="/settings">View workspace settings <ArrowRight size={15} /></Link></section>}
     <section className="metrics-grid">{metrics.map(({ label, value, detail, icon: Icon, to }) => <Link className="metric" to={to} key={label}><div className="metric-head"><span>{label}</span><Icon size={18} /></div><strong>{value}</strong><p>{detail}</p></Link>)}</section>
+    <section className="revenue-panel">
+      <div className="revenue-panel-head"><div><span className="eyebrow">PAYMENTS · LAST 7 DAYS</span><h2>{money(weeklyTotal)}</h2><p>Confirmed payments received during the past week</p></div><span className="revenue-period">7 days</span></div>
+      <div className="revenue-chart" role="img" aria-label={`Seven-day confirmed payments chart. Total ${money(weeklyTotal)}.`}>{weeklyRevenue.map((day) => <div className="revenue-day" key={day.key}><div className="revenue-bar-track"><div className="revenue-bar" style={{ height: `${Math.max(day.amount ? 8 : 2, day.amount / weeklyMax * 100)}%` }} title={`${day.label}: ${money(day.amount)}`} /></div><span>{day.label}</span></div>)}</div>
+    </section>
     <div className="dashboard-grid">
       <section className="content-section span-two">
         <div className="section-title"><div><h2>Upcoming departures</h2><p>Bookings departing in the next seven days.</p></div><Link to="/bookings">View all <ArrowRight size={15} /></Link></div>

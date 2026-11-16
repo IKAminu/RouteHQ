@@ -1787,3 +1787,80 @@
 :root[data-theme='dark'] .chart-tooltip b { color: #f4f4f5; }
 :root[data-theme='dark'] .chart-tooltip > span { color: #b5b5bf; }
 :root[data-theme='dark'] .chart-tooltip small { color: #92929d; }
+
+
+/* Final night-mode contrast correction: Notes navigation and operator manual. */
+:root[data-theme='dark'] .notes-subnav {
+  border-bottom-color: #303036;
+}
+:root[data-theme='dark'] .notes-subnav a {
+  color: #c4c4cb;
+  background: transparent;
+}
+:root[data-theme='dark'] .notes-subnav a:hover,
+:root[data-theme='dark'] .notes-subnav a:focus-visible {
+  background: #202025;
+  color: #ffffff;
+}
+:root[data-theme='dark'] .notes-subnav a.notes-subnav-active {
+  background: linear-gradient(100deg, rgb(255 255 255 / 7%), rgb(255 255 255 / 2%));
+  color: #ffffff;
+  border-bottom-color: #f08a3c;
+}
+:root[data-theme='dark'] .manual-hero {
+  border-color: #303036;
+  background: radial-gradient(ellipse at 82% 12%, rgb(255 255 255 / 4%), transparent 48%), linear-gradient(145deg, #1a1a1f, #121216 72%);
+  color: #f4f4f5;
+}
+:root[data-theme='dark'] .manual-hero-copy h1 {
+  color: #f4f4f5;
+}
+:root[data-theme='dark'] .manual-hero-copy > p {
+  color: #c4c4cb;
+}
+:root[data-theme='dark'] .manual-hero-meta span {
+  color: #c4c4cb;
+}
+:root[data-theme='dark'] .manual-hero-meta svg {
+  color: #e8a36d;
+}
+:root[data-theme='dark'] .manual-hero-orbit {
+  border-color: #414149;
+}
+:root[data-theme='dark'] .manual-hero-icon {
+  border-color: #414149;
+  background: #24242a;
+  color: #f0a36b;
+  box-shadow: inset 0 1px rgb(255 255 255 / 5%), 0 12px 30px rgb(0 0 0 / 28%);
+}
+:root[data-theme='dark'] .hero-chip {
+  border-color: #3a3a42;
+  background: #202025;
+  color: #e4e4e8;
+}
+:root[data-theme='dark'] .guide-eyebrow {
+  color: #e8a36d;
+}
+:root[data-theme='dark'] .manual-hero a {
+  color: #f0a36b;
+}
+:root[data-theme='dark'] .nav-group > p,
+:root[data-theme='dark'] .brand span,
+:root[data-theme='dark'] .sidebar-foot span {
+  color: #a6a6af;
+}
+:root[data-theme='dark'] .manual-section-kicker,
+:root[data-theme='dark'] .manual-workflow-label,
+:root[data-theme='dark'] .manual-chapter-header > div > span {
+  color: #a6a6af;
+}
+:root[data-theme='dark'] .manual-small-note,
+:root[data-theme='dark'] .manual-id-parts span,
+:root[data-theme='dark'] .manual-id-name span {
+  color: #a6a6af;
+}
+:root[data-theme='dark'] .manual-hero :focus-visible,
+:root[data-theme='dark'] .notes-subnav :focus-visible {
+  outline: 2px solid #e8a36d;
+  outline-offset: 3px;
+}

@@ -34,8 +34,8 @@ The publishable key is intended for browser use. Never use a Supabase secret key
 In the RouteHQ Supabase dashboard:
 
 1. Open Authentication → URL Configuration.
-2. Set the Site URL to the exact application origin used for testing.
-3. Add the local development callback URL (for Vite, usually `http://localhost:5173`) to Redirect URLs.
+2. Set the Site URL to the exact application origin used for testing, initially `http://localhost:8443/`.
+3. Add the local development callback URL (for Vite, `http://localhost:8443` (RouteHQ's configured Vite port)) to Redirect URLs.
 4. When staging/production hosting is established, add those exact HTTPS callback URLs too.
 5. Keep email confirmation enabled for new accounts.
 6. Keep TOTP MFA enabled. RouteHQ currently requires AAL2 before entering authenticated platform flows.

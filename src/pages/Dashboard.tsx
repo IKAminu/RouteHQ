@@ -25,18 +25,26 @@ export function Dashboard() {
   const abroad = travellers.filter((traveller) => traveller.status === 'Abroad')
   const outstanding = bookings.reduce((sum, booking) => sum + bookingBalance(booking, payments), 0)
   const received = payments.filter((payment) => payment.status === 'Confirmed').reduce((sum, payment) => sum + payment.amount, 0)
-  const weeklyRevenue = Array.from({ length: 7 }, (_, index) => {
-    const day = new Date()
-    day.setDate(day.getDate() - (6 - index))
-    const key = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
-    const amount = payments.filter((payment) => payment.status === 'Confirmed' && payment.date === key).reduce((sum, payment) => sum + payment.amount, 0)
-    return { key, label: day.toLocaleDateString('en-NG', { weekday: 'short' }), amount }
+  const todayParts = todayDate().split('-').map(Number)
+  const bookingTrend = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2] - (6 - index)))
+    const key = date.toISOString().slice(0, 10)
+    const dayBookings = bookings.filter((booking) => booking.status !== 'Cancelled' && booking.bookingDate >= `${todayDate().slice(0, 8)}${'01'}` && booking.bookingDate <= key && booking.bookingDate >= new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2] - 6)).toISOString().slice(0, 10))
+    const bookedAmount = dayBookings.reduce((sum, booking) => sum + booking.agreedPrice, 0)
+    const paidAmount = dayBookings.reduce((sum, booking) => {
+      const confirmedForBooking = payments.filter((payment) => payment.bookingId === booking.id && payment.status === 'Confirmed' && payment.date <= key).reduce((total, payment) => total + payment.amount, 0)
+      return sum + Math.min(booking.agreedPrice, confirmedForBooking)
+    }, 0)
+    return { key, label: date.toLocaleDateString('en-NG', { weekday: 'short', timeZone: 'UTC' }), bookedAmount, paidAmount, outstanding: Math.max(0, bookedAmount - paidAmount) }
   })
-  const weeklyMax = Math.max(1, ...weeklyRevenue.map((day) => day.amount))
-  const chartPoints = weeklyRevenue.map((day, index) => ({ ...day, x: 28 + index * (904 / 6), y: 104 - (day.amount / weeklyMax) * 76 }))
-  const chartLine = chartPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
-  const chartArea = `${chartLine} L ${chartPoints[chartPoints.length - 1].x} 116 L ${chartPoints[0].x} 116 Z`
-  const weeklyTotal = weeklyRevenue.reduce((sum, day) => sum + day.amount, 0)
+  const trendCurrent = bookingTrend[bookingTrend.length - 1]
+  const chartMax = Math.max(1, ...bookingTrend.map((day) => day.bookedAmount))
+  const chartY = (amount: number) => 116 - (amount / chartMax) * 88
+  const bookedPoints = bookingTrend.map((day, index) => ({ ...day, x: 28 + index * (904 / 6), y: chartY(day.bookedAmount) }))
+  const paidPoints = bookingTrend.map((day, index) => ({ ...day, x: 28 + index * (904 / 6), y: chartY(day.paidAmount) }))
+  const bookedLine = bookedPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  const paidLine = paidPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  const outstandingArea = `${bookedPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')} ${[...paidPoints].reverse().map((point) => `L ${point.x} ${point.y}`).join(' ')} Z`
   const hour = Number(new Intl.DateTimeFormat('en-NG', { timeZone: 'Africa/Lagos', hour: '2-digit', hourCycle: 'h23' }).format(new Date()))
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
@@ -54,8 +62,30 @@ export function Dashboard() {
     {mode === 'demo' && <section className="demo-banner"><div><strong>Demo workspace</strong><span>Sample records only. Changes stay in this session and are discarded when you leave.</span></div><Link to="/settings">View workspace settings <ArrowRight size={15} /></Link></section>}
     <section className="metrics-grid">{metrics.map(({ label, value, detail, icon: Icon, to }) => <Link className="metric" to={to} key={label}><div className="metric-head"><span>{label}</span><Icon size={18} /></div><strong>{value}</strong><p>{detail}</p></Link>)}</section>
     <section className="revenue-panel">
-      <div className="revenue-panel-head"><div><span className="eyebrow">PAYMENTS · LAST 7 DAYS</span><h2>{money(weeklyTotal)}</h2><p>Confirmed payments received during the past week</p></div><span className="revenue-period">7 days</span></div>
-      <div className="revenue-line-chart" role="img" aria-label={`Seven-day confirmed payments line graph. Total ${money(weeklyTotal)}.`}><svg viewBox="0 0 960 132" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#d8d8df" stopOpacity=".24" /><stop offset="100%" stopColor="#d8d8df" stopOpacity="0" /></linearGradient><linearGradient id="revenueLineStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#777780" /><stop offset="55%" stopColor="#d5d5dc" /><stop offset="100%" stopColor="#f0a36b" /></linearGradient><filter id="revenueLineGlow" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="2.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><path d={chartArea} fill="url(#revenueAreaFill)" /><path d={chartLine} fill="none" stroke="url(#revenueLineStroke)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" filter="url(#revenueLineGlow)" vectorEffect="non-scaling-stroke" />{chartPoints.map((point) => <g key={point.key}><circle cx={point.x} cy={point.y} r="3.5" fill="#f4f4f5" stroke="#777780" strokeWidth="1.5" vectorEffect="non-scaling-stroke" /><title>{`${point.label}: ${money(point.amount)}`}</title></g>)}</svg><div className="revenue-axis">{weeklyRevenue.map((day) => <span key={day.key}>{day.label}</span>)}</div></div>
+      <div className="revenue-panel-head">
+        <div>
+          <span className="eyebrow">BOOKING PERFORMANCE · LAST 7 DAYS</span>
+          <h2>{money(trendCurrent.bookedAmount)}</h2>
+          <p>{money(trendCurrent.paidAmount)} confirmed · {money(trendCurrent.outstanding)} outstanding on these bookings</p>
+          <div className="revenue-legend"><span><i className="legend-booked" />Total booking value</span><span><i className="legend-paid" />Confirmed payments</span><span><i className="legend-gap" />Outstanding balance</span></div>
+        </div>
+        <span className="revenue-period">7 days</span>
+      </div>
+      <div className="revenue-line-chart" role="img" aria-label={`Seven-day cumulative booking performance. Booking value ${money(trendCurrent.bookedAmount)}, confirmed payments ${money(trendCurrent.paidAmount)}, outstanding ${money(trendCurrent.outstanding)}.`}>
+        <svg viewBox="0 0 960 132" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="outstandingGapFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#7897f7" stopOpacity=".20" /><stop offset="100%" stopColor="#7897f7" stopOpacity=".035" /></linearGradient>
+            <filter id="bookingLineGlow" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="2.2" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          </defs>
+          {[28, 72, 116].map((y) => <line key={y} x1="28" x2="932" y1={y} y2={y} className="chart-gridline" />)}
+          <path d={outstandingArea} fill="url(#outstandingGapFill)" />
+          <path d={bookedLine} fill="none" className="chart-booked-line" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" filter="url(#bookingLineGlow)" vectorEffect="non-scaling-stroke" />
+          <path d={paidLine} fill="none" className="chart-paid-line" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" filter="url(#bookingLineGlow)" vectorEffect="non-scaling-stroke" />
+          {bookedPoints.map((point) => <g key={`booked-${point.key}`}><circle cx={point.x} cy={point.y} r="3.1" className="chart-booked-dot" /><title>{`${point.label}: booking value ${money(point.bookedAmount)}`}</title></g>)}
+          {paidPoints.map((point) => <g key={`paid-${point.key}`}><circle cx={point.x} cy={point.y} r="3.1" className="chart-paid-dot" /><title>{`${point.label}: confirmed payments ${money(point.paidAmount)}`}</title></g>)}
+        </svg>
+        <div className="revenue-axis">{bookingTrend.map((day) => <span key={day.key}>{day.label}</span>)}</div>
+      </div>
     </section>
     <div className="dashboard-grid">
       <section className="content-section span-two">

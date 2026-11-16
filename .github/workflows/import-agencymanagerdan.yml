@@ -63,13 +63,23 @@ jobs:
             exit 1
           fi
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: destination/pnpm-lock.yaml
+
       - name: Install dependencies and verify the copied application
         working-directory: destination
         env:
           VITE_BASE_PATH: /
         run: |
-          corepack enable
-          corepack prepare pnpm@10 --activate
           pnpm install --frozen-lockfile
           pnpm typecheck
           pnpm build

@@ -1641,7 +1641,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      approve_agency_application: {
+        Args: { _application_id: string; _slug: string }
+        Returns: string
+      }
+      get_my_agency_context: {
+        Args: never
+        Returns: {
+          agency_id: string
+          agency_name: string
+          agency_slug: string
+          is_owner: boolean
+          max_additional_members: number
+          membership_id: string
+          plan_code: string
+          plan_name: string
+          role_code: string
+          role_id: string
+          subscription_status: string
+        }[]
+      }
+      reject_agency_application: {
+        Args: { _application_id: string; _review_notes: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

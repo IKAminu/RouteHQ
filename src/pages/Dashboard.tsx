@@ -38,10 +38,20 @@ export function Dashboard() {
     return { key, label: date.toLocaleDateString('en-NG', { weekday: 'short', timeZone: 'UTC' }), bookedAmount, paidAmount, outstanding: Math.max(0, bookedAmount - paidAmount) }
   })
   const trendCurrent = bookingTrend[bookingTrend.length - 1]
-  const chartMax = Math.max(1, ...bookingTrend.map((day) => day.bookedAmount))
-  const chartY = (amount: number) => 116 - (amount / chartMax) * 88
-  const bookedPoints = bookingTrend.map((day, index) => ({ ...day, x: 28 + index * (904 / 6), y: chartY(day.bookedAmount) }))
-  const paidPoints = bookingTrend.map((day, index) => ({ ...day, x: 28 + index * (904 / 6), y: chartY(day.paidAmount) }))
+  const highestBookingValue = Math.max(0, ...bookingTrend.map((day) => day.bookedAmount))
+  const chartStep = highestBookingValue <= 1_000_000
+    ? 100_000
+    : highestBookingValue < 10_000_000
+      ? 1_000_000
+      : Math.ceil(highestBookingValue / 5 / 1_000_000) * 1_000_000
+  const chartAxisMax = highestBookingValue <= 1_000_000
+    ? 1_000_000
+    : Math.max(chartStep, Math.ceil(highestBookingValue / chartStep) * chartStep)
+  const chartTicks = Array.from({ length: Math.round(chartAxisMax / chartStep) + 1 }, (_, index) => index * chartStep)
+  const chartTickLabel = (amount: number) => amount === 0 ? '0' : amount >= 1_000_000 ? `${amount / 1_000_000}m` : `${amount / 1_000}k`
+  const chartY = (amount: number) => 150 - (amount / chartAxisMax) * 126
+  const bookedPoints = bookingTrend.map((day, index) => ({ ...day, x: 112 + index * (900 / 6), y: chartY(day.bookedAmount) }))
+  const paidPoints = bookingTrend.map((day, index) => ({ ...day, x: 112 + index * (900 / 6), y: chartY(day.paidAmount) }))
   const smoothPath = (points: typeof bookedPoints) => {
     if (points.length < 2) return ''
     return points.reduce((path, point, index) => {
@@ -86,15 +96,21 @@ export function Dashboard() {
         <span className="revenue-period">7 days</span>
       </div>
       <div className="revenue-line-chart" role="img" aria-label={`Seven-day cumulative booking performance. Booking value ${money(trendCurrent.bookedAmount)}, confirmed payments ${money(trendCurrent.paidAmount)}, outstanding ${money(trendCurrent.outstanding)}.`}>
-        <svg viewBox="0 0 960 132" preserveAspectRatio="none" aria-hidden="true">
+        <svg viewBox="0 0 1040 180" preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <linearGradient id="outstandingGapFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#7897f7" stopOpacity=".20" /><stop offset="100%" stopColor="#7897f7" stopOpacity=".035" /></linearGradient>
             <filter id="bookingLineGlow" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="1.1" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
           </defs>
-          {[28, 72, 116].map((y) => <line key={y} x1="28" x2="932" y1={y} y2={y} className="chart-gridline" />)}
+          {chartTicks.map((tick) => {
+            const y = chartY(tick)
+            return <g key={tick}>
+              <line x1="102" x2="1020" y1={y} y2={y} className="chart-gridline" />
+              <text x="88" y={y + 3.5} textAnchor="end" className="chart-y-label">{chartTickLabel(tick)}</text>
+            </g>
+          })}
           <path d={outstandingArea} fill="url(#outstandingGapFill)" />
           <path d={bookedLine} fill="none" className="chart-booked-line" strokeWidth="1.45" strokeLinecap="round" strokeLinejoin="round" filter="url(#bookingLineGlow)" vectorEffect="non-scaling-stroke" />
-          <path d={paidLine} fill="none" className="chart-paid-line" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" filter="url(#bookingLineGlow)" vectorEffect="non-scaling-stroke" />
+          <path d={paidLine} fill="none" className="chart-paid-line" strokeWidth="1.45" strokeLinecap="round" strokeLinejoin="round" filter="url(#bookingLineGlow)" vectorEffect="non-scaling-stroke" />
           {bookedPoints.map((point) => <g key={`booked-${point.key}`}><circle cx={point.x} cy={point.y} r="2.5" className="chart-booked-dot" /><title>{`${point.label}: booking value ${money(point.bookedAmount)}`}</title></g>)}
           {paidPoints.map((point) => <g key={`paid-${point.key}`}><circle cx={point.x} cy={point.y} r="2.5" className="chart-paid-dot" /><title>{`${point.label}: confirmed payments ${money(point.paidAmount)}`}</title></g>)}
         </svg>

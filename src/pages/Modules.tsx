@@ -54,7 +54,7 @@ function exportVisibleTable() {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = 'dandurgu-records.csv'
+  link.download = 'routehq-records.csv'
   document.body.appendChild(link)
   link.click()
   link.remove()
@@ -78,8 +78,8 @@ function Module({ title, description, actionLabel, actionType, children, options
     try { await deleteRecords(recordType, activeSelectedIds); setSelectedIds((current) => current.filter((id) => !activeSelectedIds.includes(id))) }
     catch (error) { window.alert(error instanceof Error ? error.message : 'The selected records could not be deleted.') }
   }
-  const selectionActions = recordType ? <div className="toolbar selection-toolbar"><span>{activeSelectedIds.length} selected</span><Button variant="secondary" disabled={!activeSelectedIds.length} onClick={() => exportRecords(selectedRecords, `dandurgu-selected-${recordType}.csv`)}><Download size={15} /> Export selected</Button><Button variant="danger" disabled={!activeSelectedIds.length} onClick={() => void removeSelected()}><Trash2 size={15} /> Delete selected</Button></div> : null
-  return <div className="page"><PageHeader title={title} description={description} action={<Button onClick={() => actionType && setAction(actionType)} disabled={!actionType}><Plus size={17} /> {actionLabel}</Button>} /><Toolbar query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} options={options} onExport={() => recordType ? exportRecords(records, `dandurgu-${recordType}.csv`) : exportVisibleTable()} selectionActions={selectionActions} /><SelectionContext.Provider value={selection}>{children}</SelectionContext.Provider><div className="table-footer"><span>{mode === 'demo' ? 'Showing sample records' : 'Showing agency records'}</span><span>{mode === 'demo' ? 'Changes are session-only' : 'Live database records'}</span></div></div>
+  const selectionActions = recordType ? <div className="toolbar selection-toolbar"><span>{activeSelectedIds.length} selected</span><Button variant="secondary" disabled={!activeSelectedIds.length} onClick={() => exportRecords(selectedRecords, `routehq-selected-${recordType}.csv`)}><Download size={15} /> Export selected</Button><Button variant="danger" disabled={!activeSelectedIds.length} onClick={() => void removeSelected()}><Trash2 size={15} /> Delete selected</Button></div> : null
+  return <div className="page"><PageHeader title={title} description={description} action={<Button onClick={() => actionType && setAction(actionType)} disabled={!actionType}><Plus size={17} /> {actionLabel}</Button>} /><Toolbar query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} options={options} onExport={() => recordType ? exportRecords(records, `routehq-${recordType}.csv`) : exportVisibleTable()} selectionActions={selectionActions} /><SelectionContext.Provider value={selection}>{children}</SelectionContext.Provider><div className="table-footer"><span>{mode === 'demo' ? 'Showing sample records' : 'Showing agency records'}</span><span>{mode === 'demo' ? 'Changes are session-only' : 'Live database records'}</span></div></div>
 }
 
 const useFilter = () => {
@@ -170,7 +170,7 @@ export function CustomersPage() {
   const customerPayments = payments.filter((item) => item.customerId === selectedCustomerId)
   const rows = customers.filter((item) => (!controls.filter || (controls.filter === 'Historical' ? item.historical : !item.historical)) && `${item.reference} ${item.name} ${item.phone} ${item.email}`.toLowerCase().includes(controls.query.toLowerCase()))
   return <>
-    <Module title="Customer records" description="Permanent customer profiles and their complete relationship with Dandurgu." actionLabel="Add customer" actionType="customer" recordType="customer" records={rows} options={['Current', 'Historical']} {...controls}><TableShell><table><thead><tr><th><SelectAllCheckbox /></th><th>Customer</th><th>Contact</th><th>Nationality</th><th>Type</th><th>Bookings</th><th>Travellers</th><th>Total paid</th><th>Outstanding</th><th>Actions</th></tr></thead><tbody>{rows.map((customer) => {
+    <Module title="Customer records" description="Permanent customer profiles and their complete relationship with this agency." actionLabel="Add customer" actionType="customer" recordType="customer" records={rows} options={['Current', 'Historical']} {...controls}><TableShell><table><thead><tr><th><SelectAllCheckbox /></th><th>Customer</th><th>Contact</th><th>Nationality</th><th>Type</th><th>Bookings</th><th>Travellers</th><th>Total paid</th><th>Outstanding</th><th>Actions</th></tr></thead><tbody>{rows.map((customer) => {
       const customerBookings = bookings.filter((item) => item.customerId === customer.id)
       const bookingIds = new Set(customerBookings.map((item) => item.id))
       const travellerTotal = travellers.filter((traveller) => bookingIds.has(traveller.bookingId)).length

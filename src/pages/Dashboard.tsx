@@ -10,6 +10,7 @@ export function Dashboard() {
   const { mode, leads, bookings, customers, payments, travellers } = useAppStore()
   const [greetingName, setGreetingName] = useState(mode === 'demo' ? 'guest' : 'there')
   const [trendRange, setTrendRange] = useState<'7d' | '30d' | '6m' | '12m'>('7d')
+  const [hoveredTrendPoint, setHoveredTrendPoint] = useState<{ key: string; x: number; y: number } | null>(null)
   useEffect(() => {
     if (mode === 'demo') { setGreetingName('guest'); return }
     let active = true
@@ -52,14 +53,14 @@ export function Dashboard() {
     const periodBookings = bookings.filter((booking) => booking.status !== 'Cancelled' && booking.bookingDate >= rangeStartKey && booking.bookingDate <= key)
     const bookingIds = new Set(periodBookings.map((booking) => booking.id))
     const bookedAmount = periodBookings.reduce((sum, booking) => sum + booking.agreedPrice, 0)
-    const paidAmount = payments.filter((payment) => { const bookingId = payment.bookingId; return bookingId !== undefined && bookingIds.has(bookingId) && payment.status === 'Confirmed' && payment.date <= key })
-      .reduce((sum, payment) => sum + payment.amount, 0)
+    const confirmedTransactions = payments.filter((payment) => { const bookingId = payment.bookingId; return bookingId !== undefined && bookingIds.has(bookingId) && payment.status === 'Confirmed' && payment.date <= key })
+    const paidAmount = confirmedTransactions.reduce((sum, payment) => sum + payment.amount, 0)
     const label = trendRange === '7d'
       ? date.toLocaleDateString('en-NG', { weekday: 'short', timeZone: 'UTC' })
       : trendRange === '30d'
         ? date.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', timeZone: 'UTC' })
         : date.toLocaleDateString('en-NG', { month: 'short', timeZone: 'UTC' })
-    return { key, label, bookedAmount, paidAmount: Math.min(bookedAmount, paidAmount), outstanding: Math.max(0, bookedAmount - paidAmount) }
+    return { key, label, bookedAmount, paidAmount: Math.min(bookedAmount, paidAmount), outstanding: Math.max(0, bookedAmount - paidAmount), paymentCount: confirmedTransactions.length }
   })
   const trendCurrent = bookingTrend[bookingTrend.length - 1]
   const highestBookingValue = Math.max(0, ...bookingTrend.map((day) => day.bookedAmount))
@@ -118,10 +119,22 @@ export function Dashboard() {
           <p>{money(trendCurrent.paidAmount)} confirmed · {money(trendCurrent.outstanding)} outstanding on these bookings</p>
           <div className="revenue-legend"><span><i className="legend-booked" />Total booking value</span><span><i className="legend-paid" />Confirmed payments</span><span><i className="legend-gap" />Outstanding balance</span></div>
         </div>
-        <select className="revenue-period-select" aria-label="Chart date range" value={trendRange} onChange={(event) => setTrendRange(event.target.value as typeof trendRange)}><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option><option value="6m">Last 6 months</option><option value="12m">Last 12 months</option></select>
+        <select className="revenue-period-select" aria-label="Chart date range" value={trendRange} onChange={(event) => { setTrendRange(event.target.value as typeof trendRange); setHoveredTrendPoint(null) }}><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option><option value="6m">Last 6 months</option><option value="12m">Last 12 months</option></select>
       </div>
-      <div className="revenue-line-chart" role="img" aria-label={`Cumulative booking performance for the selected date range. Booking value ${money(trendCurrent.bookedAmount)}, confirmed payments ${money(trendCurrent.paidAmount)}, outstanding ${money(trendCurrent.outstanding)}.`}>
-        <svg viewBox="0 0 1040 180" preserveAspectRatio="none" aria-hidden="true">
+      <div className="revenue-line-chart" aria-label={`Cumulative booking performance for the selected date range. Booking value ${money(trendCurrent.bookedAmount)}, confirmed payments ${money(trendCurrent.paidAmount)}, outstanding ${money(trendCurrent.outstanding)}.`}>
+        {hoveredTrendPoint && (() => {
+          const point = bookingTrend.find((day) => day.key === hoveredTrendPoint.key)
+          if (!point) return null
+          const fullDate = new Date(`${point.key}T12:00:00Z`).toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+          return <div className="chart-tooltip" role="status" style={{ left: `clamp(0px, calc(${hoveredTrendPoint.x / 1040 * 100}% - 6rem), calc(100% - 12rem))`, top: `${Math.max(4, hoveredTrendPoint.y - 88)}px` }}>
+            <strong>{fullDate}</strong>
+            <span><i className="tooltip-booked" />Booking value <b>{money(point.bookedAmount)}</b></span>
+            <span><i className="tooltip-paid" />Confirmed payments <b>{money(point.paidAmount)}</b></span>
+            <span><i className="tooltip-outstanding" />Outstanding <b>{money(point.outstanding)}</b></span>
+            <small>{point.paymentCount} confirmed transaction{point.paymentCount === 1 ? '' : 's'} recorded</small>
+          </div>
+        })()}
+        <svg viewBox="0 0 1040 180" preserveAspectRatio="none" aria-label="Booking value and confirmed payments over time">
           <defs>
             <linearGradient id="outstandingGapFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#7897f7" stopOpacity=".20" /><stop offset="100%" stopColor="#7897f7" stopOpacity=".035" /></linearGradient>
             <filter id="bookingLineGlow" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="1.1" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
@@ -136,8 +149,14 @@ export function Dashboard() {
           <path d={outstandingArea} fill="url(#outstandingGapFill)" />
           <path d={bookedLine} fill="none" className="chart-booked-line" strokeWidth="1.45" strokeLinecap="round" strokeLinejoin="round" filter="url(#bookingLineGlow)" vectorEffect="non-scaling-stroke" />
           <path d={paidLine} fill="none" className="chart-paid-line" strokeWidth="1.45" strokeLinecap="round" strokeLinejoin="round" filter="url(#bookingLineGlow)" vectorEffect="non-scaling-stroke" />
-          {bookedPoints.map((point) => <g key={`booked-${point.key}`}><circle cx={point.x} cy={point.y} r="2.5" className="chart-booked-dot" /><title>{`${point.label}: booking value ${money(point.bookedAmount)}`}</title></g>)}
-          {paidPoints.map((point) => <g key={`paid-${point.key}`}><circle cx={point.x} cy={point.y} r="2.5" className="chart-paid-dot" /><title>{`${point.label}: confirmed payments ${money(point.paidAmount)}`}</title></g>)}
+          {bookedPoints.map((point) => <g key={`booked-${point.key}`}>
+            <circle cx={point.x} cy={point.y} r="10" className="chart-hit-target" tabIndex={0} role="button" aria-label={`${point.key}: booking value ${money(point.bookedAmount)}`} onMouseEnter={() => setHoveredTrendPoint({ key: point.key, x: point.x, y: point.y })} onMouseLeave={() => setHoveredTrendPoint(null)} onFocus={() => setHoveredTrendPoint({ key: point.key, x: point.x, y: point.y })} onBlur={() => setHoveredTrendPoint(null)} />
+            <circle cx={point.x} cy={point.y} r="2.5" className="chart-booked-dot" />
+          </g>)}
+          {paidPoints.map((point) => <g key={`paid-${point.key}`}>
+            <circle cx={point.x} cy={point.y} r="10" className="chart-hit-target" tabIndex={0} role="button" aria-label={`${point.key}: confirmed payments ${money(point.paidAmount)}`} onMouseEnter={() => setHoveredTrendPoint({ key: point.key, x: point.x, y: point.y })} onMouseLeave={() => setHoveredTrendPoint(null)} onFocus={() => setHoveredTrendPoint({ key: point.key, x: point.x, y: point.y })} onBlur={() => setHoveredTrendPoint(null)} />
+            <circle cx={point.x} cy={point.y} r="2.5" className="chart-paid-dot" />
+          </g>)}
         </svg>
         <div className="revenue-axis" style={{ gridTemplateColumns: `repeat(${bookingTrend.length}, minmax(0, 1fr))` }}>{bookingTrend.map((day) => <span key={day.key}>{day.label}</span>)}</div>
       </div>

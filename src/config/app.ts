@@ -1,6 +1,6 @@
 export const appConfig = {
-  name: 'Dandurgu Headquarters',
-  shortName: 'Dandurgu HQ',
+  name: 'RouteHQ',
+  shortName: 'RouteHQ',
   defaultCurrency: 'NGN',
   timezone: 'Africa/Lagos',
 }

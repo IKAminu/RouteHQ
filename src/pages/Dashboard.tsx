@@ -9,6 +9,7 @@ import { bookingBalance, confirmedPaid, daysFromToday, money, shortDate, todayDa
 export function Dashboard() {
   const { mode, leads, bookings, customers, payments, travellers } = useAppStore()
   const [greetingName, setGreetingName] = useState(mode === 'demo' ? 'guest' : 'there')
+  const [trendRange, setTrendRange] = useState<'7d' | '30d' | '6m' | '12m'>('7d')
   useEffect(() => {
     if (mode === 'demo') { setGreetingName('guest'); return }
     let active = true
@@ -26,16 +27,39 @@ export function Dashboard() {
   const outstanding = bookings.reduce((sum, booking) => sum + bookingBalance(booking, payments), 0)
   const received = payments.filter((payment) => payment.status === 'Confirmed').reduce((sum, payment) => sum + payment.amount, 0)
   const todayParts = todayDate().split('-').map(Number)
-  const bookingTrend = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2] - (6 - index)))
-    const key = date.toISOString().slice(0, 10)
-    const dayBookings = bookings.filter((booking) => booking.status !== 'Cancelled' && booking.bookingDate <= key && booking.bookingDate >= new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2] - 6)).toISOString().slice(0, 10))
-    const bookedAmount = dayBookings.reduce((sum, booking) => sum + booking.agreedPrice, 0)
-    const paidAmount = dayBookings.reduce((sum, booking) => {
-      const confirmedForBooking = payments.filter((payment) => payment.bookingId === booking.id && payment.status === 'Confirmed' && payment.date <= key).reduce((total, payment) => total + payment.amount, 0)
-      return sum + Math.min(booking.agreedPrice, confirmedForBooking)
-    }, 0)
-    return { key, label: date.toLocaleDateString('en-NG', { weekday: 'short', timeZone: 'UTC' }), bookedAmount, paidAmount, outstanding: Math.max(0, bookedAmount - paidAmount) }
+  const todayUTC = new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2]))
+  const shiftMonths = (date: Date, months: number) => {
+    const targetMonth = date.getUTCMonth() + months
+    const year = date.getUTCFullYear() + Math.floor(targetMonth / 12)
+    const month = ((targetMonth % 12) + 12) % 12
+    const day = Math.min(date.getUTCDate(), new Date(Date.UTC(year, month + 1, 0)).getUTCDate())
+    return new Date(Date.UTC(year, month, day))
+  }
+  const startDate = trendRange === '7d'
+    ? new Date(todayUTC.getTime() - 6 * 86400000)
+    : trendRange === '30d'
+      ? new Date(todayUTC.getTime() - 29 * 86400000)
+      : shiftMonths(todayUTC, trendRange === '6m' ? -5 : -11)
+  const dateKey = (date: Date) => date.toISOString().slice(0, 10)
+  const rangeStartKey = dateKey(startDate)
+  const checkpoints = trendRange === '7d'
+    ? Array.from({ length: 7 }, (_, index) => new Date(startDate.getTime() + index * 86400000))
+    : trendRange === '30d'
+      ? Array.from({ length: 5 }, (_, index) => new Date(startDate.getTime() + Math.round(index * 29 / 4) * 86400000))
+      : Array.from({ length: trendRange === '6m' ? 6 : 12 }, (_, index) => shiftMonths(startDate, index))
+  const bookingTrend = checkpoints.map((date) => {
+    const key = dateKey(date)
+    const periodBookings = bookings.filter((booking) => booking.status !== 'Cancelled' && booking.bookingDate >= rangeStartKey && booking.bookingDate <= key)
+    const bookingIds = new Set(periodBookings.map((booking) => booking.id))
+    const bookedAmount = periodBookings.reduce((sum, booking) => sum + booking.agreedPrice, 0)
+    const paidAmount = payments.filter((payment) => bookingIds.has(payment.bookingId) && payment.status === 'Confirmed' && payment.date <= key)
+      .reduce((sum, payment) => sum + payment.amount, 0)
+    const label = trendRange === '7d'
+      ? date.toLocaleDateString('en-NG', { weekday: 'short', timeZone: 'UTC' })
+      : trendRange === '30d'
+        ? date.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+        : date.toLocaleDateString('en-NG', { month: 'short', timeZone: 'UTC' })
+    return { key, label, bookedAmount, paidAmount: Math.min(bookedAmount, paidAmount), outstanding: Math.max(0, bookedAmount - paidAmount) }
   })
   const trendCurrent = bookingTrend[bookingTrend.length - 1]
   const highestBookingValue = Math.max(0, ...bookingTrend.map((day) => day.bookedAmount))
@@ -50,8 +74,9 @@ export function Dashboard() {
   const chartTicks = Array.from({ length: Math.round(chartAxisMax / chartStep) + 1 }, (_, index) => index * chartStep)
   const chartTickLabel = (amount: number) => amount === 0 ? '0' : amount >= 1_000_000 ? `${amount / 1_000_000}m` : `${amount / 1_000}k`
   const chartY = (amount: number) => 150 - (amount / chartAxisMax) * 126
-  const bookedPoints = bookingTrend.map((day, index) => ({ ...day, x: 112 + index * (900 / 6), y: chartY(day.bookedAmount) }))
-  const paidPoints = bookingTrend.map((day, index) => ({ ...day, x: 112 + index * (900 / 6), y: chartY(day.paidAmount) }))
+  const chartX = (index: number) => 112 + index * (900 / Math.max(1, bookingTrend.length - 1))
+  const bookedPoints = bookingTrend.map((day, index) => ({ ...day, x: chartX(index), y: chartY(day.bookedAmount) }))
+  const paidPoints = bookingTrend.map((day, index) => ({ ...day, x: chartX(index), y: chartY(day.paidAmount) }))
   const smoothPath = (points: typeof bookedPoints) => {
     if (points.length < 2) return ''
     return points.reduce((path, point, index) => {
@@ -88,14 +113,14 @@ export function Dashboard() {
     <section className="revenue-panel">
       <div className="revenue-panel-head">
         <div>
-          <span className="eyebrow">BOOKING PERFORMANCE · LAST 7 DAYS</span>
+          <span className="eyebrow">BOOKING PERFORMANCE · {trendRange === '7d' ? 'LAST 7 DAYS' : trendRange === '30d' ? 'LAST 30 DAYS' : trendRange === '6m' ? 'LAST 6 MONTHS' : 'LAST 12 MONTHS'}</span>
           <h2>{money(trendCurrent.bookedAmount)}</h2>
           <p>{money(trendCurrent.paidAmount)} confirmed · {money(trendCurrent.outstanding)} outstanding on these bookings</p>
           <div className="revenue-legend"><span><i className="legend-booked" />Total booking value</span><span><i className="legend-paid" />Confirmed payments</span><span><i className="legend-gap" />Outstanding balance</span></div>
         </div>
-        <span className="revenue-period">7 days</span>
+        <select className="revenue-period-select" aria-label="Chart date range" value={trendRange} onChange={(event) => setTrendRange(event.target.value as typeof trendRange)}><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option><option value="6m">Last 6 months</option><option value="12m">Last 12 months</option></select>
       </div>
-      <div className="revenue-line-chart" role="img" aria-label={`Seven-day cumulative booking performance. Booking value ${money(trendCurrent.bookedAmount)}, confirmed payments ${money(trendCurrent.paidAmount)}, outstanding ${money(trendCurrent.outstanding)}.`}>
+      <div className="revenue-line-chart" role="img" aria-label={`Cumulative booking performance for the selected date range. Booking value ${money(trendCurrent.bookedAmount)}, confirmed payments ${money(trendCurrent.paidAmount)}, outstanding ${money(trendCurrent.outstanding)}.`}>
         <svg viewBox="0 0 1040 180" preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <linearGradient id="outstandingGapFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#7897f7" stopOpacity=".20" /><stop offset="100%" stopColor="#7897f7" stopOpacity=".035" /></linearGradient>
@@ -114,7 +139,7 @@ export function Dashboard() {
           {bookedPoints.map((point) => <g key={`booked-${point.key}`}><circle cx={point.x} cy={point.y} r="2.5" className="chart-booked-dot" /><title>{`${point.label}: booking value ${money(point.bookedAmount)}`}</title></g>)}
           {paidPoints.map((point) => <g key={`paid-${point.key}`}><circle cx={point.x} cy={point.y} r="2.5" className="chart-paid-dot" /><title>{`${point.label}: confirmed payments ${money(point.paidAmount)}`}</title></g>)}
         </svg>
-        <div className="revenue-axis">{bookingTrend.map((day) => <span key={day.key}>{day.label}</span>)}</div>
+        <div className="revenue-axis" style={{ gridTemplateColumns: `repeat(${bookingTrend.length}, minmax(0, 1fr))` }}>{bookingTrend.map((day) => <span key={day.key}>{day.label}</span>)}</div>
       </div>
     </section>
     <div className="dashboard-grid">

@@ -12,8 +12,8 @@ The following migrations have been applied to the RouteHQ Supabase project:
 - `20261116185021_routehq_multitenant_platform_and_operations`
 - `20261116185120_tighten_tenant_policies_and_indexes`
 - `20261116185224_secure_private_document_storage_and_fk_deletes`
-- `202611161854xx_enforce_permission_delegation_and_team_seats` (exact version is recorded in Supabase migration history)
-- `2026111618xxxx_fix_seat_limit_transition_checks` (exact version is recorded in Supabase migration history)
+- `20261116185430_enforce_permission_delegation_and_team_seats`
+- `20261116185509_fix_seat_limit_transition_checks`
 
 The initial schema and follow-up SQL were applied through the connected Supabase management tools. The SQL source files have not yet been exported into this repository. **Do not treat this README as a reproducible migration bundle.** Before the next database change, export and commit the exact applied SQL migrations here, then use versioned migrations for all subsequent changes.
 

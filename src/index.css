@@ -1524,3 +1524,21 @@
 :root[data-theme='dark'] .button-secondary:disabled,
 :root[data-theme='dark'] button:disabled { color: #85858e; opacity: .8; }
 :root[data-theme='dark'] .chart-gridline { stroke: rgb(180 180 190 / 16%); }
+
+
+/* Final night-mode legibility pass for small labels and secondary metadata. */
+:root[data-theme='dark'] .brand span,
+:root[data-theme='dark'] .sidebar-foot span,
+:root[data-theme='dark'] .revenue-panel-head .eyebrow,
+:root[data-theme='dark'] .revenue-period,
+:root[data-theme='dark'] .theme-option small,
+:root[data-theme='dark'] .manual-screen-top small,
+:root[data-theme='dark'] .guide-index a,
+:root[data-theme='dark'] .guide-index span,
+:root[data-theme='dark'] .manual-id-name span,
+:root[data-theme='dark'] .manual-id-parts span {
+  color: #a6a6af;
+}
+:root[data-theme='dark'] .manual-step-number {
+  color: #f0c18d;
+}

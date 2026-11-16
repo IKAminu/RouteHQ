@@ -1710,3 +1710,14 @@
   :root .revenue-panel-head { flex-wrap: wrap; }
   :root .revenue-period-select { max-width: none; }
 }
+
+
+/* Keep the dashboard timeline control visually consistent across browsers. */
+:root .revenue-period-select {
+  appearance: auto;
+  min-width: 8.5rem;
+  line-height: 1.25;
+}
+:root[data-theme='dark'] .revenue-period-select:focus-visible {
+  outline-color: #8b9ff0;
+}

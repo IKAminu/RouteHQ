@@ -52,7 +52,7 @@ export function Dashboard() {
     const periodBookings = bookings.filter((booking) => booking.status !== 'Cancelled' && booking.bookingDate >= rangeStartKey && booking.bookingDate <= key)
     const bookingIds = new Set(periodBookings.map((booking) => booking.id))
     const bookedAmount = periodBookings.reduce((sum, booking) => sum + booking.agreedPrice, 0)
-    const paidAmount = payments.filter((payment) => bookingIds.has(payment.bookingId) && payment.status === 'Confirmed' && payment.date <= key)
+    const paidAmount = payments.filter((payment) => Boolean(payment.bookingId) && bookingIds.has(payment.bookingId!) && payment.status === 'Confirmed' && payment.date <= key)
       .reduce((sum, payment) => sum + payment.amount, 0)
     const label = trendRange === '7d'
       ? date.toLocaleDateString('en-NG', { weekday: 'short', timeZone: 'UTC' })

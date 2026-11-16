@@ -162,7 +162,7 @@ export function AppLayout() {
               {(accountName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('') || accountEmail.slice(0, 2) || 'DU').toUpperCase()}
             </button>
             {accountOpen && <section className="account-popover" aria-label="Account centre">
-              <div className="account-identity"><div className="account-avatar">{(accountName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('') || 'DU').toUpperCase()}</div><div><strong>{accountName || 'Dandurgu user'}</strong><span>{accountEmail}</span></div></div>
+              <div className="account-identity"><div className="account-avatar">{(accountName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('') || 'DU').toUpperCase()}</div><div><strong>{accountName || 'RouteHQ user'}</strong><span>{accountEmail}</span></div></div>
               <div className="account-detail"><span>Workspace</span><strong>RouteHQ workspace</strong></div>
               <div className="account-detail"><span>Access</span><strong>{mode === 'live' ? 'Authorised account' : 'Guest demonstration'}</strong></div>
               {mode === 'live' ? <div className="account-security"><ShieldCheck size={16} /><div><strong>Two-step verification</strong><span>Authenticator app enabled</span></div></div> : <div className="account-security account-demo-note"><ShieldCheck size={16} /><div><strong>Demo environment</strong><span>Changes are not saved to the agency database</span></div></div>}

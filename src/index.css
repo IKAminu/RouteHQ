@@ -1542,3 +1542,29 @@
 :root[data-theme='dark'] .manual-step-number {
   color: #f0c18d;
 }
+
+
+/* Dynamic booking chart Y-axis labels and Notes search field alignment. */
+:root .revenue-line-chart svg { height: 180px; }
+:root .chart-y-label {
+  fill: #777780;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+:root .chart-gridline { stroke: rgb(128 128 138 / 16%); stroke-width: 1; stroke-dasharray: 3 6; vector-effect: non-scaling-stroke; }
+:root[data-theme='dark'] .chart-y-label { fill: #a6a6af; }
+:root[data-theme='dark'] .notes-search {
+  border-color: #303036;
+  background: linear-gradient(180deg, #19191e, #151518);
+  color: #a6a6af;
+}
+:root[data-theme='dark'] .notes-search .field {
+  border: 0;
+  background: transparent;
+  color: #f0f0f2;
+  box-shadow: none;
+}
+:root[data-theme='dark'] .notes-search .field::placeholder { color: #92929c; }
+@media (max-width: 720px) {
+  :root .revenue-line-chart svg { height: 170px; }
+}

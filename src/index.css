@@ -1409,3 +1409,51 @@
   background: #85858d;
   box-shadow: 0 0 0 .2rem rgb(133 133 141 / 13%);
 }
+
+/* Two-series booking performance chart and uploaded RouteHQ wordmark. */
+:root .brand-logo {
+  display: block;
+  width: 1.8rem;
+  height: 1.8rem;
+  flex: 0 0 1.8rem;
+  object-fit: contain;
+}
+:root .revenue-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .85rem;
+  margin-top: .65rem;
+}
+:root .revenue-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  color: var(--color-muted);
+  font-size: .62rem;
+}
+:root .revenue-legend i {
+  display: inline-block;
+  width: .95rem;
+  height: 2px;
+  border-radius: 2px;
+}
+:root .legend-booked { background: #d7d7dc; }
+:root .legend-paid { background: #6888ee; }
+:root .legend-gap { height: 7px !important; background: rgb(104 136 238 / 28%); }
+:root .chart-gridline { stroke: rgb(128 128 138 / 13%); stroke-width: 1; stroke-dasharray: 3 6; vector-effect: non-scaling-stroke; }
+:root .chart-booked-line { stroke: #b9b9c2; }
+:root .chart-paid-line { stroke: #6888ee; }
+:root .chart-booked-dot { fill: #f4f4f5; stroke: #777780; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+:root .chart-paid-dot { fill: #6888ee; stroke: #a9baff; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+:root[data-theme='dark'] .revenue-panel {
+  background: radial-gradient(ellipse at 48% 0%, rgb(255 255 255 / 5%), transparent 68%), linear-gradient(155deg,#151518,#101013 76%);
+}
+:root[data-theme='dark'] .chart-booked-line { stroke: #eeeeF2; }
+:root[data-theme='dark'] .chart-paid-line { stroke: #7795ff; }
+:root[data-theme='dark'] .chart-booked-dot { fill: #fff; stroke: #aaaab3; }
+:root[data-theme='dark'] .chart-paid-dot { fill: #7795ff; stroke: #b4c3ff; }
+@media (max-width: 720px) {
+  :root .revenue-legend { gap: .55rem .75rem; }
+  :root .revenue-legend span { font-size: .58rem; }
+  :root .revenue-line-chart svg { height: 118px; }
+}

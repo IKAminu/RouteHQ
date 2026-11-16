@@ -1,16 +1,10 @@
-name: Deploy RouteHQ preview to GitHub Pages
+name: Deploy RouteHQ demo preview to GitHub Pages
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      source_branch:
-        description: Branch to build for the preview
-        required: true
-        default: main
-        type: string
 
 permissions:
   contents: read
@@ -28,10 +22,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Check out selected RouteHQ branch
+      - name: Check out RouteHQ main
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_branch || 'main' }}
+          ref: main
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
@@ -50,7 +44,7 @@ jobs:
       - name: Check TypeScript
         run: pnpm typecheck
 
-      - name: Build preview
+      - name: Build demo preview
         run: pnpm build
         env:
           VITE_BASE_PATH: /RouteHQ/
@@ -66,6 +60,6 @@ jobs:
         with:
           path: ./dist
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy demo preview
         id: deployment
         uses: actions/deploy-pages@v4

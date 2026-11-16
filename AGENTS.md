@@ -1,37 +1,79 @@
-# figma-make-app
+# RouteHQ engineering guide
 
-React + Vite + Tailwind CSS project running inside Figma Make.
+RouteHQ is a commercial travel-agency SaaS in product development. The public GitHub Pages deployment is a demonstration preview only. It must not be connected to customer production data.
 
-## Development Server
+## Canonical project structure
 
-A Vite development server is **already running** on `$PORT` (default 8443). You don't need to start it manually.
+- `src/main.tsx` — browser entrypoint and stylesheet import.
+- `src/app/` — application composition and route definitions.
+- `src/auth/` — current preview authentication gate. The email allowlist is temporary and must not become the SaaS tenant authorisation model.
+- `src/components/` — reusable interface components.
+- `src/config/` — application configuration.
+- `src/data/mockData.ts` — synthetic demonstration records only.
+- `src/hooks/useAppStore.tsx` — current application state and workflow layer.
+- `src/layouts/` — shared application shell.
+- `src/lib/` — business calculations and current Supabase adapter.
+- `src/pages/` — dashboard and operational modules.
+- `src/services/` — service boundary.
+- `src/theme/` — appearance preferences.
+- `src/types/` — shared domain types.
+- `supabase/migrations/` — versioned SQL migrations and migration notes.
+- `.github/workflows/` — validation and preview deployment.
 
-- Preview URL: The user can access the running app through the preview panel
-- Hot reload: Changes to source files are reflected immediately
+## Current stack
 
-## Project Structure
+- Node.js 22, pnpm 10
+- React 19, TypeScript, Vite 8
+- Tailwind CSS 4, React Router 7
+- Supabase JS client; PostgreSQL is the intended commercial database
+- GitHub Actions; GitHub Pages is currently preview hosting
 
-This is the canonical project structure. Start with task-relevant files below. Only follow imports or inspect other files when required, when a documented path is missing, or when the repository contradicts this guide.
+Useful commands:
 
-- `src/main.tsx` - React entrypoint; imports `src/index.css` and mounts `src/App.tsx` into the `#root` element
-- `src/App.tsx` - Primary application component and the usual starting point for UI work
-- `src/index.css` - Global CSS entrypoint and Tailwind CSS v4 import
-- `index.html` - Vite HTML shell containing the `#root` element and loading `src/main.tsx`
-- `package.json` - Project dependencies and the Vite build, development, preview, and formatting scripts
-- `vite.config.ts` - Vite configuration with React, Tailwind CSS v4, and Figma Make plugins plus the `@` alias for `src`
-- `.mise.toml` - Toolchain versions for Node.js and pnpm
+```sh
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm build
+pnpm format
+```
 
-## Dependencies
+## Product and architecture boundaries
 
-- Runtime: React 19 and React DOM 19
-- Styling: Tailwind CSS v4 with the `@tailwindcss/vite` plugin
-- Build tooling: Vite 8, TypeScript 5.7, and `@vitejs/plugin-react`
-- Formatting: oxfmt
+- Build a travel-agency operations product, not a generic CRM.
+- Preserve useful workflows unless a documented product or technical reason requires changing them.
+- The current demo mode uses synthetic in-memory records. Never add real customer, lead, traveller, passport, payment or supplier data to this public repository.
+- The existing Supabase project is Dandurgu's system. Do not point RouteHQ commercial tenants at it, weaken its policies, or migrate its production data as part of routine development.
+- RouteHQ commercial data requires a separate Supabase project and a reviewed multi-tenant schema.
+- Every agency-owned record must be scoped to an agency and protected by database-enforced Row Level Security. Frontend filtering is never a security boundary.
+- Never expose service-role keys, payment secrets, Meta tokens or other private credentials in browser code or `VITE_*` variables.
+- Sensitive documents must use private storage and controlled, short-lived access. A URL stored in a row is not a security control.
+- Financial changes must preserve an auditable transaction history. Prefer server-side database transactions for multi-record operations.
+- Do not implement self-service signup, billing entitlements or cross-agency access until the backend authorization model is ready.
 
-## Styling
+## Approved design direction
 
-This project uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin configured in `vite.config.ts`. `src/index.css` imports Tailwind with `@import 'tailwindcss';`. Use Tailwind utility classes directly in JSX and put global CSS or Tailwind v4 theme customization in `src/index.css`. This scaffold does not need a Tailwind config file or PostCSS config.
+- Premium charcoal, graphite and obsidian surfaces.
+- Restrained orange brand accent and restrained blue secondary accent.
+- Strong readable text contrast in both light and night modes.
+- Subtle surface depth and gradients; avoid excessive borders, glow, radius or decorative effects.
+- Compact, deliberate corner radii and consistent spacing.
+- Use Inter/Geist-style typography, tabular numerals for financial values, and Lucide icons.
+- Preserve the same design system across all modules and responsive breakpoints.
+- Prioritise clear workflows, accessible controls, useful empty/loading/error states and keyboard focus.
 
-`src/main.tsx` imports `src/index.css`, so global font wiring belongs in `src/index.css`. Keep CSS `@import` statements first, then add any `@font-face` rules and font-family defaults there.
+## Development protocol
 
-Tailwind emits utility classes in `@layer utilities`, and CSS outside any cascade layer overrides every layer regardless of specificity. Put global element styles, such as resets and defaults for `body`, headings, `button`, or `input`, inside `@layer base { ... }` so utility classes on those elements still apply. Tailwind's Preflight already applies `box-sizing: border-box`, removes default margins, and sets `font: inherit` on form controls, so do not repeat those rules.
+1. Inspect the existing implementation and dependencies before editing.
+2. State the problem, intended outcome and acceptance criteria for significant changes.
+3. Keep changes scoped and avoid unnecessary rewrites or dependencies.
+4. Do not silently change product direction, data contracts or database architecture.
+5. Add or update versioned migrations for schema changes; never make undocumented production edits.
+6. Test tenant isolation, permissions and financial invariants when those systems are introduced.
+7. Run `pnpm typecheck` and `pnpm build` for application changes.
+8. Review the actual workflow result before claiming a change is deployed.
+9. Keep secrets and real customer data out of Git history.
+10. Document important decisions and known limitations.
+
+## Productisation rule
+
+A working demo is not a production SaaS. Do not describe a feature as commercially ready until its persistence, tenant isolation, authorization, error handling, operational support and relevant tests have been verified.

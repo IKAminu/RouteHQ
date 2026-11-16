@@ -15,8 +15,8 @@ RouteHQ is a travel-agency operations platform in product development. It brings
 ## Run locally
 
 1. Install Node.js 22 and pnpm 10.
-2. Run `pnpm install`.
-3. Copy `.env.example` to `.env.local`.
+2. Run `pnpm install --frozen-lockfile`.
+3. Copy `.env.example` to `.env.local`, if present.
 4. Set `VITE_USE_MOCK_DATA=true` for the safe demo.
 5. Run `pnpm dev`.
 
@@ -24,27 +24,29 @@ Checks: `pnpm typecheck` and `pnpm build`.
 
 ## Demo and live data
 
-- `VITE_USE_MOCK_DATA=true` loads bundled demonstration records. Changes exist only in browser memory and reset when the session reloads.
+- `VITE_USE_MOCK_DATA=true` loads bundled synthetic demonstration records. Changes exist only in browser memory and reset when the session reloads.
 - `VITE_USE_MOCK_DATA=false` activates the legacy Dandurgu Supabase access path. Do not use that path for RouteHQ customer tenants.
 - Never put a Supabase secret/service-role key, payment secret, Meta token, or Google credential in a `VITE_*` variable. Browser variables are public.
 
 ## Preview deployment
 
-The `.github/workflows/deploy-pages.yml` workflow deploys automatically when the application branch or the deployment workflow on `main` changes. The project preview is:
+The GitHub Pages workflow deploys the `main` branch when it is updated, or when the workflow is manually run. It always builds with `VITE_USE_MOCK_DATA=true`.
 
-https://ikaminu.github.io/RouteHQ/
+Preview: https://ikaminu.github.io/RouteHQ/
 
-The workflow runs TypeScript checks and a production build before publishing. A failed build does not replace the last successful deployment.
-
-## Themes
-
-Light mode and Night mode are available in Settings. The selected appearance is stored locally in the browser and is not an agency-wide setting.
+The preview is not a production tenant environment. A successful preview build does not certify the application for customer data.
 
 ## Productisation boundary
 
-This repository is the product preview, not yet the complete commercial SaaS platform. The existing Supabase project is named `DandurguAgencyManager`, contains Dandurgu's operational tables, and has Dandurgu-specific authorised-account policies. Those tables do not yet have agency/tenant ownership columns.
+RouteHQ needs three distinct surfaces:
 
-Before external agencies can register or store real records, RouteHQ needs a separate production backend and a reviewed tenant model. See [PRODUCT_READINESS.md](./PRODUCT_READINESS.md).
+1. Marketing website: product explanation, features, plans, demo request, FAQs, support and legal pages.
+2. Application: authenticated agency workspaces.
+3. Platform operations: internal administration for tenant onboarding, subscriptions, support, usage, security events and billing reconciliation.
+
+The existing Supabase project named `DandurguAgencyManager` is the original Dandurgu system. Its operational tables and authorised-account policies are Dandurgu-specific. They do not yet provide commercial multi-tenant isolation.
+
+Before external agencies can register or store real records, RouteHQ needs a separate production backend, a reviewed tenant model, membership-based authorization, database-enforced RLS, private document storage, backups and cross-tenant tests. See [PRODUCT_READINESS.md](./PRODUCT_READINESS.md).
 
 ## Security
 

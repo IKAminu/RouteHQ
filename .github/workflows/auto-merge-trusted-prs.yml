@@ -1,0 +1,43 @@
+name: Auto-merge trusted RouteHQ pull requests
+
+on:
+  workflow_run:
+    workflows:
+      - Validate RouteHQ
+    types:
+      - completed
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge-after-validation:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge the matching trusted same-repository pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          PR_NUMBER="$(gh pr list --repo "$REPOSITORY" --state open --json number,headRefOid,headRepository,author,isDraft --jq '
+            [.[] |
+              select(
+                .headRefOid == env.HEAD_SHA and
+                .headRepository.nameWithOwner == env.REPOSITORY and
+                .author.login == "IKAminu" and
+                .isDraft == false
+              )
+            ][0].number // empty
+          ')"
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open, ready, same-repository PR by the repository owner matches this successful validation run."
+            exit 0
+          fi
+
+          gh pr merge "$PR_NUMBER" --repo "$REPOSITORY" --squash --delete-branch

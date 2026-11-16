@@ -50,7 +50,7 @@ export function AppLayout() {
       const knownNames: Record<string, string> = { 'ikaminumail@gmail.com': 'IK', 'dandurguairtravels@gmail.com': 'Aliyu' }
       const fallbackName = email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (letter: string) => letter.toUpperCase())
       setAccountEmail(email)
-      setAccountName(metadataName || knownNames[email.toLowerCase()] || fallbackName || 'Dandurgu user')
+      setAccountName(metadataName || knownNames[email.toLowerCase()] || fallbackName || 'RouteHQ user')
     })
     return () => { active = false }
   }, [mode])
@@ -141,7 +141,7 @@ export function AppLayout() {
     <a className="skip-link" href="#main-content">Skip to main content</a>
     {saveNotice && <div className={`save-toast ${saveNotice.includes('Could not') ? 'save-toast-error' : ''}`} role="status" aria-live="polite">{saveNotice.includes('Updating') || saveNotice.includes('Saving') ? <LoaderCircle size={16} className="toast-spinner" /> : <CheckCircle2 size={16} />}<span>{saveNotice}</span></div>}
     <aside className={`sidebar ${menuOpen ? 'sidebar-open' : ''}`}>
-      <div className="brand"><img className="brand-logo" src={`${import.meta.env.BASE_URL}brand/logo.png`} alt="Dandurgu logo" /><div className="brand-name"><strong>Dandurgu</strong><span>Headquarters</span></div><IconButton label="Close navigation" className="mobile-close" onClick={() => setMenuOpen(false)}><X size={18} /></IconButton></div>
+      <div className="brand"><span className="brand-monogram" aria-hidden="true">R</span><div className="brand-name"><strong>RouteHQ</strong><span>Travel operations</span></div><IconButton label="Close navigation" className="mobile-close" onClick={() => setMenuOpen(false)}><X size={18} /></IconButton></div>
       <nav>{groups.map((group) => <div className="nav-group" key={group.label}><p>{group.label}</p>{group.links.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}><Icon size={18} /><span>{label}</span></NavLink>)}</div>)}</nav>
       <div className={`sidebar-foot ${mode === 'live' ? (isOnline ? 'mode-live' : 'mode-offline') : 'mode-demo'}`}><span className="status-dot" /> <div><strong>{mode === 'live' ? (isOnline ? 'Live' : navigator.onLine ? 'Connection issue' : 'Offline') : 'Demo Mode'}</strong><span>{mode === 'live' ? (isOnline ? 'Connected to server' : navigator.onLine ? 'Server unavailable' : 'No internet connection') : 'Session-only sample records'}</span></div></div>
     </aside>
@@ -163,7 +163,7 @@ export function AppLayout() {
             </button>
             {accountOpen && <section className="account-popover" aria-label="Account centre">
               <div className="account-identity"><div className="account-avatar">{(accountName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('') || 'DU').toUpperCase()}</div><div><strong>{accountName || 'Dandurgu user'}</strong><span>{accountEmail}</span></div></div>
-              <div className="account-detail"><span>Workspace</span><strong>Dandurgu Headquarters</strong></div>
+              <div className="account-detail"><span>Workspace</span><strong>RouteHQ workspace</strong></div>
               <div className="account-detail"><span>Access</span><strong>{mode === 'live' ? 'Authorised account' : 'Guest demonstration'}</strong></div>
               {mode === 'live' ? <div className="account-security"><ShieldCheck size={16} /><div><strong>Two-step verification</strong><span>Authenticator app enabled</span></div></div> : <div className="account-security account-demo-note"><ShieldCheck size={16} /><div><strong>Demo environment</strong><span>Changes are not saved to the agency database</span></div></div>}
               <button className="account-logout" type="button" onClick={() => { setAccountOpen(false); if (mode === 'live') void supabase?.auth.signOut(); else window.location.reload() }}><LogOut size={16} /> {mode === 'live' ? 'Sign out' : 'Exit demo'}</button>

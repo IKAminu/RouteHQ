@@ -33,6 +33,9 @@ export function Dashboard() {
     return { key, label: day.toLocaleDateString('en-NG', { weekday: 'short' }), amount }
   })
   const weeklyMax = Math.max(1, ...weeklyRevenue.map((day) => day.amount))
+  const chartPoints = weeklyRevenue.map((day, index) => ({ ...day, x: 28 + index * (904 / 6), y: 104 - (day.amount / weeklyMax) * 76 }))
+  const chartLine = chartPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  const chartArea = `${chartLine} L ${chartPoints[chartPoints.length - 1].x} 116 L ${chartPoints[0].x} 116 Z`
   const weeklyTotal = weeklyRevenue.reduce((sum, day) => sum + day.amount, 0)
   const hour = Number(new Intl.DateTimeFormat('en-NG', { timeZone: 'Africa/Lagos', hour: '2-digit', hourCycle: 'h23' }).format(new Date()))
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
@@ -52,7 +55,7 @@ export function Dashboard() {
     <section className="metrics-grid">{metrics.map(({ label, value, detail, icon: Icon, to }) => <Link className="metric" to={to} key={label}><div className="metric-head"><span>{label}</span><Icon size={18} /></div><strong>{value}</strong><p>{detail}</p></Link>)}</section>
     <section className="revenue-panel">
       <div className="revenue-panel-head"><div><span className="eyebrow">PAYMENTS · LAST 7 DAYS</span><h2>{money(weeklyTotal)}</h2><p>Confirmed payments received during the past week</p></div><span className="revenue-period">7 days</span></div>
-      <div className="revenue-chart" role="img" aria-label={`Seven-day confirmed payments chart. Total ${money(weeklyTotal)}.`}>{weeklyRevenue.map((day) => <div className="revenue-day" key={day.key}><div className="revenue-bar-track"><div className="revenue-bar" style={{ height: `${Math.max(day.amount ? 8 : 2, day.amount / weeklyMax * 100)}%` }} title={`${day.label}: ${money(day.amount)}`} /></div><span>{day.label}</span></div>)}</div>
+      <div className="revenue-line-chart" role="img" aria-label={`Seven-day confirmed payments line graph. Total ${money(weeklyTotal)}.`}><svg viewBox="0 0 960 132" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#d8d8df" stopOpacity=".24" /><stop offset="100%" stopColor="#d8d8df" stopOpacity="0" /></linearGradient><linearGradient id="revenueLineStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#777780" /><stop offset="55%" stopColor="#d5d5dc" /><stop offset="100%" stopColor="#f0a36b" /></linearGradient><filter id="revenueLineGlow" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="2.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><path d={chartArea} fill="url(#revenueAreaFill)" /><path d={chartLine} fill="none" stroke="url(#revenueLineStroke)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" filter="url(#revenueLineGlow)" vectorEffect="non-scaling-stroke" />{chartPoints.map((point) => <g key={point.key}><circle cx={point.x} cy={point.y} r="3.5" fill="#f4f4f5" stroke="#777780" strokeWidth="1.5" vectorEffect="non-scaling-stroke" /><title>{`${point.label}: ${money(point.amount)}`}</title></g>)}</svg><div className="revenue-axis">{weeklyRevenue.map((day) => <span key={day.key}>{day.label}</span>)}</div></div>
     </section>
     <div className="dashboard-grid">
       <section className="content-section span-two">

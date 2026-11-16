@@ -93,7 +93,7 @@ jobs:
         run: |
           set -euo pipefail
           IMPORT_BRANCH="import/agency-managerdan"
-          git switch -c "$IMPORT_BRANCH"
+          git switch -C "$IMPORT_BRANCH"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
@@ -102,7 +102,7 @@ jobs:
             exit 1
           fi
           git commit -m "Import AgencyManagerDan application baseline"
-          git push --set-upstream origin "$IMPORT_BRANCH"
+          git push --force-with-lease --set-upstream origin "$IMPORT_BRANCH"
           gh pr create \
             --base main \
             --head "$IMPORT_BRANCH" \

@@ -4,18 +4,16 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { waitForMinimumLoadingTime } from '@/lib/loading'
 
-const ALLOWED_EMAILS = new Set([
-  'ikaminumail@gmail.com',
-  'dandurguairtravels@gmail.com',
-])
-
 export type AppMode = 'demo' | 'live'
 type AuthStep = 'login' | 'mfa' | 'enroll'
 
 function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Session) => void; onDemo: () => void }) {
   const [step, setStep] = useState<AuthStep>('login')
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [info, setInfo] = useState('')
   const [code, setCode] = useState('')
   const [factorId, setFactorId] = useState('')
   const [challengeId, setChallengeId] = useState('')
@@ -66,13 +64,39 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
     setBusy(true)
     try {
       const normalizedEmail = email.trim().toLowerCase()
-      if (!ALLOWED_EMAILS.has(normalizedEmail)) throw new Error('This email address is not authorised to access RouteHQ.')
       const { data, error: loginError } = await supabase!.auth.signInWithPassword({ email: normalizedEmail, password })
       if (loginError) throw loginError
       if (!data.session) throw new Error('Sign-in did not return a valid session.')
       await beginSecondFactor()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not sign in. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleSignup = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError('')
+    setInfo('')
+    setBusy(true)
+    try {
+      const normalizedEmail = email.trim().toLowerCase()
+      const { data, error: signupError } = await supabase!.auth.signUp({
+        email: normalizedEmail,
+        password,
+        options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.origin },
+      })
+      if (signupError) throw signupError
+      if (data.session) {
+        setInfo('Your account has been created. Secure it with an authenticator to continue.')
+        await beginSecondFactor()
+      } else {
+        setInfo('Account created. Check your email to confirm your address, then sign in to submit your agency application.')
+        setAuthMode('login')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not create your account. Please try again.')
     } finally {
       setBusy(false)
     }
@@ -131,19 +155,22 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
     <section className="auth-panel">
       <img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" />
       <p className="auth-eyebrow">TRAVEL AGENCY OPERATIONS</p>
-      <h1>{step === 'login' ? 'Headquarters sign in' : step === 'enroll' ? 'Secure your account' : 'Two-step verification'}</h1>
+      <h1>{step === 'login' ? (authMode === 'signup' ? 'Create your RouteHQ account' : 'Sign in to RouteHQ') : step === 'enroll' ? 'Secure your account' : 'Two-step verification'}</h1>
       <p className="auth-description">
-        {step === 'login' ? 'Sign in with your authorised agency account.' : step === 'enroll' ? 'Connect an authenticator app to your account. This is required before accessing agency records.' : 'Enter the current six-digit code from your authenticator app.'}
+        {step === 'login' ? (authMode === 'signup' ? 'Create an account first. You will submit your agency details after verifying your email.' : 'Sign in to manage your agency or submit an application to join RouteHQ.') : step === 'enroll' ? 'Connect an authenticator app to your account. This is required before accessing agency records.' : 'Enter the current six-digit code from your authenticator app.'}
       </p>
 
-      {step === 'login' && <form className="auth-form" onSubmit={handleLogin}>
+      {step === 'login' && <form className="auth-form" onSubmit={authMode === 'signup' ? handleSignup : handleLogin}>
+        {authMode === 'signup' && <label className="field-group">Your full name<input className="field" autoComplete="name" required value={fullName} onChange={(event) => setFullName(event.target.value)} /></label>}
         <label className="field-group">Email address<input className="field" type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
-        <label className="field-group">Password<input className="field" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} /></label>
+        <label className="field-group">Password<input className="field" type="password" autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} minLength={authMode === 'signup' ? 10 : undefined} required value={password} onChange={(event) => setPassword(event.target.value)} /></label>
+        {authMode === 'signup' && <p className="auth-help">Use at least 10 characters. Email confirmation may be required before you can continue.</p>}
+        {info && <p className="auth-info" role="status">{info}</p>}
         {error && <p className="auth-error" role="alert">{error}</p>}
-        <button className="button button-primary auth-submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+        <button className="button button-primary auth-submit" disabled={busy}>{busy ? (authMode === 'signup' ? 'Creating account…' : 'Signing in…') : (authMode === 'signup' ? 'Create account' : 'Sign in')}</button>
       </form>}
-
-      {step === 'login' && <button className="button button-secondary auth-demo" type="button" onClick={onDemo}>Sign in as guest · Explore demo</button>}
+      {step === 'login' && <button className="auth-back" type="button" onClick={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setError(''); setInfo('') }}>{authMode === 'signup' ? 'Already registered? Sign in' : 'New to RouteHQ? Create an account'}</button>}
+      {step === 'login' && <button className="button button-secondary auth-demo" type="button" onClick={onDemo}>Explore the demo</button>}
 
       {step === 'enroll' && <form className="auth-form" onSubmit={handleVerify}>
         <div className="auth-qr"><img src={qrCode} alt="Authenticator setup QR code" /></div>
@@ -178,7 +205,7 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
       </form>}
 
       {step !== 'login' && <button className="auth-back" type="button" onClick={handleBackToLogin}>Cancel and return to sign in</button>}
-      <p className="auth-footnote">Access is restricted to authorised RouteHQ accounts.</p>
+      <p className="auth-footnote">Agency workspaces are activated only after RouteHQ reviews and approves an application.</p>
     </section>
   </div>
 }
@@ -197,11 +224,7 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
     const checkSession = async (current: Session | null) => {
       if (!alive) return
       try {
-        if (!current || !ALLOWED_EMAILS.has((current.user.email || '').toLowerCase())) {
-          if (current) {
-            const { error } = await supabase!.auth.signOut()
-            if (error) throw error
-          }
+        if (!current) {
           await waitForMinimumLoadingTime()
           if (alive) { setSession(null); setAuthenticated(false); setMode((previous) => previous === 'demo' ? 'demo' : null); setAuthError(''); setReady(true) }
           return

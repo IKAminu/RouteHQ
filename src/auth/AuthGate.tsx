@@ -48,8 +48,8 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
 
     const { data: enrollment, error: enrollmentError } = await supabase!.auth.mfa.enroll({
       factorType: 'totp',
-      friendlyName: 'Dandurgu HQ Authenticator',
-      issuer: 'Dandurgu Headquarters',
+      friendlyName: 'RouteHQ Authenticator',
+      issuer: 'RouteHQ',
     })
     if (enrollmentError) throw enrollmentError
     setFactorId(enrollment.id)
@@ -66,7 +66,7 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
     setBusy(true)
     try {
       const normalizedEmail = email.trim().toLowerCase()
-      if (!ALLOWED_EMAILS.has(normalizedEmail)) throw new Error('This email address is not authorised to access Dandurgu Headquarters.')
+      if (!ALLOWED_EMAILS.has(normalizedEmail)) throw new Error('This email address is not authorised to access RouteHQ.')
       const { data, error: loginError } = await supabase!.auth.signInWithPassword({ email: normalizedEmail, password })
       if (loginError) throw loginError
       if (!data.session) throw new Error('Sign-in did not return a valid session.')
@@ -129,7 +129,7 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
 
   return <div className="auth-screen">
     <section className="auth-panel">
-      <img src={`${import.meta.env.BASE_URL}brand/logo.png`} alt="Dandurgu logo" className="auth-logo" />
+      <img src={`${import.meta.env.BASE_URL}brand/logo.png`} alt="RouteHQ" className="auth-logo" />
       <p className="auth-eyebrow">DANDURGU AIR TRAVEL & TOURS</p>
       <h1>{step === 'login' ? 'Headquarters sign in' : step === 'enroll' ? 'Secure your account' : 'Two-step verification'}</h1>
       <p className="auth-description">
@@ -163,7 +163,7 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
               }
             }}>{secretCopied ? 'Copied' : 'Copy key'}</button>
           </div>
-          <p className="auth-help">In your authenticator app, choose the option to enter a setup key manually. Use the account name Dandurgu Headquarters and select time-based (TOTP) if asked.</p>
+          <p className="auth-help">In your authenticator app, choose the option to enter a setup key manually. Use the account name RouteHQ and select time-based (TOTP) if asked.</p>
           <p className="auth-help">Keep this key private. Anyone who has it can generate your verification codes.</p>
         </div>
         <label className="field-group">Authenticator code<input className="field auth-code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,8}" maxLength={8} required value={code} onChange={(event) => setCode(event.target.value)} placeholder="000000" /></label>
@@ -178,7 +178,7 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
       </form>}
 
       {step !== 'login' && <button className="auth-back" type="button" onClick={handleBackToLogin}>Cancel and return to sign in</button>}
-      <p className="auth-footnote">Access is restricted to authorised Dandurgu accounts.</p>
+      <p className="auth-footnote">Access is restricted to authorised RouteHQ accounts.</p>
     </section>
   </div>
 }

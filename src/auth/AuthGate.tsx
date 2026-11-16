@@ -129,8 +129,8 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
 
   return <div className="auth-screen">
     <section className="auth-panel">
-      <img src={`${import.meta.env.BASE_URL}brand/logo.png`} alt="RouteHQ" className="auth-logo" />
-      <p className="auth-eyebrow">DANDURGU AIR TRAVEL & TOURS</p>
+      <img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" />
+      <p className="auth-eyebrow">TRAVEL AGENCY OPERATIONS</p>
       <h1>{step === 'login' ? 'Headquarters sign in' : step === 'enroll' ? 'Secure your account' : 'Two-step verification'}</h1>
       <p className="auth-description">
         {step === 'login' ? 'Sign in with your authorised agency account.' : step === 'enroll' ? 'Connect an authenticator app to your account. This is required before accessing agency records.' : 'Enter the current six-digit code from your authenticator app.'}

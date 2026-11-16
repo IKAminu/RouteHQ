@@ -1387,3 +1387,25 @@
 :root[data-theme='dark'] .field:focus { border-color: rgb(240 138 60 / 42%); }
 :root[data-theme='dark'] .modal-backdrop { backdrop-filter: blur(8px); }
 :root[data-theme='dark'] .revenue-chart { display: none; }
+
+
+/* Revenue line graph layout, shared by both themes. */
+:root .revenue-line-chart { width: 100%; margin-top: .8rem; }
+:root .revenue-line-chart svg { display: block; width: 100%; height: 132px; overflow: visible; }
+:root .revenue-axis {
+  display: grid;
+  grid-template-columns: repeat(7,minmax(0,1fr));
+  gap: .35rem;
+  margin-top: -.05rem;
+  color: #85858d;
+  font-size: .62rem;
+  text-align: center;
+}
+:root .sidebar-foot.mode-demo .status-dot {
+  background: #85858d;
+  box-shadow: 0 0 0 .2rem rgb(133 133 141 / 12%);
+}
+:root[data-theme='dark'] .sidebar-foot.mode-demo .status-dot {
+  background: #85858d;
+  box-shadow: 0 0 0 .2rem rgb(133 133 141 / 13%);
+}

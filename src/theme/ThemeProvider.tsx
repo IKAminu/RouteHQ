@@ -12,9 +12,10 @@ const STORAGE_KEY = 'routehq-theme'
 
 function readInitialTheme(): ThemePreference {
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light'
+    const saved = window.localStorage.getItem(STORAGE_KEY)
+    return saved === 'light' ? 'light' : 'dark'
   } catch {
-    return 'light'
+    return 'dark'
   }
 }
 

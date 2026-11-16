@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { Download, ExternalLink, Eye, Filter, Info, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Download, ExternalLink, Eye, Filter, Info, Moon, Pencil, Plus, Search, Sun, Trash2 } from 'lucide-react'
 import { Badge, Button, EmptyState, Input, Modal, PageHeader, Select, TableShell } from '@/components/ui'
 import { useAppStore } from '@/hooks/useAppStore'
 import { bookingBalance, confirmedPaid, money, shortDate, supplierOutstanding, travellerCount } from '@/lib/business'
 import { supabase } from '@/lib/supabase'
 import type { QuickActionType } from '@/types'
+import { useTheme } from '@/theme/ThemeProvider'
 
 type DeletableRecordType = 'lead' | 'customer' | 'package' | 'booking' | 'traveller' | 'supplier-cost' | 'document'
 type SelectableRecord = { id: string }
@@ -305,7 +306,19 @@ export function DocumentsPage() {
 
 export function SettingsPage() {
   const { mode } = useAppStore()
-  return <div className="page"><PageHeader title="Settings" description="Business details, application preferences and integration readiness." /><div className="settings-grid"><section className="settings-section"><h2>Business information</h2><p>Used as the default identity and regional configuration.</p><dl><div><dt>Business name</dt><dd>Dandurgu Air Travel & Tours Ltd</dd></div><div><dt>Default currency</dt><dd>Nigerian Naira (NGN)</dd></div><div><dt>Time zone</dt><dd>Africa/Lagos</dd></div><div><dt>Date format</dt><dd>DD MMM YYYY</dd></div></dl></section><section className="settings-section"><h2>Integration status</h2><p>External services are not represented as connected until configured.</p><div className="integration-list"><div><span><strong>Supabase</strong><small>Database and authentication</small></span><Badge>{mode === 'live' ? 'Connected' : 'Not used in demo'}</Badge></div><div><span><strong>Google Drive</strong><small>Document links only</small></span><Badge>Not configured</Badge></div><div><span><strong>Website lead capture</strong><small>Secure endpoint required</small></span><Badge>Not configured</Badge></div><div><span><strong>Meta Ads</strong><small>Attribution fields prepared</small></span><Badge>Not configured</Badge></div></div></section><section className="settings-section"><h2>User account</h2><p>Access to live agency records is protected by account sign-in and authenticator verification.</p><dl><div><dt>Current profile</dt><dd>{mode === 'live' ? 'Authorised account' : 'Guest user'}</dd></div><div><dt>Access</dt><dd>{mode === 'live' ? 'Live agency workspace' : 'Sample records only'}</dd></div></dl></section><section className="settings-section"><h2>Workspace mode</h2><p>{mode === 'live' ? 'This session is connected to the agency database. Changes are saved to the live workspace.' : 'This guest workspace uses sample records bundled with the application. Changes are temporary and are not sent to the agency database.'}</p><div className="code-line">{mode === 'live' ? 'LIVE MODE' : 'DEMO MODE'}</div></section></div></div>
+  const { theme, setTheme } = useTheme()
+  return <div className="page"><PageHeader title="Settings" description="Manage your workspace preferences and application configuration." /><div className="settings-grid">
+    <section className="settings-section theme-settings"><h2>Appearance</h2><p>Choose how RouteHQ looks on this device. Your preference is saved automatically.</p>
+      <div className="theme-options" role="group" aria-label="Colour theme">
+        <button type="button" className={`theme-option ${theme === 'light' ? 'selected' : ''}`} aria-pressed={theme === 'light'} onClick={() => setTheme('light')}><span className="theme-preview theme-preview-light"><Sun size={20} /></span><span><strong>Light mode</strong><small>Bright surfaces for daytime use</small></span>{theme === 'light' && <span className="theme-selected">Selected</span>}</button>
+        <button type="button" className={`theme-option ${theme === 'dark' ? 'selected' : ''}`} aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}><span className="theme-preview theme-preview-dark"><Moon size={20} /></span><span><strong>Night mode</strong><small>Deep blue surfaces with orange accents</small></span>{theme === 'dark' && <span className="theme-selected">Selected</span>}</button>
+      </div>
+    </section>
+    <section className="settings-section"><h2>Workspace identity</h2><p>This preview uses demonstration workspace details. Each customer workspace will have its own agency profile after tenant onboarding is implemented.</p><dl><div><dt>Product</dt><dd>RouteHQ</dd></div><div><dt>Workspace</dt><dd>Demo travel agency</dd></div><div><dt>Default currency</dt><dd>Nigerian Naira (NGN)</dd></div><div><dt>Time zone</dt><dd>Africa/Lagos</dd></div></dl></section>
+    <section className="settings-section"><h2>Integration status</h2><p>External services are not represented as connected until configured.</p><div className="integration-list"><div><span><strong>Supabase</strong><small>Database and authentication</small></span><Badge>{mode === 'live' ? 'Connected' : 'Demo mode'}</Badge></div><div><span><strong>Google Drive</strong><small>Document links only</small></span><Badge>Not configured</Badge></div><div><span><strong>Website lead capture</strong><small>Secure tenant-aware endpoint required</small></span><Badge>Not configured</Badge></div><div><span><strong>Meta Ads</strong><small>Attribution and lead integration</small></span><Badge>Not configured</Badge></div></div></section>
+    <section className="settings-section"><h2>Account and access</h2><p>Public customer registration and agency account provisioning are not enabled in this preview.</p><dl><div><dt>Current profile</dt><dd>{mode === 'live' ? 'Authorised account' : 'Guest user'}</dd></div><div><dt>Access</dt><dd>{mode === 'live' ? 'Connected workspace' : 'Sample records only'}</dd></div><div><dt>Agency isolation</dt><dd>Not yet implemented</dd></div></dl></section>
+    <section className="settings-section"><h2>Workspace mode</h2><p>{mode === 'live' ? 'This session is connected to the configured database. Changes are saved to that workspace.' : 'This guest workspace uses bundled sample records. Changes are temporary and are not sent to a live database.'}</p><div className="code-line">{mode === 'live' ? 'CONNECTED WORKSPACE' : 'DEMO MODE'}</div></section>
+  </div></div>
 }
 
 export function NotFoundPage() {

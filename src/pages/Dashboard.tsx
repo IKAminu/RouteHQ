@@ -29,7 +29,7 @@ export function Dashboard() {
   const bookingTrend = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2] - (6 - index)))
     const key = date.toISOString().slice(0, 10)
-    const dayBookings = bookings.filter((booking) => booking.status !== 'Cancelled' && booking.bookingDate >= `${todayDate().slice(0, 8)}${'01'}` && booking.bookingDate <= key && booking.bookingDate >= new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2] - 6)).toISOString().slice(0, 10))
+    const dayBookings = bookings.filter((booking) => booking.status !== 'Cancelled' && booking.bookingDate <= key && booking.bookingDate >= new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2] - 6)).toISOString().slice(0, 10))
     const bookedAmount = dayBookings.reduce((sum, booking) => sum + booking.agreedPrice, 0)
     const paidAmount = dayBookings.reduce((sum, booking) => {
       const confirmedForBooking = payments.filter((payment) => payment.bookingId === booking.id && payment.status === 'Confirmed' && payment.date <= key).reduce((total, payment) => total + payment.amount, 0)

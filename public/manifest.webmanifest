@@ -1,12 +1,12 @@
 {
-  "name": "Dandurgu Headquarters",
-  "short_name": "Dandurgu HQ",
-  "description": "Internal operations management for Dandurgu Air Travel & Tours Ltd.",
+  "name": "RouteHQ",
+  "short_name": "RouteHQ",
+  "description": "The operating system for travel agencies.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f7f6f3",
-  "theme_color": "#e87521",
+  "background_color": "#0b2344",
+  "theme_color": "#f07824",
   "icons": [
     {
       "src": "app-icon.svg",

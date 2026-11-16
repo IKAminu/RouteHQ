@@ -1,6 +1,9 @@
 name: Deploy RouteHQ preview to GitHub Pages
 
 on:
+  push:
+    branches:
+      - import/agency-managerdan
   workflow_dispatch:
     inputs:
       source_branch:
@@ -28,7 +31,7 @@ jobs:
       - name: Check out selected RouteHQ branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_branch }}
+          ref: ${{ inputs.source_branch || github.ref_name }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4

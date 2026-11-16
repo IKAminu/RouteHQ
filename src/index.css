@@ -1568,3 +1568,81 @@
 @media (max-width: 720px) {
   :root .revenue-line-chart svg { height: 170px; }
 }
+
+
+/* RouteHQ operation manual: keep every handbook surface in the graphite palette. */
+:root[data-theme='dark'] .operator-guide,
+:root[data-theme='dark'] .guide-header,
+:root[data-theme='dark'] .guide-header > div,
+:root[data-theme='dark'] .guide-intro,
+:root[data-theme='dark'] .guide-search,
+:root[data-theme='dark'] .guide-index a,
+:root[data-theme='dark'] .guide-index span,
+:root[data-theme='dark'] .guide-section,
+:root[data-theme='dark'] .guide-section-heading,
+:root[data-theme='dark'] .guide-section-heading > span,
+:root[data-theme='dark'] .manual-overview,
+:root[data-theme='dark'] .manual-hero,
+:root[data-theme='dark'] .manual-id-section,
+:root[data-theme='dark'] .manual-practices,
+:root[data-theme='dark'] .manual-chapter,
+:root[data-theme='dark'] .manual-chapter-header,
+:root[data-theme='dark'] .manual-practice-grid > div,
+:root[data-theme='dark'] .manual-callout,
+:root[data-theme='dark'] .manual-warning,
+:root[data-theme='dark'] .manual-flow-card,
+:root[data-theme='dark'] .manual-impact,
+:root[data-theme='dark'] .manual-explain-card,
+:root[data-theme='dark'] .manual-id-card,
+:root[data-theme='dark'] .manual-uuid,
+:root[data-theme='dark'] .manual-branch,
+:root[data-theme='dark'] .manual-screen-field,
+:root[data-theme='dark'] .manual-screen-top,
+:root[data-theme='dark'] .manual-step-list li,
+:root[data-theme='dark'] .manual-flow,
+:root[data-theme='dark'] .guide-flow,
+:root[data-theme='dark'] .settings-guide-link,
+:root[data-theme='dark'] .settings-guide-icon {
+  border-color: #303036;
+  background-color: #17171b;
+  color: #e4e4e8;
+}
+:root[data-theme='dark'] .manual-explain-card.automated,
+:root[data-theme='dark'] .manual-explain-card.operator,
+:root[data-theme='dark'] .manual-impact > div,
+:root[data-theme='dark'] .manual-warning,
+:root[data-theme='dark'] .manual-callout,
+:root[data-theme='dark'] .guide-intro {
+  background: #19191e;
+  color: #e4e4e8;
+}
+:root[data-theme='dark'] .guide-header h1,
+:root[data-theme='dark'] .guide-section-heading h2,
+:root[data-theme='dark'] .manual-hero h1,
+:root[data-theme='dark'] .manual-chapter-header h2,
+:root[data-theme='dark'] .manual-overview h2,
+:root[data-theme='dark'] .manual-id-section h2,
+:root[data-theme='dark'] .manual-practices h2 {
+  color: #f4f4f5;
+}
+:root[data-theme='dark'] .guide-header p,
+:root[data-theme='dark'] .guide-section-heading p,
+:root[data-theme='dark'] .manual-chapter-header p,
+:root[data-theme='dark'] .manual-practice-grid p,
+:root[data-theme='dark'] .manual-hero-copy p,
+:root[data-theme='dark'] .manual-overview p,
+:root[data-theme='dark'] .manual-id-section p,
+:root[data-theme='dark'] .manual-practices p,
+:root[data-theme='dark'] .manual-explain-card li,
+:root[data-theme='dark'] .manual-step-list p,
+:root[data-theme='dark'] .guide-subsection li {
+  color: #c4c4cb;
+}
+:root[data-theme='dark'] .guide-eyebrow,
+:root[data-theme='dark'] .settings-guide-arrow {
+  color: #e8a36d;
+}
+:root[data-theme='dark'] .guide-search input {
+  background: transparent;
+  color: #f4f4f5;
+}

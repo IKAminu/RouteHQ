@@ -1721,3 +1721,69 @@
 :root[data-theme='dark'] .revenue-period-select:focus-visible {
   outline-color: #8b9ff0;
 }
+
+
+/* Dashboard chart hover details and enlarged brand mark. */
+:root .brand-logo {
+  width: 2.4rem;
+  height: 2.4rem;
+  flex-basis: 2.4rem;
+}
+:root .brand { gap: .8rem; }
+:root .revenue-line-chart { position: relative; }
+:root .chart-hit-target {
+  fill: transparent;
+  stroke: transparent;
+  pointer-events: all;
+  cursor: crosshair;
+  outline: none;
+}
+:root .chart-hit-target:focus-visible {
+  stroke: var(--color-brand-500);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 2;
+}
+:root .chart-tooltip {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  width: 12rem;
+  flex-direction: column;
+  gap: .42rem;
+  pointer-events: none;
+  border: 1px solid rgb(128 128 138 / 20%);
+  border-radius: 7px;
+  background: #fff;
+  padding: .7rem .75rem;
+  color: #24242a;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 14%);
+  font-size: .65rem;
+}
+:root .chart-tooltip > strong {
+  margin-bottom: .12rem;
+  color: #17171b;
+  font-size: .7rem;
+}
+:root .chart-tooltip > span {
+  display: grid;
+  grid-template-columns: .45rem 1fr auto;
+  align-items: center;
+  gap: .38rem;
+  color: #686873;
+}
+:root .chart-tooltip b { color: #27272d; font-variant-numeric: tabular-nums; font-weight: 650; }
+:root .chart-tooltip i { width: .42rem; height: .42rem; border-radius: 50%; }
+:root .tooltip-booked { background: #b9b9c2; }
+:root .tooltip-paid { background: #6888ee; }
+:root .tooltip-outstanding { background: rgb(104 136 238 / 38%); }
+:root .chart-tooltip small { margin-top: .1rem; color: #8a8a94; font-size: .58rem; }
+:root[data-theme='dark'] .chart-tooltip {
+  border-color: #38383f;
+  background: #202025;
+  color: #f4f4f5;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+}
+:root[data-theme='dark'] .chart-tooltip > strong,
+:root[data-theme='dark'] .chart-tooltip b { color: #f4f4f5; }
+:root[data-theme='dark'] .chart-tooltip > span { color: #b5b5bf; }
+:root[data-theme='dark'] .chart-tooltip small { color: #92929d; }

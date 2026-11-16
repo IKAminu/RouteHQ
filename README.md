@@ -1,47 +1,54 @@
-# Dandurgu Headquarters
+# RouteHQ
 
-An internal operations application for Dandurgu Air Travel & Tours Ltd. It gives leads, customers, packages, bookings, travellers, payments, supplier obligations and document references one connected home.
+RouteHQ is a travel-agency operations platform in product development. It brings enquiries, customer records, travel packages, bookings, travellers, payments, supplier obligations and document references into one workspace.
 
-## Stack
+**Current release status: preview/demo only.** The public GitHub Pages deployment runs with bundled demonstration data. It is not an open-registration SaaS service and must not be used to store third-party agencies' customer information.
 
-React 19, TypeScript, Vite, Tailwind CSS v4, React Router, Lucide and a prepared Supabase client. The current demonstration uses coherent in-memory mock records.
+## Technology
+
+- React 19 and TypeScript
+- Vite 8 and Tailwind CSS 4
+- React Router 7
+- Supabase JS client (the existing live connection belongs to the original Dandurgu deployment)
+- GitHub Actions and GitHub Pages for preview deployment
 
 ## Run locally
 
-1. Install Node 22 and pnpm 10.
+1. Install Node.js 22 and pnpm 10.
 2. Run `pnpm install`.
 3. Copy `.env.example` to `.env.local`.
-4. Keep `VITE_USE_MOCK_DATA=true`.
+4. Set `VITE_USE_MOCK_DATA=true` for the safe demo.
 5. Run `pnpm dev`.
 
-Useful checks: `pnpm typecheck`, `pnpm build`, and `pnpm format`.
+Checks: `pnpm typecheck` and `pnpm build`.
 
-## Data modes
+## Demo and live data
 
-- `VITE_USE_MOCK_DATA=true`: uses demonstration records. Newly created records last for the browser session and are not database records.
-- `VITE_USE_MOCK_DATA=false`: activates the Supabase service path. Do this only after deploying and reviewing the proposed schema, authentication and RLS.
+- `VITE_USE_MOCK_DATA=true` loads bundled demonstration records. Changes exist only in browser memory and reset when the session reloads.
+- `VITE_USE_MOCK_DATA=false` activates the legacy Dandurgu Supabase access path. Do not use that path for RouteHQ customer tenants.
+- Never put a Supabase secret/service-role key, payment secret, Meta token, or Google credential in a `VITE_*` variable. Browser variables are public.
 
-Never put a Supabase service-role key or a private Meta/Google token in a `VITE_` variable.
+## Preview deployment
 
-## Project structure
+The `.github/workflows/deploy-pages.yml` workflow deploys automatically when the application branch or the deployment workflow on `main` changes. The project preview is:
 
-Presentation is in `src/pages`, `src/layouts`, and `src/components`. Operational calculations are in `src/lib/business.ts`. Typed records are in `src/types`, mock data in `src/data`, and the replaceable data boundary in `src/services`.
+https://ikaminu.github.io/RouteHQ/
 
-## GitHub Pages
+The workflow runs TypeScript checks and a production build before publishing. A failed build does not replace the last successful deployment.
 
-The workflow in `.github/workflows/deploy.yml` builds and deploys `dist`. In the repository settings, enable Pages with **GitHub Actions** as the source. For a custom domain, add the domain in Pages settings, then configure the exact DNS records supplied by GitHub at the DNS provider. The app does not hardcode the planned domain.
+## Themes
 
-The included `404.html` returns nested SPA URLs to the root. For project-subpath deployment, set `VITE_BASE_PATH`; the intended custom subdomain uses `/`.
+Light mode and Night mode are available in Settings. The selected appearance is stored locally in the browser and is not an agency-wide setting.
 
-## Install on a phone
+## Productisation boundary
 
-- iPhone/iPad: open the deployed site in Safari, tap Share, then **Add to Home Screen**.
-- Android: open it in Chrome, open the menu, then choose **Install app** or **Add to Home screen**.
+This repository is the product preview, not yet the complete commercial SaaS platform. The existing Supabase project is named `DandurguAgencyManager`, contains Dandurgu's operational tables, and has Dandurgu-specific authorised-account policies. Those tables do not yet have agency/tenant ownership columns.
 
-The manifest provides standalone display preparation. Offline data access is not implemented or claimed.
+Before external agencies can register or store real records, RouteHQ needs a separate production backend and a reviewed tenant model. See [PRODUCT_READINESS.md](./PRODUCT_READINESS.md).
 
-## Current scope
+## Security
 
-Implemented in the frontend: all primary module routes, responsive navigation, global mock search, derived notifications, sorting-ready tables, search/filter controls, dashboard calculations, manual lead/customer/booking/payment/traveller forms, financial rules, and PWA metadata.
-
-Mocked: records and record creation. Prepared but not connected: Supabase, authentication, Google Drive, website capture and Meta. Complex detail editing, server persistence, file upload and automated integrations remain later work. See `IMPLEMENTATION_STATUS.md`.
+- Do not add real customer, lead, payment, passport, or supplier data to this public repository.
+- Do not enable public signup against the legacy Dandurgu database.
+- Do not relax existing Dandurgu Row Level Security policies to make the preview work.
+- Keep document storage private. A URL in a record is not proof that its permissions are safe.

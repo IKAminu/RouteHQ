@@ -72,7 +72,7 @@ All public application tables have RLS enabled. Agency-owned rows are tenant-sco
 - Rejection is audited.
 - Platform admin dashboard reads applications only after the account has been provisioned in `platform_admins`.
 
-The first platform administrator must be provisioned by a trusted database administrator after the user has created and confirmed their Auth account. Never add a self-service "make me admin" button or bootstrap RPC.
+The first platform administrator must be provisioned by a trusted database administrator after the user has created and confirmed their Auth account. Run `supabase/operations/bootstrap-platform-admin.sql` in the RouteHQ SQL Editor after replacing its email placeholder with the exact confirmed account email. Verify the inserted row before signing in to the platform console. Never add a self-service "make me admin" button or bootstrap RPC.
 
 ## Important current limitations
 

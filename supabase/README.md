@@ -14,9 +14,9 @@ The following migrations have been applied to the RouteHQ Supabase project:
 - `20261116185224_secure_private_document_storage_and_fk_deletes`
 - `20261116185430_enforce_permission_delegation_and_team_seats`
 - `20261116185509_fix_seat_limit_transition_checks`
-- `20261116202000_agency_onboarding_and_platform_review`
-- `20261116202500_expose_authenticated_onboarding_rpcs`
-- `20261116203000_index_agency_notes_by_tenant_and_date`
+- `20261116191517_agency_onboarding_and_platform_review`
+- `20261116191543_expose_authenticated_onboarding_rpcs`
+- `20261116191748_index_agency_notes_by_tenant_and_date`
 
 The initial schema and follow-up SQL were applied through the connected Supabase management tools. The exact applied SQL source files are preserved under `migrations/`. The Supabase project is the remote source of truth; apply future changes through new versioned migrations and commit the exact SQL before considering the work complete.
 

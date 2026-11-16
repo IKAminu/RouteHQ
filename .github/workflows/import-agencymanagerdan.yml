@@ -1,0 +1,100 @@
+name: Temporary source repository import
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: routehq-source-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    name: Copy AgencyManagerDan into RouteHQ
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out RouteHQ
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: destination
+
+      - name: Check out the source application
+        uses: actions/checkout@v4
+        with:
+          repository: IKAminu/AgencyManagerDan
+          ref: main
+          path: source
+          persist-credentials: false
+
+      - name: Copy application files, excluding repository and machine-specific files
+        shell: bash
+        run: |
+          rsync -a --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='source/' \
+            --exclude='node_modules/' \
+            --exclude='dist/' \
+            --exclude='build/' \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --include='.env.example' \
+            --exclude='.vercel/' \
+            --exclude='.netlify/' \
+            --exclude='.supabase/.temp/' \
+            --exclude='.figma/design-context/' \
+            --exclude='.plugins/' \
+            --exclude='.opencode-skills/' \
+            --exclude='*.log' \
+            source/ destination/
+
+      - name: Verify no local secrets or private key files were copied
+        working-directory: destination
+        shell: bash
+        run: |
+          if find . -type f \\
+            \( -name '.env' -o -name '.env.local' -o -name '.env.production' -o -name '*.pem' -o -name '*.key' \) \\
+            -not -path './.git/*' -print -quit | grep -q .; then
+            echo "A prohibited environment or key file was found. Stopping the import."
+            exit 1
+          fi
+
+      - name: Install dependencies and verify the copied application
+        working-directory: destination
+        env:
+          VITE_BASE_PATH: /
+        run: |
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm install --frozen-lockfile
+          pnpm typecheck
+          pnpm build
+
+      - name: Create an import branch and pull request
+        working-directory: destination
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMPORT_BRANCH="import/agency-managerdan"
+          git switch -c "$IMPORT_BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No files were copied. Nothing to commit."
+            exit 1
+          fi
+          git commit -m "Import AgencyManagerDan application baseline"
+          git push --set-upstream origin "$IMPORT_BRANCH"
+          gh pr create \
+            --base main \
+            --head "$IMPORT_BRANCH" \
+            --title "Import AgencyManagerDan application baseline" \
+            --body "Cloud-based initial copy from IKAminu/AgencyManagerDan. The source repository is unchanged. This import excludes GitHub workflow files, environment files and local secrets, dependencies, build output, and machine-specific folders. The workflow runs typecheck and production build before opening this PR. Review the imported demo fixtures and application configuration before merging."

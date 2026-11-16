@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button, Field, Input, Select } from '@/components/ui'
 
@@ -29,7 +29,7 @@ type AgencyContext = {
 
 const slugify = (value: string) => value.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48)
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children }: { children: ReactNode }) {
   return <main className="onboarding-shell"><div className="onboarding-brand"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /><span>RouteHQ</span></div>{children}<p className="onboarding-foot">RouteHQ · Travel agency operations</p></main>
 }
 

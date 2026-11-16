@@ -7,12 +7,12 @@ const iso = (offset: number) => {
 }
 
 export const initialLeads: Lead[] = [
-  { id: 'l1', reference: 'DNC-2026-7K4P9M2Q', name: 'Amina Bello', phone: '+234 803 441 2098', email: 'amina@example.com', service: 'Umrah', travelPeriod: 'Ramadan 2026', source: 'Facebook Ads', campaign: 'Ramadan Umrah North', status: 'New', receivedAt: iso(-1), followUp: iso(0), groupSize: 2, city: 'Kano' },
-  { id: 'l2', reference: 'DNC-2026-8L2H5D1S', name: 'Chinedu Okafor', phone: '+234 806 772 1140', service: 'General Travel', travelPeriod: 'June 2026', source: 'Referral', status: 'Contacted', receivedAt: iso(-3), followUp: iso(2), groupSize: 1, city: 'Abuja' },
-  { id: 'l3', reference: 'DNC-2026-3A8R6T4N', name: 'Zainab Musa', phone: '+234 809 126 7802', email: 'zainab@example.com', service: 'Hajj', travelPeriod: 'Hajj 2026', source: 'Instagram Ads', campaign: 'Hajj Early Interest', status: 'Follow-up Required', receivedAt: iso(-6), followUp: iso(-2), groupSize: 4, city: 'Kaduna' },
-  { id: 'l4', reference: 'DNC-2026-9Q1W5E7R', name: 'Tunde Adebayo', phone: '+234 802 550 9134', service: 'Umrah', travelPeriod: 'December 2026', source: 'WhatsApp', status: 'Interested', receivedAt: iso(-8), followUp: iso(1), groupSize: 3, city: 'Lagos' },
-  { id: 'l5', reference: 'DNC-2026-2M6B4V8C', name: 'Fatima Abdullahi', phone: '+234 701 482 6671', service: 'Umrah', travelPeriod: 'Flexible', source: 'Website', status: 'Converted', receivedAt: iso(-18), groupSize: 1, city: 'Katsina' },
-  { id: 'l6', reference: 'DNC-2026-1P7J3F9K', name: 'Maryam Suleiman', phone: '+234 811 220 4706', service: 'General Travel', travelPeriod: 'August 2026', source: 'Walk-in', status: 'New', receivedAt: iso(-2), followUp: iso(0), groupSize: 5, city: 'Abuja' },
+  { id: 'l1', reference: 'RHQ-2026-7K4P9M2Q', name: 'Amina Bello', phone: '+234 803 441 2098', email: 'amina@example.com', service: 'Umrah', travelPeriod: 'Ramadan 2026', source: 'Facebook Ads', campaign: 'Ramadan Umrah North', status: 'New', receivedAt: iso(-1), followUp: iso(0), groupSize: 2, city: 'Kano' },
+  { id: 'l2', reference: 'RHQ-2026-8L2H5D1S', name: 'Chinedu Okafor', phone: '+234 806 772 1140', service: 'General Travel', travelPeriod: 'June 2026', source: 'Referral', status: 'Contacted', receivedAt: iso(-3), followUp: iso(2), groupSize: 1, city: 'Abuja' },
+  { id: 'l3', reference: 'RHQ-2026-3A8R6T4N', name: 'Zainab Musa', phone: '+234 809 126 7802', email: 'zainab@example.com', service: 'Hajj', travelPeriod: 'Hajj 2026', source: 'Instagram Ads', campaign: 'Hajj Early Interest', status: 'Follow-up Required', receivedAt: iso(-6), followUp: iso(-2), groupSize: 4, city: 'Kaduna' },
+  { id: 'l4', reference: 'RHQ-2026-9Q1W5E7R', name: 'Tunde Adebayo', phone: '+234 802 550 9134', service: 'Umrah', travelPeriod: 'December 2026', source: 'WhatsApp', status: 'Interested', receivedAt: iso(-8), followUp: iso(1), groupSize: 3, city: 'Lagos' },
+  { id: 'l5', reference: 'RHQ-2026-2M6B4V8C', name: 'Fatima Abdullahi', phone: '+234 701 482 6671', service: 'Umrah', travelPeriod: 'Flexible', source: 'Website', status: 'Converted', receivedAt: iso(-18), groupSize: 1, city: 'Katsina' },
+  { id: 'l6', reference: 'RHQ-2026-1P7J3F9K', name: 'Maryam Suleiman', phone: '+234 811 220 4706', service: 'General Travel', travelPeriod: 'August 2026', source: 'Walk-in', status: 'New', receivedAt: iso(-2), followUp: iso(0), groupSize: 5, city: 'Abuja' },
 ]
 
 export const initialCustomers: Customer[] = [

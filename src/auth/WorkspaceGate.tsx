@@ -90,14 +90,14 @@ function AgencyApplication({ email, onSubmitted }: { email: string; onSubmitted:
   </section>
 }
 
-function ApplicationStatus({ application, onRefresh, onReapply }: { application: Application; onRefresh: () => void; onReapply: () => void }) {
+function ApplicationStatus({ application, onRefresh, onReapply, onSignOut }: { application: Application; onRefresh: () => void; onReapply: () => void; onSignOut: () => void }) {
   return <section className="onboarding-card">
     <span className="onboarding-eyebrow">APPLICATION STATUS</span>
     <h1>{application.agency_name}</h1>
     <div className={`application-status status-${application.status}`}>{application.status.replace('_',' ')}</div>
     <p className="onboarding-copy">Your application was submitted on {new Date(application.submitted_at).toLocaleDateString()}. We will activate your agency workspace after review.</p>
     {application.review_notes && <div className="review-note"><strong>Review note</strong><p>{application.review_notes}</p></div>}
-    <div className="application-buttons"><Button variant="secondary" onClick={onRefresh}>Refresh status</Button>{application.status==='rejected' && <Button onClick={onReapply}>Submit a new application</Button>}</div>
+    <div className="application-buttons"><Button variant="secondary" onClick={onRefresh}>Refresh status</Button>{application.status==='rejected' && <Button onClick={onReapply}>Submit a new application</Button>}<Button variant="secondary" onClick={onSignOut}>Sign out</Button></div>
   </section>
 }
 
@@ -188,6 +188,6 @@ export function WorkspaceGate() {
   if(error)return <Shell><section className="onboarding-card"><h1>We couldn't verify your access</h1><p className="onboarding-error">{error}</p><Button onClick={()=>void refresh()}>Try again</Button></section></Shell>
   if(isAdmin)return <PlatformConsole email={email}/>
   if(agency)return <Shell><section className="onboarding-card"><span className="onboarding-eyebrow">AGENCY WORKSPACE</span><h1>{agency.agency_name}</h1><p className="onboarding-copy">Your agency is approved. We are finishing the secure operational-data connection before enabling live records.</p><div className="platform-stats"><div><strong>{agency.plan_name || agency.plan_code || 'Plan pending'}</strong><span>Plan</span></div><div><strong>{agency.subscription_status || 'Not set'}</strong><span>Subscription</span></div><div><strong>{agency.role_code}</strong><span>Your role</span></div></div><p className="onboarding-copy">This account is not yet connected to the operational modules. Your agency data will remain untouched until that connection is verified.</p><Button variant="secondary" onClick={()=>supabase?.auth.signOut()}>Sign out</Button></section></Shell>
-  if(application)return <Shell><ApplicationStatus application={application} onRefresh={()=>void refresh()} onReapply={()=>setApplication(null)}/></Shell>
+  if(application)return <Shell><ApplicationStatus application={application} onRefresh={()=>void refresh()} onReapply={()=>setApplication(null)} onSignOut={()=>void supabase?.auth.signOut()}/></Shell>
   return <Shell><AgencyApplication email={email} onSubmitted={()=>void refresh()}/></Shell>
 }

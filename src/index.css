@@ -2554,3 +2554,56 @@
 @media(prefers-reduced-motion:reduce) {
   .routehq-search,.routehq-search-panel,.routehq-search-spinner,.auth-code.has-error { animation:none!important; transition-duration:1ms!important; }
 }
+
+
+/* Product-wide visual audit: RouteHQ is an operations desk, not a stack of glossy widgets. */
+:root .nav-group > p { color:#747d88; font-size:.68rem; font-weight:600; letter-spacing:0; text-transform:none; }
+:root th { color:#68788b; font-size:.68rem; font-weight:600; letter-spacing:0; text-transform:none; }
+:root .metric:hover { transform:none; }
+:root .dynaura-root { --dynaura-font: Inter, ui-sans-serif, system-ui, sans-serif; }
+:root[data-theme='dark'] body,
+:root[data-theme='dark'] .app-shell { background:#09090b; }
+:root[data-theme='dark'] .sidebar { border-right:1px solid #252529; background:#111114; box-shadow:none; }
+:root[data-theme='dark'] .brand-monogram { background:#202025; }
+:root[data-theme='dark'] .nav-group a.active { border:0; background:#202025; box-shadow:none; }
+:root[data-theme='dark'] .topbar { border-bottom:1px solid #252529; background:#111114; box-shadow:none; }
+:root[data-theme='dark'] .metric,
+:root[data-theme='dark'] .content-section,
+:root[data-theme='dark'] .settings-section,
+:root[data-theme='dark'] .table-shell,
+:root[data-theme='dark'] .quick-strip,
+:root[data-theme='dark'] .traveller-metric,
+:root[data-theme='dark'] .finance-summary,
+:root[data-theme='dark'] .modal,
+:root[data-theme='dark'] .notifications,
+:root[data-theme='dark'] .search-results,
+:root[data-theme='dark'] .quick-action-menu,
+:root[data-theme='dark'] .account-popover,
+:root[data-theme='dark'] .guide-section,
+:root[data-theme='dark'] .manual-overview,
+:root[data-theme='dark'] .manual-id-section,
+:root[data-theme='dark'] .manual-practices,
+:root[data-theme='dark'] .manual-chapter,
+:root[data-theme='dark'] .notes-overview > div,
+:root[data-theme='dark'] .note-card,
+:root[data-theme='dark'] .lead-followup-panel,
+:root[data-theme='dark'] .route-error-card {
+  border:1px solid #252529;
+  border-radius:var(--rq-radius-card,12px);
+  background:#111114;
+  box-shadow:none;
+}
+:root[data-theme='dark'] .metric:hover { border-color:#3a3a40; background:#141417; transform:none; }
+:root[data-theme='dark'] .nav-group a.active::before { background:#ed873b; }
+:root[data-theme='dark'] .button-secondary,
+:root[data-theme='dark'] .date-chip,
+:root[data-theme='dark'] .field {
+  border:1px solid #303036;
+  background:#17171b;
+}
+:root[data-theme='dark'] .revenue-panel { border:1px solid #252529; border-radius:12px; background:#111114; box-shadow:none; }
+:root[data-theme='dark'] .revenue-period { border:1px solid #303036; background:#17171b; }
+:root[data-theme='dark'] .modal-backdrop { backdrop-filter:none; }
+@media(prefers-reduced-motion:reduce) {
+  :root .metric:hover { transform:none; }
+}

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      dynaura:
+        specifier: 0.2.2
+        version: 0.2.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@supabase/supabase-js':
         specifier: 2.118.0
         version: 2.118.0
@@ -252,6 +255,17 @@ packages:
   '@supabase/storage-js@2.118.0':
     resolution: {integrity: sha512-5MNkKt2Moy7Jud/sPX7/28BwdDxZMCVHGJT00b8op3KRa9LKSjOAYU5IcfGWIstaasAqY8GkbA6oI3IRDgB1YQ==}
     engines: {node: '>=22.0.0'}
+
+  dynaura@0.2.2:
+    resolution: {integrity: sha512-iYptiLGMNjsJiuDCqa9Vtx2ZnnF42zfE+rksYPFMozeIjglWbW8jl1cpr/3lMP8p6gb42sKScdTaD8aVC1TNYQ==}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   '@supabase/supabase-js@2.118.0':
     resolution: {integrity: sha512-FxI8UXMVC2UG7IkeiI8fuQZqq2oI3JeSuN8MPIC2RLVaoEAxKS0nqE6kii9Ewpq8f9gNPM6git1Y8f0vN/QLFw==}
@@ -773,6 +787,8 @@ snapshots:
     dependencies:
       iceberg-js: 0.8.1
       tslib: 2.8.1
+
+  dynaura@0.2.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4): {}
 
   '@supabase/supabase-js@2.118.0':
     dependencies:

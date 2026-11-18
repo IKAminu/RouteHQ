@@ -245,6 +245,7 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
     if (!pending) return
     window.clearTimeout(pending.timer)
     pendingDeleteRef.current = null
+    setUndoAvailable(false)
     try {
       if (!isDemo) {
         const tableByType: Record<DeletableRecordType, string> = { lead: 'leads', customer: 'customers', package: 'packages', booking: 'bookings', traveller: 'travellers', 'supplier-cost': 'supplier_costs', document: 'documents' }

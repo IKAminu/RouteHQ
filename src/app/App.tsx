@@ -4,12 +4,17 @@ import 'dynaura/styles-no-font.css'
 import { AuthGate, type AppMode } from '@/auth/AuthGate'
 import { WorkspaceGate } from '@/auth/WorkspaceGate'
 import { AppStoreProvider } from '@/hooks/useAppStore'
-import { ThemeProvider } from '@/theme/ThemeProvider'
+import { ThemeProvider, useTheme } from '@/theme/ThemeProvider'
 import { router } from '@/app/routes'
+
+function RouteToaster() {
+  const { theme } = useTheme()
+  return <Toaster position="bottom-right" theme={theme} haptics={false} />
+}
 
 export default function App() {
   return <ThemeProvider>
-    <Toaster position="bottom-right" theme="light" haptics={false} />
+    <RouteToaster />
     <AuthGate>
       {(mode: AppMode) => mode === 'demo'
         ? <AppStoreProvider mode="demo"><RouterProvider router={router} /></AppStoreProvider>

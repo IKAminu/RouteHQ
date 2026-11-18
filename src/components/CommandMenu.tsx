@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { ArrowRight, CalendarCheck, CreditCard, LayoutDashboard, Package, Search, StickyNote, UserPlus, Users } from 'lucide-react'
+import { ArrowRight, CalendarCheck, CreditCard, FileText, LayoutDashboard, Package, Search, Settings, StickyNote, UserPlus, Users, WalletCards } from 'lucide-react'
 import { useAppStore } from '@/hooks/useAppStore'
 
 const commands = [
@@ -12,12 +12,20 @@ const commands = [
   { label: 'Go to bookings', detail: 'Travel management', path: '/bookings', icon: CalendarCheck },
   { label: 'Go to travellers and operations', detail: 'Travel management', path: '/travellers', icon: Users },
   { label: 'Go to payments and balances', detail: 'Finance', path: '/payments', icon: CreditCard },
-  { label: 'Go to supplier payments', detail: 'Finance', path: '/suppliers', icon: CreditCard },
+  { label: 'Go to supplier payments', detail: 'Finance', path: '/suppliers', icon: WalletCards },
+  { label: 'Go to documents', detail: 'Administration', path: '/documents', icon: FileText },
   { label: 'Go to notes', detail: 'Administration', path: '/notes', icon: StickyNote },
+  { label: 'Go to operation guide', detail: 'Administration', path: '/notes/guidelines', icon: FileText },
+  { label: 'Go to settings', detail: 'Administration', path: '/settings', icon: Settings },
   { label: 'Add a lead', detail: 'Create record', action: 'lead' as const, icon: UserPlus },
   { label: 'Add a customer', detail: 'Create record', action: 'customer' as const, icon: Users },
+  { label: 'Create a package', detail: 'Create record', action: 'package' as const, icon: Package },
   { label: 'Create a booking', detail: 'Create record', action: 'booking' as const, icon: CalendarCheck },
+  { label: 'Add a traveller', detail: 'Create record', action: 'traveller' as const, icon: Users },
   { label: 'Record a payment', detail: 'Create record', action: 'payment' as const, icon: CreditCard },
+  { label: 'Add a supplier cost', detail: 'Create record', action: 'supplier-cost' as const, icon: WalletCards },
+  { label: 'Record a supplier payment', detail: 'Create record', action: 'supplier-payment' as const, icon: WalletCards },
+  { label: 'Add a document', detail: 'Create record', action: 'document' as const, icon: FileText },
 ]
 
 export function CommandMenu({ onClose }: { onClose: () => void }) {

@@ -30,19 +30,21 @@ export function GlobalSearch() {
   const [active, setActive] = useState(0)
   const [announcement, setAnnouncement] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const requestRef = useRef(0)
   const timerRef = useRef<number | undefined>(undefined)
   const rootRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const { mode, leads, customers, bookings, travellers, packages } = useAppStore()
 
-  const close = useCallback(() => {
+  const close = useCallback((restoreFocus = false) => {
     setOpen(false)
     setQuery('')
     setResults([])
     setError('')
     setLoading(false)
     if (timerRef.current) window.clearTimeout(timerRef.current)
+    if (restoreFocus) requestAnimationFrame(() => triggerRef.current?.focus())
   }, [])
 
   const searchLive = useCallback(async (term: string) => {
@@ -118,13 +120,13 @@ export function GlobalSearch() {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         if (event.defaultPrevented || event.altKey || event.shiftKey) return
         const target = event.target as HTMLElement | null
-        if (target?.isContentEditable || target?.closest('input, textarea, select, [contenteditable="true"]')) return
+        if (target?.isContentEditable || target?.closest('[contenteditable="true"]')) return
         event.preventDefault()
         setOpen(true)
         return
       }
       if (!open) return
-      if (event.key === 'Escape') { event.preventDefault(); close(); return }
+      if (event.key === 'Escape') { event.preventDefault(); close(true); return }
       if (event.key === 'ArrowDown' && results.length) { event.preventDefault(); setActive(i => Math.min(i + 1, results.length - 1)) }
       if (event.key === 'ArrowUp' && results.length) { event.preventDefault(); setActive(i => Math.max(i - 1, 0)) }
       if (event.key === 'Enter' && results[active]) { event.preventDefault(); select(results[active]) }
@@ -150,7 +152,7 @@ export function GlobalSearch() {
   }
 
   return <div className={`routehq-search ${open ? 'is-open' : ''}`} ref={rootRef}>
-    <button type="button" className="routehq-search-trigger" aria-label="Open global search" aria-expanded={open} onClick={() => setOpen(true)}>
+    <button ref={triggerRef} type="button" className="routehq-search-trigger" aria-label="Open global search" aria-expanded={open} onClick={() => setOpen(true)}>
       <Search size={17} strokeWidth={1.8} />
       <span>Search</span>
       <kbd><Command size={11} /> K</kbd>
@@ -160,7 +162,7 @@ export function GlobalSearch() {
         <Search size={18} aria-hidden="true" />
         <input ref={inputRef} value={query} onChange={event => setQuery(event.target.value)} placeholder="Search customers, bookings, packages…" aria-label="Search all RouteHQ records" autoComplete="off" />
         {loading && <LoaderCircle size={17} className="routehq-search-spinner" aria-label="Searching" />}
-        <button type="button" onClick={close} aria-label="Close search"><X size={17} /></button>
+        <button type="button" onClick={() => close(true)} aria-label="Close search"><X size={17} /></button>
       </div>
       <div className="routehq-search-results" role="listbox" aria-label="Search results" aria-busy={loading}>
         {!query.trim() && <p className="routehq-search-hint">Search agency records across RouteHQ</p>}

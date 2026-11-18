@@ -38,6 +38,7 @@ export function GlobalSearch() {
   const { mode, leads, customers, bookings, travellers, packages } = useAppStore()
 
   const close = useCallback((restoreFocus = false) => {
+    requestRef.current += 1
     setOpen(false)
     setQuery('')
     setResults([])
@@ -77,9 +78,9 @@ export function GlobalSearch() {
   }, [leads,customers,packages,bookings,travellers])
 
   const runSearch = useCallback(async (raw: string) => {
+    const request = ++requestRef.current
     const term = safeTerm(raw)
     if (term.length < 2) { setResults([]); setLoading(false); setError(''); return }
-    const request = ++requestRef.current
     setLoading(true)
     setError('')
     try {

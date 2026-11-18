@@ -2254,3 +2254,19 @@
   ::view-transition-old(root),
   ::view-transition-new(root) { animation-duration: .01ms !important; }
 }
+
+
+/* Minimum touch area for all primary interactive controls. */
+:root .button,
+:root .field,
+:root select.field {
+  min-height: 2.75rem;
+}
+@media (max-width: 900px) {
+  :root .button,
+  :root .field,
+  :root select.field,
+  :root .date-chip {
+    min-height: 3rem;
+  }
+}

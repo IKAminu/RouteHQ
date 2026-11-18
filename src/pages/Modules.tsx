@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { Download, ExternalLink, Eye, Filter, Info, Moon, Pencil, Plus, Search, Sun, Trash2 } from 'lucide-react'
 import { Badge, Button, EmptyState, Input, Modal, PageHeader, Select, TableShell } from '@/components/ui'
 import { useAppStore } from '@/hooks/useAppStore'
@@ -82,7 +83,8 @@ function Module({ title, description, actionLabel, actionType, children, options
 }
 
 const useFilter = () => {
-  const [query, setQuery] = useState('')
+  const [searchParams] = useSearchParams()
+  const [query, setQuery] = useState(() => searchParams.get('search') || '')
   const [filter, setFilter] = useState('')
   return { query, setQuery, filter, setFilter }
 }

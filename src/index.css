@@ -2367,3 +2367,19 @@
     animation: none !important;
   }
 }
+
+
+.save-toast-undo {
+  flex: none;
+  border: 0;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-brand-500) 12%, transparent);
+  padding: .35rem .6rem;
+  color: var(--color-brand-700);
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.save-toast-undo:hover { background: color-mix(in srgb, var(--color-brand-500) 20%, transparent); }
+:root[data-theme='dark'] .save-toast-undo { color: #f0a36b; }

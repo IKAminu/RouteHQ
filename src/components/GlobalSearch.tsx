@@ -148,9 +148,10 @@ export function GlobalSearch() {
     target.set('search', safeTerm(query))
     navigate(`${result.path}?${target.toString()}`)
     close()
+    requestAnimationFrame(() => document.getElementById('main-content')?.focus())
   }
 
-  return <div className={`routehq-search ${open ? 'is-open' : ''}`} ref={rootRef}>
+  return <div className={`routehq-search ${open ? 'is-open' : ''}`} ref={rootRef} onBlurCapture={event => { const next = event.relatedTarget as Node | null; if (next && !rootRef.current?.contains(next)) close() }}>
     <button ref={triggerRef} type="button" className="routehq-search-trigger" aria-label="Open global search" aria-expanded={open} onClick={() => setOpen(true)}>
       <Search size={17} strokeWidth={1.8} />
       <span>Search</span>

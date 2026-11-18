@@ -42,7 +42,7 @@ export function CommandMenu({ onClose }: { onClose: () => void }) {
   }
 
   const run = (item: (typeof commands)[number]) => {
-    if (item.path) navigate(item.path)
+    if (item.path) navigate(item.path, { viewTransition: true })
     else if (item.action) setAction(item.action)
     onClose()
   }

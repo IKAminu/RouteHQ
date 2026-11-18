@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/hooks/useAppStore'
 import { Button, IconButton } from '@/components/ui'
 import { QuickActionModal } from '@/components/QuickActionModal'
-import { CommandMenu } from '@/components/CommandMenu'
+import { GlobalSearch } from '@/components/GlobalSearch'
 import { daysFromToday, supplierOutstanding } from '@/lib/business'
 
 const primaryQuickActions = [
@@ -25,11 +25,9 @@ const groups = [
 
 export function AppLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [quickActionsOpen, setQuickActionsOpen] = useState(false)
-  const [commandOpen, setCommandOpen] = useState(false)
   const [accountEmail, setAccountEmail] = useState('')
   const [accountName, setAccountName] = useState('')
   const [isOnline, setIsOnline] = useState(() => typeof navigator === 'undefined' ? true : navigator.onLine)
@@ -37,8 +35,6 @@ export function AppLayout() {
   const accountRef = useRef<HTMLDivElement>(null)
   const quickActionsRef = useRef<HTMLDivElement>(null)
   const mobileQuickActionsRef = useRef<HTMLDivElement>(null)
-  const [query, setQuery] = useState('')
-  const shortcutLabel = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K'
   const navigate = useNavigate()
   const { mode, saveNotice, undoAvailable, undoDelete, leads, customers, bookings, travellers, supplierCosts, setAction } = useAppStore()
 
@@ -106,32 +102,16 @@ export function AppLayout() {
   useEffect(() => {
     const closeOverlays = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setSearchOpen(false)
         setNotificationsOpen(false)
         setAccountOpen(false)
         setQuickActionsOpen(false)
         setMenuOpen(false)
-        setCommandOpen(false)
       }
     }
     window.addEventListener('keydown', closeOverlays)
     return () => window.removeEventListener('keydown', closeOverlays)
   }, [])
 
-  useEffect(() => {
-    const openCommandMenu = (event: KeyboardEvent) => {
-      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k') return
-      const target = event.target as HTMLElement | null
-      if (target?.isContentEditable || target?.closest('input, textarea, select, [contenteditable="true"]')) return
-      event.preventDefault()
-      setCommandOpen((open) => !open)
-      setNotificationsOpen(false)
-      setAccountOpen(false)
-      setQuickActionsOpen(false)
-    }
-    window.addEventListener('keydown', openCommandMenu)
-    return () => window.removeEventListener('keydown', openCommandMenu)
-  }, [])
 
   const alerts = useMemo(() => {
     const followUps = leads.filter((item) => item.followUp && daysFromToday(item.followUp) <= 1 && !['Converted', 'Lost', 'Not Interested'].includes(item.status))
@@ -144,16 +124,7 @@ export function AppLayout() {
     ].slice(0, 8)
   }, [leads, bookings, supplierCosts])
 
-  const results = useMemo(() => {
-    if (query.length < 2) return []
-    const q = query.toLowerCase()
-    return [
-      ...leads.filter((item) => `${item.reference} ${item.name} ${item.phone}`.toLowerCase().includes(q)).map((item) => ({ label: item.name, meta: `Lead · ${item.reference}`, path: '/leads' })),
-      ...customers.filter((item) => `${item.reference} ${item.name} ${item.phone}`.toLowerCase().includes(q)).map((item) => ({ label: item.name, meta: `Customer · ${item.reference}`, path: '/customers' })),
-      ...bookings.filter((item) => `${item.reference} ${item.packageName}`.toLowerCase().includes(q)).map((item) => ({ label: item.reference, meta: `Booking · ${item.packageName}`, path: '/bookings' })),
-      ...travellers.filter((item) => item.name.toLowerCase().includes(q)).map((item) => ({ label: item.name, meta: 'Traveller', path: '/travellers' })),
-    ].slice(0, 7)
-  }, [query, leads, customers, bookings, travellers])
+
 
   return <div className="app-shell">
     <a className="skip-link" href="#main-content">Skip to main content</a>
@@ -167,11 +138,7 @@ export function AppLayout() {
     <div className="main-column">
       <header className="topbar">
         <IconButton label="Open navigation" className="menu-button" onClick={() => setMenuOpen(true)}><Menu size={20} /></IconButton>
-        <div className="global-search">
-          <Search size={18} />
-          <input aria-label="Search all records" placeholder="Search customers, bookings, travellers…" value={query} onFocus={() => setSearchOpen(true)} onChange={(event) => { setQuery(event.target.value); setSearchOpen(true) }} /><kbd className="global-search-shortcut">{shortcutLabel}</kbd>
-          {searchOpen && query && <div className="search-results">{results.length ? results.map((result, index) => <button key={`${result.meta}-${index}`} onClick={() => { navigate(result.path); setQuery(''); setSearchOpen(false) }}><strong>{result.label}</strong><span>{result.meta}</span></button>) : <p>No matching records</p>}</div>}
-        </div>
+        <GlobalSearch />
         <div className="top-actions">
           <div className="popover-wrap" ref={notificationRef}><IconButton label={alerts.length ? `View ${alerts.length} notifications` : 'No current notifications'} aria-expanded={notificationsOpen} onClick={() => { setNotificationsOpen((open) => !open); setAccountOpen(false) }}><Bell size={19} />{alerts.length > 0 && <span className="notification-dot" />}</IconButton>{notificationsOpen && <div className="notifications"><div><strong>Current alerts</strong><span>{alerts.length} items · Based on current records</span></div>{alerts.length ? alerts.map((alert, index) => <button key={`${alert.path}-${index}`} onClick={() => { navigate(alert.path); setNotificationsOpen(false) }}><strong>{alert.title}</strong><span>{alert.detail}</span></button>) : <p className="notification-empty">Nothing needs attention right now.</p>}</div>}</div>
           <div className="quick-action-wrap" ref={quickActionsRef}><Button className="quick-button" aria-expanded={quickActionsOpen} onClick={() => { setQuickActionsOpen((open) => !open); setNotificationsOpen(false); setAccountOpen(false) }}><Plus size={17} /> Quick action <ChevronDown size={15} /></Button>{quickActionsOpen && <div className="quick-action-menu" role="menu" aria-label="Quick actions">{primaryQuickActions.map(({ type, label, icon: Icon }) => <button key={type} type="button" role="menuitem" onClick={() => { setAction(type); setQuickActionsOpen(false) }}><Icon size={17} /><span>{label}</span></button>)}</div>}</div>
@@ -193,6 +160,5 @@ export function AppLayout() {
     </div>
     <div className={`mobile-quick-actions ${quickActionsOpen ? 'is-open' : ''}`} ref={mobileQuickActionsRef}><div className="mobile-quick-menu" aria-hidden={!quickActionsOpen}>{primaryQuickActions.map(({ type, label, icon: Icon }, index) => <button className={`mobile-quick-option mobile-quick-option-${index + 1}`} key={type} type="button" tabIndex={quickActionsOpen ? 0 : -1} onClick={() => { setAction(type); setQuickActionsOpen(false) }}><Icon size={17} /><span>{label}</span></button>)}</div><button className="mobile-fab" aria-label={quickActionsOpen ? "Close quick actions" : "Open quick actions"} aria-expanded={quickActionsOpen} onClick={() => setQuickActionsOpen((open) => !open)}><Plus size={22} /></button></div>
     <QuickActionModal />
-    {commandOpen && <CommandMenu onClose={() => setCommandOpen(false)} />}
   </div>
 }

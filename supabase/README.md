@@ -4,6 +4,10 @@ Project: `viohesitrhrtkulcdnqk` (Supabase project named RouteHQ, EU Central / Fr
 
 This is the commercial RouteHQ database. It is separate from the legacy Dandurgu project. Never point RouteHQ commercial tenants at Dandurgu's project or copy Dandurgu production records into this repository.
 
+## Migration source of truth
+
+Only the nine RouteHQ migrations listed in `migrations/README.md` are recorded in the commercial database. Historical Dandurgu SQL has been moved to `legacy-dandurgu-migrations/` so a future `supabase db push` cannot accidentally apply it to the RouteHQ schema. Do not run those legacy files against this project.
+
 ## Current remote migration history
 
 The following migrations have been applied to the RouteHQ Supabase project:

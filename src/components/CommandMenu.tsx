@@ -42,8 +42,8 @@ export function CommandMenu({ onClose }: { onClose: () => void }) {
   }
 
   const run = (item: (typeof commands)[number]) => {
-    if ('path' in item) navigate(item.path)
-    else setAction(item.action)
+    if (item.path) navigate(item.path)
+    else if (item.action) setAction(item.action)
     onClose()
   }
 

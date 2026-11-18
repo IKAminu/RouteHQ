@@ -38,6 +38,7 @@ export function AppLayout() {
   const quickActionsRef = useRef<HTMLDivElement>(null)
   const mobileQuickActionsRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
+  const shortcutLabel = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K'
   const navigate = useNavigate()
   const { mode, saveNotice, leads, customers, bookings, travellers, supplierCosts, setAction } = useAppStore()
 
@@ -167,7 +168,7 @@ export function AppLayout() {
         <IconButton label="Open navigation" className="menu-button" onClick={() => setMenuOpen(true)}><Menu size={20} /></IconButton>
         <div className="global-search">
           <Search size={18} />
-          <input aria-label="Search all records" placeholder="Search customers, bookings, travellers…" value={query} onFocus={() => setSearchOpen(true)} onChange={(event) => { setQuery(event.target.value); setSearchOpen(true) }} />
+          <input aria-label="Search all records" placeholder="Search customers, bookings, travellers…" value={query} onFocus={() => setSearchOpen(true)} onChange={(event) => { setQuery(event.target.value); setSearchOpen(true) }} /><kbd className="global-search-shortcut">{shortcutLabel}</kbd>
           {searchOpen && query && <div className="search-results">{results.length ? results.map((result, index) => <button key={`${result.meta}-${index}`} onClick={() => { navigate(result.path); setQuery(''); setSearchOpen(false) }}><strong>{result.label}</strong><span>{result.meta}</span></button>) : <p>No matching records</p>}</div>}
         </div>
         <div className="top-actions">

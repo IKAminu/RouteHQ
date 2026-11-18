@@ -25,7 +25,7 @@ Checks: `pnpm typecheck` and `pnpm build`.
 ## Current interface refinements
 
 The current preview includes:
-- A top-centred global search island with keyboard access (`Cmd/Ctrl + K`) and search across demo records.
+- A charcoal oval global search control beside navigation, with keyboard access (`Ctrl + K` / `⌘ K`) and search across demo records.
 - A unified, responsive authentication layout for login, account recovery and Supabase TOTP verification.
 - Six-digit TOTP auto-submit, paste support and one-time-code autocomplete.
 - RouteHQ's orange visual identity with a quieter, more consistent surface and typography system.

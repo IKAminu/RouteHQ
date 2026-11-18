@@ -7,6 +7,10 @@ import type { AppMode } from '@/auth/AuthGate'
 import { initialBookings, initialCustomers, initialLeads, initialPackages, initialPayments, initialTravellers, initialSupplierPayments, supplierCosts as initialSupplierCosts, documents as initialDocuments } from '@/data/mockData'
 import type { Booking, Customer, Lead, Payment, DocumentRecord, QuickActionType, SupplierCost, SupplierPayment, TravelPackage, Traveller } from '@/types'
 
+type DeletableRecordType = 'lead' | 'customer' | 'package' | 'booking' | 'traveller' | 'supplier-cost' | 'document'
+type DeletableRecord = Lead | Customer | TravelPackage | Booking | Traveller | SupplierCost | DocumentRecord
+type PendingDelete = { type: DeletableRecordType; ids: string[]; records: DeletableRecord[]; timer: number }
+
 type AppStore = {
   mode: AppMode
   saveNotice: string | null

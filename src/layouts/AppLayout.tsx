@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/hooks/useAppStore'
 import { Button, IconButton } from '@/components/ui'
 import { QuickActionModal } from '@/components/QuickActionModal'
+import { CommandMenu } from '@/components/CommandMenu'
 import { daysFromToday, supplierOutstanding } from '@/lib/business'
 
 const primaryQuickActions = [
@@ -28,6 +29,7 @@ export function AppLayout() {
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [quickActionsOpen, setQuickActionsOpen] = useState(false)
+  const [commandOpen, setCommandOpen] = useState(false)
   const [accountEmail, setAccountEmail] = useState('')
   const [accountName, setAccountName] = useState('')
   const [isOnline, setIsOnline] = useState(() => typeof navigator === 'undefined' ? true : navigator.onLine)
@@ -114,6 +116,21 @@ export function AppLayout() {
     return () => window.removeEventListener('keydown', closeOverlays)
   }, [])
 
+  useEffect(() => {
+    const openCommandMenu = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k') return
+      const target = event.target as HTMLElement | null
+      if (target?.isContentEditable || target?.closest('input, textarea, select, [contenteditable="true"]')) return
+      event.preventDefault()
+      setCommandOpen((open) => !open)
+      setNotificationsOpen(false)
+      setAccountOpen(false)
+      setQuickActionsOpen(false)
+    }
+    window.addEventListener('keydown', openCommandMenu)
+    return () => window.removeEventListener('keydown', openCommandMenu)
+  }, [])
+
   const alerts = useMemo(() => {
     const followUps = leads.filter((item) => item.followUp && daysFromToday(item.followUp) <= 1 && !['Converted', 'Lost', 'Not Interested'].includes(item.status))
     const departures = bookings.filter((item) => daysFromToday(item.departureDate) >= 0 && daysFromToday(item.departureDate) <= 7 && !['Cancelled', 'Completed'].includes(item.status))
@@ -174,5 +191,6 @@ export function AppLayout() {
     </div>
     <div className={`mobile-quick-actions ${quickActionsOpen ? 'is-open' : ''}`} ref={mobileQuickActionsRef}><div className="mobile-quick-menu" aria-hidden={!quickActionsOpen}>{primaryQuickActions.map(({ type, label, icon: Icon }, index) => <button className={`mobile-quick-option mobile-quick-option-${index + 1}`} key={type} type="button" tabIndex={quickActionsOpen ? 0 : -1} onClick={() => { setAction(type); setQuickActionsOpen(false) }}><Icon size={17} /><span>{label}</span></button>)}</div><button className="mobile-fab" aria-label={quickActionsOpen ? "Close quick actions" : "Open quick actions"} aria-expanded={quickActionsOpen} onClick={() => setQuickActionsOpen((open) => !open)}><Plus size={22} /></button></div>
     <QuickActionModal />
+    {commandOpen && <CommandMenu onClose={() => setCommandOpen(false)} />}
   </div>
 }

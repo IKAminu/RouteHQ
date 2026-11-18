@@ -22,6 +22,16 @@ RouteHQ is a travel-agency operations platform in product development. It brings
 
 Checks: `pnpm typecheck` and `pnpm build`.
 
+## Current interface refinements
+
+The current preview includes:
+- A top-centred global search island with keyboard access (`Cmd/Ctrl + K`) and search across demo records.
+- A unified, responsive authentication layout for login, account recovery and Supabase TOTP verification.
+- Six-digit TOTP auto-submit, paste support and one-time-code autocomplete.
+- RouteHQ's orange visual identity with a quieter, more consistent surface and typography system.
+
+The public preview uses demonstration records only. The authenticated live workspace is still gated while the operational-data adapter is completed, so live cross-agency search is not yet available to agency users.
+
 ## Demo and live data
 
 - `VITE_USE_MOCK_DATA=true` loads bundled synthetic demonstration records. Changes exist only in browser memory and reset when the session reloads.

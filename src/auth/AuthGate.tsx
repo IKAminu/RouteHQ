@@ -67,7 +67,12 @@ function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered
     try {
       const normalizedEmail = email.trim().toLowerCase()
       const { data, error: loginError } = await supabase!.auth.signInWithPassword({ email: normalizedEmail, password })
-      if (loginError) throw loginError
+      if (loginError) {
+        if (loginError.code === 'invalid_credentials' || loginError.message.toLowerCase().includes('invalid login credentials')) {
+          throw new Error('Email or password is incorrect. Use “Forgot password?” to securely set a new password for this account.')
+        }
+        throw loginError
+      }
       if (!data.session) throw new Error('Sign-in did not return a valid session.')
       await beginSecondFactor()
     } catch (err) {
@@ -335,7 +340,9 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
         return
       }
       if (event === 'SIGNED_OUT') setPasswordRecovery(false)
-      void checkSession(current)
+      // Avoid calling Supabase APIs inside onAuthStateChange; defer the AAL check
+      // until the auth callback has returned to prevent client-lock deadlocks.
+      window.setTimeout(() => { void checkSession(current) }, 0)
     })
     return () => { alive = false; listener.subscription.unsubscribe() }
   }, [])

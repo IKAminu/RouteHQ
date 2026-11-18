@@ -91,13 +91,13 @@ function AgencyApplication({ email, onSubmitted }: { email: string; onSubmitted:
 }
 
 function ApplicationStatus({ application, onRefresh, onReapply, onSignOut }: { application: Application; onRefresh: () => void; onReapply: () => void; onSignOut: () => void }) {
-  return <section className="onboarding-card">
-    <span className="onboarding-eyebrow">APPLICATION STATUS</span>
+  return <section className="onboarding-card onboarding-status-card">
+    <div className="onboarding-status-topline"><span className="onboarding-eyebrow">APPLICATION STATUS</span><Button variant="secondary" onClick={onSignOut}>Sign out <span aria-hidden="true">↗</span></Button></div>
     <h1>{application.agency_name}</h1>
     <div className={`application-status status-${application.status}`}>{application.status.replace('_',' ')}</div>
     <p className="onboarding-copy">Your application was submitted on {new Date(application.submitted_at).toLocaleDateString()}. We will activate your agency workspace after review.</p>
     {application.review_notes && <div className="review-note"><strong>Review note</strong><p>{application.review_notes}</p></div>}
-    <div className="application-buttons"><Button variant="secondary" onClick={onRefresh}>Refresh status</Button>{application.status==='rejected' && <Button onClick={onReapply}>Submit a new application</Button>}<Button variant="secondary" onClick={onSignOut}>Sign out</Button></div>
+    <div className="application-buttons"><Button variant="secondary" onClick={onRefresh}>Refresh status</Button>{application.status==='rejected' && <Button onClick={onReapply}>Submit a new application</Button>}</div>
   </section>
 }
 

@@ -2010,3 +2010,69 @@
   :root .account-trigger { width: 2.15rem; height: 2.15rem; }
   :root .page { padding-inline: .75rem; }
 }
+
+
+/* UX pass: readable text rhythm, predictable numbers, and accessible hit areas. */
+:root {
+  --routehq-hit-target: 2.75rem;
+}
+:root :is(button, a, [role="button"], input[type="checkbox"], input[type="radio"]) {
+  touch-action: manipulation;
+}
+:root .icon-button,
+:root .menu-button,
+:root .mobile-close,
+:root .account-trigger {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+:root .nav-group a {
+  min-height: 2.75rem;
+}
+:root .page-header h1,
+:root .section-title h2,
+:root .modal-header h2,
+:root .onboarding-card h1,
+:root .platform-heading h1,
+:root .application-row-head h3 {
+  text-wrap: balance;
+}
+:root p,
+:root .page-header p,
+:root .section-title p,
+:root .onboarding-copy,
+:root .platform-list-head p {
+  text-wrap: pretty;
+}
+:root .metric > strong,
+:root .finance-summary strong,
+:root .platform-stats strong,
+:root .application-details,
+:root td,
+:root th,
+:root .date-chip {
+  font-variant-numeric: tabular-nums;
+}
+@supports (corner-shape: squircle) {
+  :root .button,
+  :root .icon-button,
+  :root .content-section,
+  :root .settings-section,
+  :root .modal,
+  :root .onboarding-card,
+  :root .platform-list {
+    corner-shape: squircle;
+  }
+}
+@media (max-width: 900px) {
+  :root .icon-button,
+  :root .menu-button,
+  :root .mobile-close,
+  :root .account-trigger,
+  :root .nav-group a,
+  :root .quick-action-menu button,
+  :root .mobile-quick-option {
+    min-width: 3rem;
+    min-height: 3rem;
+  }
+}

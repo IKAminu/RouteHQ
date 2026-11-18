@@ -32,8 +32,8 @@ Agency approval currently creates a **pending** subscription record. It does not
 
 Before external agencies store real operational records:
 
-1. Configure managed backups or a secure external backup process and test a restore.
-2. Enable Supabase leaked-password protection.
+1. The current Free plan has no automatic daily backups. Either implement and test an off-site CLI backup/restore process, or upgrade to Pro+ for managed daily backups.
+2. Supabase leaked-password protection is a Pro+ feature. Upgrade before enabling it; on Free, record the limitation and enforce strong passwords plus TOTP MFA.
 3. Connect the Management API through a server-side Edge Function and scoped secret.
 4. Add subscription activation, renewal and cancellation workflows backed by a payment provider or auditable manual billing operations.
 5. Add automated tests for cross-tenant isolation and platform-admin access boundaries.

@@ -58,7 +58,7 @@ export function GlobalSearch() {
       }
       return (data || []).map(row => {
         const item = row as unknown as Record<string, unknown>
-        const title = String(item[entity.title] || entity.label)
+        const title = String(item[entity.title] || entity.table)
         return { id: String(item.id), title, detail: entity.detail(item), path: entity.path } satisfies SearchResult
       })
     }))

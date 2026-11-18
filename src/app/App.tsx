@@ -1,6 +1,6 @@
 import { RouterProvider } from 'react-router'
 import { Toaster } from 'dynaura'
-import 'dynaura/styles.css'
+import 'dynaura/styles-no-font.css'
 import { AuthGate, type AppMode } from '@/auth/AuthGate'
 import { WorkspaceGate } from '@/auth/WorkspaceGate'
 import { AppStoreProvider } from '@/hooks/useAppStore'

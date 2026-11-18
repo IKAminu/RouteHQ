@@ -13,8 +13,8 @@ const entities: SearchEntity[] = [
   { table: 'customers', path: '/customers', label: 'Customer', fields: ['customer_ref', 'full_name', 'phone', 'email'], select: 'id,customer_ref,full_name,phone,email', title: 'full_name', detail: r => `Customer · ${r.customer_ref || r.phone || ''}` },
   { table: 'packages', path: '/packages', label: 'Package', fields: ['package_ref', 'name', 'departure_location'], select: 'id,package_ref,name,departure_location', title: 'name', detail: r => `Package · ${r.package_ref || r.departure_location || ''}` },
   { table: 'bookings', path: '/bookings', label: 'Booking', fields: ['booking_ref'], select: 'id,booking_ref,status', title: 'booking_ref', detail: r => `Booking · ${r.status || ''}` },
-  { table: 'travellers', path: '/travellers', label: 'Traveller', fields: ['full_name', 'nationality', 'room_group'], select: 'id,full_name,nationality,room_group', title: 'full_name', detail: r => `Traveller · ${r.nationality || ''}` },
-  { table: 'payments', path: '/payments', label: 'Payment', fields: ['payment_ref', 'external_reference', 'status'], select: 'id,payment_ref,external_reference,status', title: 'payment_ref', detail: r => `Payment · ${r.external_reference || r.status || ''}` },
+  { table: 'travellers', path: '/travellers', label: 'Traveller', fields: ['full_name'], select: 'id,full_name,nationality,room_group', title: 'full_name', detail: r => `Traveller · ${r.nationality || ''}` },
+  { table: 'payments', path: '/payments', label: 'Payment', fields: ['payment_ref', 'external_reference'], select: 'id,payment_ref,external_reference,status', title: 'payment_ref', detail: r => `Payment · ${r.external_reference || r.status || ''}` },
   { table: 'documents', path: '/documents', label: 'Document', fields: ['file_name', 'document_type'], select: 'id,file_name,document_type', title: 'file_name', detail: r => `Document · ${r.document_type || ''}` },
   { table: 'agency_notes', path: '/notes', label: 'Note', fields: ['title', 'body'], select: 'id,title,body', title: 'title', detail: () => 'Agency note' },
 ]
@@ -86,7 +86,7 @@ export function GlobalSearch() {
     try {
       const task = mode === 'demo' ? Promise.resolve(searchDemo(term)) : searchLive(term)
       const found = await dynaura.promise(task, {
-        loading: { title: 'Searching RouteHQ', duration: 1200 },
+        loading: { title: 'Searching RouteHQ', duration: null },
         success: { title: 'Search updated', duration: 700 },
         error: { title: 'Search failed', duration: 1800 },
       })

@@ -8,6 +8,16 @@ import { dynaura } from 'dynaura'
 export type AppMode = 'demo' | 'live'
 type AuthStep = 'login' | 'mfa' | 'enroll' | 'forgot' | 'recover'
 
+function AuthVisual() {
+  return <aside className="auth-visual" aria-label="RouteHQ travel operations">
+    <div className="auth-visual-top"><img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="RouteHQ" /><span>TRAVEL OPERATIONS</span></div>
+    <div className="auth-visual-main"><p>ROUTEHQ WORKSPACE</p><h2>Every journey.<br/>One clear view.</h2><span>Keep enquiries, bookings, travellers and payments connected from one workspace.</span>
+      <div className="auth-route-flow"><div><i>01</i><span><strong>Enquiries</strong><small>Capture and qualify</small></span></div><b></b><div><i>02</i><span><strong>Bookings</strong><small>Coordinate each trip</small></span></div><b></b><div><i>03</i><span><strong>Departures</strong><small>Keep operations moving</small></span></div></div>
+    </div>
+    <div className="auth-visual-foot"><span>BUILT FOR TRAVEL AGENCIES</span><span>ROUTEHQ · 01</span></div>
+  </aside>
+}
+
 function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered }: { onAuthenticated: (session: Session) => void; onDemo: () => void; recoveryMode: boolean; onPasswordRecovered: () => void }) {
   const [step, setStep] = useState<AuthStep>(recoveryMode ? 'recover' : 'login')
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
@@ -293,7 +303,7 @@ function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered
       {step !== 'login' && <button className="auth-back" type="button" onClick={async () => { await handleBackToLogin(); onPasswordRecovered() }}>Cancel and return to sign in</button>}
       <p className="auth-footnote">Agency workspaces are activated after RouteHQ reviews and approves an application.</p>
     </section>
-    <aside className="auth-visual" aria-label="RouteHQ travel operations"><div className="auth-visual-top"><img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="RouteHQ" /><span>TRAVEL OPERATIONS</span></div><div className="auth-visual-main"><p>ROUTEHQ WORKSPACE</p><h2>Every journey.<br/>One clear view.</h2><span>Keep enquiries, bookings, travellers and payments connected from one workspace.</span><div className="auth-route-flow"><div><i>01</i><span><strong>Enquiries</strong><small>Capture and qualify</small></span></div><b></b><div><i>02</i><span><strong>Bookings</strong><small>Coordinate each trip</small></span></div><b></b><div><i>03</i><span><strong>Departures</strong><small>Keep operations moving</small></span></div></div></div><div className="auth-visual-foot"><span>BUILT FOR TRAVEL AGENCIES</span><span>ROUTEHQ · 01</span></div></aside>
+    <AuthVisual />
     </div>
   </div>
 }
@@ -365,9 +375,9 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
   }, [])
 
   if (import.meta.env.VITE_USE_MOCK_DATA === 'true') return <>{children('demo')}</>
-  if (!supabase) return <div className="auth-screen"><section className="auth-panel"><h1>Configuration required</h1><p>Supabase connection settings are missing. Contact the app administrator.</p></section></div>
+  if (!supabase) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Configuration required</h1><p className="auth-description">Supabase connection settings are missing. Contact the app administrator.</p></section><AuthVisual /></div></div>
   if (!ready) return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /><span>Preparing secure workspace</span><i /></div>
-  if (authError) return <div className="auth-screen"><section className="auth-panel"><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section></div>
+  if (authError) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section><AuthVisual /></div></div>
   if (mode === 'demo') return <>{children('demo')}</>
   if (!session || !authenticated || passwordRecovery) return <AuthScreen key={passwordRecovery ? 'password-recovery' : 'sign-in'} recoveryMode={passwordRecovery} onPasswordRecovered={() => { setPasswordRecovery(false); setSession(null); setAuthenticated(false); setMode(null) }} onDemo={async () => { const { error } = await supabase!.auth.signOut(); if (error) throw error; setSession(null); setAuthenticated(false); setMode('demo') }} onAuthenticated={(nextSession) => { setPasswordRecovery(false); setSession(nextSession); setAuthenticated(true); setMode('live') }} />
   return <>{mode === 'live' ? children('live') : null}</>

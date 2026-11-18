@@ -2396,3 +2396,16 @@
   flex: none;
   min-height: 2.75rem;
 }
+
+
+/* One consistent reduced-motion policy for every component and future animation. */
+@media (prefers-reduced-motion: reduce) {
+  :root *,
+  :root *::before,
+  :root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

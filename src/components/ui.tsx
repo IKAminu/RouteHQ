@@ -35,25 +35,36 @@ export const EmptyState = ({ title, text }: { title: string; text: string }) => 
 
 export function Modal({ title, description, onClose, children }: { title: string; description?: string; onClose: () => void; children: ReactNode }) {
   const dragStart = useRef<{ y: number; startedAt: number } | null>(null)
+  const dragOffsetRef = useRef(0)
   const [dragOffset, setDragOffset] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
   const handleDragStart = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'mouse' || (event.target instanceof Element && event.target.closest('button'))) return
     dragStart.current = { y: event.clientY, startedAt: Date.now() }
+    dragOffsetRef.current = 0
+    setIsDragging(true)
     event.currentTarget.setPointerCapture(event.pointerId)
   }
   const handleDragMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (dragStart.current) setDragOffset(Math.max(0, event.clientY - dragStart.current.y))
+    if (dragStart.current) {
+      const offset = Math.max(0, event.clientY - dragStart.current.y)
+      dragOffsetRef.current = offset
+      setDragOffset(offset)
+    }
   }
   const handleDragEnd = () => {
     if (!dragStart.current) return
     const elapsed = Date.now() - dragStart.current.startedAt
-    const shouldDismiss = dragOffset > 110 || (elapsed < 180 && dragOffset > 55)
+    const offset = dragOffsetRef.current
+    const shouldDismiss = offset > 110 || (elapsed < 180 && offset > 55)
     dragStart.current = null
+    dragOffsetRef.current = 0
+    setIsDragging(false)
     setDragOffset(0)
     if (shouldDismiss) onClose()
   }
   return <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
-    <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" style={dragOffset ? { transform: `translateY(${dragOffset}px)` } : undefined} onMouseDown={(event) => event.stopPropagation()}>
+    <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" style={dragOffset ? { transform: `translateY(${dragOffset}px)`, transition: isDragging ? 'none' : undefined } : undefined} onMouseDown={(event) => event.stopPropagation()}>
       <div className="modal-header" onPointerDown={handleDragStart} onPointerMove={handleDragMove} onPointerUp={handleDragEnd} onPointerCancel={handleDragEnd}><div><h2 id="modal-title">{title}</h2>{description && <p>{description}</p>}</div><IconButton label="Close dialog" onClick={onClose}><X size={18} /></IconButton></div>
       {children}
     </section>

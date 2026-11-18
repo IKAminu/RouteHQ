@@ -2270,3 +2270,26 @@
     min-height: 3rem;
   }
 }
+
+
+/* Respect device cutouts and home-indicator areas in installed/mobile layouts. */
+@media (max-width: 900px) {
+  :root .topbar {
+    height: calc(4.5rem + env(safe-area-inset-top));
+    min-height: calc(4.5rem + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+    padding-left: max(.75rem, env(safe-area-inset-left));
+    padding-right: max(.75rem, env(safe-area-inset-right));
+  }
+  :root .sidebar {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+  :root .onboarding-shell,
+  :root .auth-screen {
+    padding-left: max(.85rem, env(safe-area-inset-left));
+    padding-right: max(.85rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}

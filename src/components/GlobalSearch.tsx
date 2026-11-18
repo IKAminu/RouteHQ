@@ -5,24 +5,22 @@ import { dynaura } from 'dynaura'
 import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/hooks/useAppStore'
 
-type SearchResult = { id: string; title: string; detail: string; path: string; query: string }
+type SearchResult = { id: string; title: string; detail: string; path: string }
 type SearchEntity = { table: string; path: string; label: string; fields: string[]; select: string; title: string; detail: (row: Record<string, unknown>) => string }
 
 const entities: SearchEntity[] = [
   { table: 'leads', path: '/leads', label: 'Lead', fields: ['lead_ref', 'full_name', 'phone', 'email'], select: 'id,lead_ref,full_name,phone,email', title: 'full_name', detail: r => `Lead · ${r.lead_ref || r.phone || ''}` },
   { table: 'customers', path: '/customers', label: 'Customer', fields: ['customer_ref', 'full_name', 'phone', 'email'], select: 'id,customer_ref,full_name,phone,email', title: 'full_name', detail: r => `Customer · ${r.customer_ref || r.phone || ''}` },
   { table: 'packages', path: '/packages', label: 'Package', fields: ['package_ref', 'name', 'departure_location'], select: 'id,package_ref,name,departure_location', title: 'name', detail: r => `Package · ${r.package_ref || r.departure_location || ''}` },
-  { table: 'bookings', path: '/bookings', label: 'Booking', fields: ['booking_ref', 'status'], select: 'id,booking_ref,status', title: 'booking_ref', detail: r => `Booking · ${r.status || ''}` },
+  { table: 'bookings', path: '/bookings', label: 'Booking', fields: ['booking_ref'], select: 'id,booking_ref,status', title: 'booking_ref', detail: r => `Booking · ${r.status || ''}` },
   { table: 'travellers', path: '/travellers', label: 'Traveller', fields: ['full_name', 'nationality', 'room_group'], select: 'id,full_name,nationality,room_group', title: 'full_name', detail: r => `Traveller · ${r.nationality || ''}` },
   { table: 'payments', path: '/payments', label: 'Payment', fields: ['payment_ref', 'external_reference', 'status'], select: 'id,payment_ref,external_reference,status', title: 'payment_ref', detail: r => `Payment · ${r.external_reference || r.status || ''}` },
   { table: 'suppliers', path: '/suppliers', label: 'Supplier', fields: ['name', 'email', 'phone'], select: 'id,name,email,phone', title: 'name', detail: r => `Supplier · ${r.phone || r.email || ''}` },
   { table: 'documents', path: '/documents', label: 'Document', fields: ['file_name', 'document_type'], select: 'id,file_name,document_type', title: 'file_name', detail: r => `Document · ${r.document_type || ''}` },
   { table: 'agency_notes', path: '/notes', label: 'Note', fields: ['title', 'body'], select: 'id,title,body', title: 'title', detail: () => 'Agency note' },
-  { table: 'tasks', path: '/notes', label: 'Task', fields: ['title', 'description'], select: 'id,title,description', title: 'title', detail: r => `Task · ${r.status || 'Agency task'}` },
 ]
 
 const safeTerm = (value: string) => value.replace(/[%_,().*]/g, ' ').replace(/[^\p{L}\p{N}\s@.+-]/gu, ' ').trim().replace(/\s+/g, ' ')
-const resultQuery = (result: SearchResult) => result.query
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false)
@@ -53,12 +51,15 @@ export function GlobalSearch() {
     const matches = await Promise.all(entities.map(async entity => {
       const expression = entity.fields.map(field => `${field}.ilike.%${term}%`).join(',')
       const { data, error: searchError } = await supabase!.from(entity.table).select(entity.select).or(expression).limit(4)
-      if (searchError) throw searchError
+      if (searchError) {
+        if (searchError.code === '42501' || /permission denied|not authorized/i.test(searchError.message)) return []
+        throw searchError
+      }
       return (data || []).map(row => {
         const item = row as unknown as Record<string, unknown>
         const title = String(item[entity.title] || entity.label)
         const value = String(item[entity.fields[0]] || title)
-        return { id: String(item.id), title, detail: entity.detail(item), path: entity.path, query: value } satisfies SearchResult
+        return { id: String(item.id), title, detail: entity.detail(item), path: entity.path } satisfies SearchResult
       })
     }))
     return matches.flat().slice(0, 10)
@@ -67,11 +68,11 @@ export function GlobalSearch() {
   const searchDemo = useCallback((term: string): SearchResult[] => {
     const q = term.toLowerCase()
     return [
-      ...leads.filter(x => `${x.reference} ${x.name} ${x.phone} ${x.email || ''}`.toLowerCase().includes(q)).map(x => ({ id:x.id,title:x.name,detail:`Lead · ${x.reference}`,path:'/leads',query:x.reference })),
-      ...customers.filter(x => `${x.reference} ${x.name} ${x.phone} ${x.email || ''}`.toLowerCase().includes(q)).map(x => ({ id:x.id,title:x.name,detail:`Customer · ${x.reference}`,path:'/customers',query:x.reference })),
-      ...packages.filter(x => `${x.code} ${x.name} ${x.destination}`.toLowerCase().includes(q)).map(x => ({ id:x.id,title:x.name,detail:`Package · ${x.code}`,path:'/packages',query:x.code })),
-      ...bookings.filter(x => `${x.reference} ${x.packageName}`.toLowerCase().includes(q)).map(x => ({ id:x.id,title:x.reference,detail:`Booking · ${x.packageName}`,path:'/bookings',query:x.reference })),
-      ...travellers.filter(x => x.name.toLowerCase().includes(q)).map(x => ({ id:x.id,title:x.name,detail:'Traveller',path:'/travellers',query:x.name })),
+      ...leads.filter(x => `${x.reference} ${x.name} ${x.phone} ${x.email || ''}`.toLowerCase().includes(q)).map(x => ({ id:x.id,title:x.name,detail:`Lead · ${x.reference}`,path:'/leads' })),
+      ...customers.filter(x => `${x.reference} ${x.name} ${x.phone} ${x.email || ''}`.toLowerCase().includes(q)).map(x => ({ id:x.id,title:x.name,detail:`Customer · ${x.reference}`,path:'/customers' })),
+      ...packages.filter(x => `${x.code} ${x.name} ${x.destination}`.toLowerCase().includes(q)).map(x => ({ id:x.id,title:x.name,detail:`Package · ${x.code}`,path:'/packages' })),
+      ...bookings.filter(x => `${x.reference} ${x.packageName}`.toLowerCase().includes(q)).map(x => ({ id:x.id,title:x.reference,detail:`Booking · ${x.packageName}`,path:'/bookings' })),
+      ...travellers.filter(x => x.name.toLowerCase().includes(q)).map(x => ({ id:x.id,title:x.name,detail:'Traveller',path:'/travellers' })),
     ].slice(0, 10)
   }, [leads,customers,packages,bookings,travellers])
 
@@ -144,7 +145,7 @@ export function GlobalSearch() {
 
   const select = (result: SearchResult) => {
     const target = new URLSearchParams()
-    target.set('search', resultQuery(result))
+    target.set('search', query.trim())
     navigate(`${result.path}?${target.toString()}`)
     close()
   }

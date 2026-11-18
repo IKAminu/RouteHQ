@@ -2194,3 +2194,47 @@
 @media (max-width: 720px) {
   .global-search-shortcut { display: none; }
 }
+
+
+/* Mobile forms behave like dismissible bottom sheets. */
+@media (max-width: 640px) {
+  :root .modal-backdrop {
+    align-items: end;
+    padding: 0;
+    overscroll-behavior: contain;
+  }
+  :root .modal {
+    width: 100%;
+    max-width: none;
+    max-height: min(92dvh, 56rem);
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: .85rem .85rem 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    transform: translateY(0);
+    transition: transform 180ms cubic-bezier(.2,.8,.2,1);
+  }
+  :root .modal-header {
+    position: relative;
+    min-height: 4rem;
+    padding-top: 1.45rem;
+    touch-action: pan-x;
+    cursor: grab;
+    user-select: none;
+  }
+  :root .modal-header::before {
+    position: absolute;
+    top: .55rem;
+    left: calc(50% - 1.35rem);
+    width: 2.7rem;
+    height: .22rem;
+    border-radius: 99px;
+    background: var(--color-muted);
+    opacity: .35;
+    content: '';
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .modal { transition: none !important; }
+}

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { waitForMinimumLoadingTime } from '@/lib/loading'
+import { dynaura } from 'dynaura'
 
 export type AppMode = 'demo' | 'live'
 type AuthStep = 'login' | 'mfa' | 'enroll' | 'forgot' | 'recover'
@@ -25,6 +26,8 @@ function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered
   const [secretCopied, setSecretCopied] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const verifyFormRef = useRef<HTMLFormElement>(null)
+  const verifyInFlight = useRef(false)
 
   const beginSecondFactor = async () => {
     const { data: factors, error: factorsError } = await supabase!.auth.mfa.listFactors()
@@ -163,6 +166,8 @@ function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered
 
   const handleVerify = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (verifyInFlight.current) return
+    verifyInFlight.current = true
     setError('')
     setBusy(true)
     try {
@@ -181,13 +186,22 @@ function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered
       const { data, error: sessionError } = await supabase!.auth.getSession()
       if (sessionError) throw sessionError
       if (!data.session) throw new Error('Your session could not be confirmed. Please sign in again.')
+      dynaura.success({ title: 'Verification complete', description: 'Your RouteHQ session is secured.' })
       onAuthenticated(data.session)
     } catch (err) {
+      setCode('')
       setError(err instanceof Error ? err.message : 'The verification code was not accepted.')
     } finally {
+      verifyInFlight.current = false
       setBusy(false)
     }
   }
+
+  useEffect(() => {
+    if ((step === 'mfa' || step === 'enroll') && code.length === 6 && !busy && !error && !verifyInFlight.current) {
+      verifyFormRef.current?.requestSubmit()
+    }
+  }, [code, step, busy, error])
 
   const handleBackToLogin = async () => {
     if (factorId && step === 'enroll') {
@@ -211,12 +225,13 @@ function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered
   }
 
   return <div className="auth-screen">
+    <div className="auth-layout">
     <section className="auth-panel">
       <img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" />
-      <p className="auth-eyebrow">TRAVEL AGENCY OPERATIONS</p>
-      <h1>{step === 'login' ? (authMode === 'signup' ? 'Create your RouteHQ account' : 'Sign in to RouteHQ') : step === 'forgot' ? 'Reset your password' : step === 'recover' ? 'Choose a new password' : step === 'enroll' ? 'Secure your account' : 'Two-step verification'}</h1>
+      <p className="auth-eyebrow">AGENCY OPERATIONS</p>
+      <h1>{step === 'login' ? (authMode === 'signup' ? 'Create your RouteHQ account' : 'Sign in to RouteHQ') : step === 'forgot' ? 'Reset your password' : step === 'recover' ? 'Choose a new password'  : step === 'enroll' ? 'Secure your account' : 'Verify it’s you'}</h1>
       <p className="auth-description">
-        {step === 'login' ? (authMode === 'signup' ? 'Create an account first. You will submit your agency details after verifying your email.' : 'Sign in to manage your agency or submit an application to join RouteHQ.') : step === 'forgot' ? 'We will send a secure password-reset link to the email address on your account.' : step === 'recover' ? 'Choose a new password for your RouteHQ account. You will sign in again and complete two-step verification afterwards.' : step === 'enroll' ? 'Connect an authenticator app to your account. This is required before accessing agency records.' : 'Enter the current six-digit code from your authenticator app.'}
+        {step === 'login' ? (authMode === 'signup' ? 'Create an account first. You will submit your agency details after verifying your email.' : 'Sign in to manage your agency or submit an application to join RouteHQ.') : step === 'forgot' ? 'We will send a secure password-reset link to the email address on your account.' : step === 'recover' ? 'Choose a new password for your RouteHQ account. You will sign in again and complete two-step verification afterwards.' : step === 'enroll' ? 'Connect an authenticator app to secure your account.' : 'Enter the six-digit code from your authenticator app.'}
       </p>
 
       {step === 'login' && <form className="auth-form" onSubmit={authMode === 'signup' ? handleSignup : handleLogin}>
@@ -243,7 +258,7 @@ function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered
       {step === 'login' && <button className="auth-back" type="button" onClick={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setError(''); setInfo('') }}>{authMode === 'signup' ? 'Already registered? Sign in' : 'New to RouteHQ? Create an account'}</button>}
       {step === 'login' && <button className="button button-secondary auth-demo" type="button" onClick={onDemo}>Explore the demo</button>}
 
-      {step === 'enroll' && <form className="auth-form" onSubmit={handleVerify}>
+      {step === 'enroll' && <form ref={verifyFormRef} className="auth-form" onSubmit={handleVerify}>
         <div className="auth-qr"><img src={qrCode} alt="Authenticator setup QR code" /></div>
         <p className="auth-help">Open Google Authenticator, Microsoft Authenticator, 1Password or another TOTP app and scan this QR code. Then enter the six-digit code it generates.</p>
         <div className="auth-manual-setup">
@@ -264,20 +279,22 @@ function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered
           <p className="auth-help">In your authenticator app, choose the option to enter a setup key manually. Use the account name RouteHQ and select time-based (TOTP) if asked.</p>
           <p className="auth-help">Keep this key private. Anyone who has it can generate your verification codes.</p>
         </div>
-        <label className="field-group">Authenticator code<input className="field auth-code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,8}" maxLength={8} required value={code} onChange={(event) => setCode(event.target.value)} placeholder="000000" /></label>
+        <label className="field-group">Enter the code<input className={`field auth-code ${error ? 'has-error' : ''} ${code ? 'has-value' : ''}`} type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required aria-label="Six-digit authenticator code" aria-describedby="auth-code-help" value={code} onChange={(event) => { setCode(event.target.value.replace(/\\D/g, '').slice(0, 6)); setError('') }} placeholder="••••••" /></label><span id="auth-code-help" className="auth-code-help">Codes refresh every 30 seconds</span>
         {error && <p className="auth-error" role="alert">{error}</p>}
         <button className="button button-primary auth-submit" disabled={busy || code.replace(/\s/g, '').length < 6}>{busy ? 'Verifying…' : 'Enable two-step verification'}</button>
       </form>}
 
-      {step === 'mfa' && <form className="auth-form" onSubmit={handleVerify}>
-        <label className="field-group">Six-digit code<input className="field auth-code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,8}" maxLength={8} required value={code} onChange={(event) => setCode(event.target.value)} placeholder="000000" /></label>
+      {step === 'mfa' && <form ref={verifyFormRef} className="auth-form" onSubmit={handleVerify}>
+        <label className="field-group">Enter the code<input className={`field auth-code ${error ? 'has-error' : ''} ${code ? 'has-value' : ''}`} type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required aria-label="Six-digit authenticator code" aria-describedby="auth-code-help" value={code} onChange={(event) => { setCode(event.target.value.replace(/\\D/g, '').slice(0, 6)); setError('') }} placeholder="••••••" /></label><span id="auth-code-help" className="auth-code-help">Use the current code from your authenticator app</span>
         {error && <p className="auth-error" role="alert">{error}</p>}
         <button className="button button-primary auth-submit" disabled={busy || code.replace(/\s/g, '').length < 6}>{busy ? 'Verifying…' : 'Verify and continue'}</button>
       </form>}
 
       {step !== 'login' && <button className="auth-back" type="button" onClick={async () => { await handleBackToLogin(); onPasswordRecovered() }}>Cancel and return to sign in</button>}
-      <p className="auth-footnote">Agency workspaces are activated only after RouteHQ reviews and approves an application.</p>
+      <p className="auth-footnote">Agency workspaces are activated after RouteHQ reviews and approves an application.</p>
     </section>
+    <aside className="auth-visual" aria-label="RouteHQ travel operations"><div className="auth-visual-top"><img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="RouteHQ" /><span>TRAVEL OPERATIONS</span></div><div className="auth-visual-main"><p>ROUTEHQ WORKSPACE</p><h2>Every journey.<br/>One clear view.</h2><span>Keep enquiries, bookings, travellers and payments connected from one workspace.</span><div className="auth-route-flow"><div><i>01</i><span><strong>Enquiries</strong><small>Capture and qualify</small></span></div><b></b><div><i>02</i><span><strong>Bookings</strong><small>Coordinate each trip</small></span></div><b></b><div><i>03</i><span><strong>Departures</strong><small>Keep operations moving</small></span></div></div></div><div className="auth-visual-foot"><span>BUILT FOR TRAVEL AGENCIES</span><span>ROUTEHQ · 01</span></div></aside>
+    </div>
   </div>
 }
 

@@ -287,7 +287,7 @@ function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered
       {step === 'mfa' && <form ref={verifyFormRef} className="auth-form" onSubmit={handleVerify}>
         <label className="field-group">Enter the code<input className={`field auth-code ${error ? 'has-error' : ''} ${code ? 'has-value' : ''}`} type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required aria-label="Six-digit authenticator code" aria-describedby="auth-code-help" value={code} onChange={(event) => { setCode(event.target.value.replace(/\D/g, '').slice(0, 6)); setError('') }} placeholder="••••••" /></label><span id="auth-code-help" className="auth-code-help">Use the current code from your authenticator app</span>
         {error && <p className="auth-error" role="alert">{error}</p>}
-        <button className="button button-primary auth-submit" disabled={busy || code.replace(/\s/g, '').length < 6}>{busy ? 'Verifying…' : 'Verify and continue'}</button>
+        <button className="button button-primary auth-submit" disabled={busy || code.length !== 6}>{busy ? 'Verifying…' : 'Verify and continue'}</button>
       </form>}
 
       {step !== 'login' && <button className="auth-back" type="button" onClick={async () => { await handleBackToLogin(); onPasswordRecovered() }}>Cancel and return to sign in</button>}

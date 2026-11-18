@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { ArrowRight, Command, LoaderCircle, Search, X } from 'lucide-react'
+import { ArrowRight, LoaderCircle, Search, X } from 'lucide-react'
 import { dynaura } from 'dynaura'
 import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/hooks/useAppStore'
@@ -29,6 +29,7 @@ export function GlobalSearch() {
   const [error, setError] = useState('')
   const [active, setActive] = useState(0)
   const [announcement, setAnnouncement] = useState('')
+  const shortcutLabel = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K'
   const inputRef = useRef<HTMLInputElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const requestRef = useRef(0)
@@ -155,7 +156,7 @@ export function GlobalSearch() {
     <button ref={triggerRef} type="button" className="routehq-search-trigger" aria-label="Open global search" aria-expanded={open} onClick={() => setOpen(true)}>
       <Search size={17} strokeWidth={1.8} />
       <span>Search</span>
-      <kbd><Command size={11} /> K</kbd>
+      <kbd>{shortcutLabel}</kbd>
     </button>
     {open && <section className="routehq-search-panel" role="dialog" aria-label="Search RouteHQ">
       <div className="routehq-search-field">

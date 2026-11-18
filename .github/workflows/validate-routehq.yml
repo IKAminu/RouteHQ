@@ -34,6 +34,9 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Verify Dynaura registry integrity
+        run: npm view dynaura@0.2.2 dist.integrity
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 

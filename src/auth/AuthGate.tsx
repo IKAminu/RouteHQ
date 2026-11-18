@@ -5,14 +5,16 @@ import { supabase } from '@/lib/supabase'
 import { waitForMinimumLoadingTime } from '@/lib/loading'
 
 export type AppMode = 'demo' | 'live'
-type AuthStep = 'login' | 'mfa' | 'enroll'
+type AuthStep = 'login' | 'mfa' | 'enroll' | 'forgot' | 'recover'
 
-function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Session) => void; onDemo: () => void }) {
-  const [step, setStep] = useState<AuthStep>('login')
+function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered }: { onAuthenticated: (session: Session) => void; onDemo: () => void; recoveryMode: boolean; onPasswordRecovered: () => void }) {
+  const [step, setStep] = useState<AuthStep>(recoveryMode ? 'recover' : 'login')
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [info, setInfo] = useState('')
   const [code, setCode] = useState('')
   const [factorId, setFactorId] = useState('')
@@ -70,6 +72,58 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
       await beginSecondFactor()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not sign in. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleSendPasswordReset = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError('')
+    setInfo('')
+    setBusy(true)
+    try {
+      const normalizedEmail = email.trim().toLowerCase()
+      if (!normalizedEmail) throw new Error('Enter the email address for your RouteHQ account.')
+      const { error: resetError } = await supabase!.auth.resetPasswordForEmail(normalizedEmail, {
+        redirectTo: window.location.origin,
+      })
+      if (resetError) throw resetError
+      setInfo('If an account exists for that address, Supabase has sent a password-reset link. Check your inbox and spam folder.')
+      setStep('login')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not request a password reset. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handlePasswordRecovery = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError('')
+    setInfo('')
+    if (newPassword.length < 10) {
+      setError('Use a password with at least 10 characters.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setError('The two passwords do not match.')
+      return
+    }
+    setBusy(true)
+    try {
+      const { error: updateError } = await supabase!.auth.updateUser({ password: newPassword })
+      if (updateError) throw updateError
+      const { error: signOutError } = await supabase!.auth.signOut()
+      if (signOutError) throw signOutError
+      setPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setStep('login')
+      setInfo('Your password has been changed. Sign in with your new password, then complete two-step verification.')
+      onPasswordRecovered()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update your password. Request a new reset link and try again.')
     } finally {
       setBusy(false)
     }
@@ -155,9 +209,9 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
     <section className="auth-panel">
       <img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" />
       <p className="auth-eyebrow">TRAVEL AGENCY OPERATIONS</p>
-      <h1>{step === 'login' ? (authMode === 'signup' ? 'Create your RouteHQ account' : 'Sign in to RouteHQ') : step === 'enroll' ? 'Secure your account' : 'Two-step verification'}</h1>
+      <h1>{step === 'login' ? (authMode === 'signup' ? 'Create your RouteHQ account' : 'Sign in to RouteHQ') : step === 'forgot' ? 'Reset your password' : step === 'recover' ? 'Choose a new password' : step === 'enroll' ? 'Secure your account' : 'Two-step verification'}</h1>
       <p className="auth-description">
-        {step === 'login' ? (authMode === 'signup' ? 'Create an account first. You will submit your agency details after verifying your email.' : 'Sign in to manage your agency or submit an application to join RouteHQ.') : step === 'enroll' ? 'Connect an authenticator app to your account. This is required before accessing agency records.' : 'Enter the current six-digit code from your authenticator app.'}
+        {step === 'login' ? (authMode === 'signup' ? 'Create an account first. You will submit your agency details after verifying your email.' : 'Sign in to manage your agency or submit an application to join RouteHQ.') : step === 'forgot' ? 'We will send a secure password-reset link to the email address on your account.' : step === 'recover' ? 'Choose a new password for your RouteHQ account. You will sign in again and complete two-step verification afterwards.' : step === 'enroll' ? 'Connect an authenticator app to your account. This is required before accessing agency records.' : 'Enter the current six-digit code from your authenticator app.'}
       </p>
 
       {step === 'login' && <form className="auth-form" onSubmit={authMode === 'signup' ? handleSignup : handleLogin}>
@@ -169,6 +223,18 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
         {error && <p className="auth-error" role="alert">{error}</p>}
         <button className="button button-primary auth-submit" disabled={busy}>{busy ? (authMode === 'signup' ? 'Creating account…' : 'Signing in…') : (authMode === 'signup' ? 'Create account' : 'Sign in')}</button>
       </form>}
+      {step === 'forgot' && <form className="auth-form" onSubmit={handleSendPasswordReset}>
+        <label className="field-group">Email address<input className="field" type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+        {error && <p className="auth-error" role="alert">{error}</p>}
+        <button className="button button-primary auth-submit" disabled={busy}>{busy ? 'Sending link…' : 'Send password-reset link'}</button>
+      </form>}
+      {step === 'recover' && <form className="auth-form" onSubmit={handlePasswordRecovery}>
+        <label className="field-group">New password<input className="field" type="password" autoComplete="new-password" minLength={10} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /></label>
+        <label className="field-group">Confirm new password<input className="field" type="password" autoComplete="new-password" minLength={10} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /></label>
+        {error && <p className="auth-error" role="alert">{error}</p>}
+        <button className="button button-primary auth-submit" disabled={busy || newPassword.length < 10 || newPassword !== confirmPassword}>{busy ? 'Updating password…' : 'Update password'}</button>
+      </form>}
+      {step === 'login' && authMode === 'login' && <button className="auth-back" type="button" onClick={() => { setStep('forgot'); setError(''); setInfo('') }}>Forgot password?</button>}
       {step === 'login' && <button className="auth-back" type="button" onClick={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setError(''); setInfo('') }}>{authMode === 'signup' ? 'Already registered? Sign in' : 'New to RouteHQ? Create an account'}</button>}
       {step === 'login' && <button className="button button-secondary auth-demo" type="button" onClick={onDemo}>Explore the demo</button>}
 
@@ -204,7 +270,7 @@ function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: (session: Se
         <button className="button button-primary auth-submit" disabled={busy || code.replace(/\s/g, '').length < 6}>{busy ? 'Verifying…' : 'Verify and continue'}</button>
       </form>}
 
-      {step !== 'login' && <button className="auth-back" type="button" onClick={handleBackToLogin}>Cancel and return to sign in</button>}
+      {step !== 'login' && <button className="auth-back" type="button" onClick={async () => { await handleBackToLogin(); onPasswordRecovered() }}>Cancel and return to sign in</button>}
       <p className="auth-footnote">Agency workspaces are activated only after RouteHQ reviews and approves an application.</p>
     </section>
   </div>
@@ -216,6 +282,7 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
   const [authenticated, setAuthenticated] = useState(false)
   const [mode, setMode] = useState<AppMode | null>(null)
   const [authError, setAuthError] = useState('')
+  const [passwordRecovery, setPasswordRecovery] = useState(() => new URLSearchParams(window.location.hash.replace(/^#/, '')).get('type') === 'recovery')
 
   useEffect(() => {
     // Public preview builds use local demo data and must not initialise Supabase auth.
@@ -258,7 +325,16 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
       setAuthError(error instanceof Error ? error.message : 'The sign-in service could not be reached. Check your connection and try again.')
       setReady(true)
     })
-    const { data: listener } = supabase!.auth.onAuthStateChange((_event, current) => {
+    const { data: listener } = supabase!.auth.onAuthStateChange((event, current) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordRecovery(true)
+        setSession(current)
+        setAuthenticated(false)
+        setMode(null)
+        setReady(true)
+        return
+      }
+      if (event === 'SIGNED_OUT') setPasswordRecovery(false)
       void checkSession(current)
     })
     return () => { alive = false; listener.subscription.unsubscribe() }
@@ -269,6 +345,6 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
   if (!ready) return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /><span>Preparing secure workspace</span><i /></div>
   if (authError) return <div className="auth-screen"><section className="auth-panel"><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section></div>
   if (mode === 'demo') return <>{children('demo')}</>
-  if (!session || !authenticated) return <AuthScreen onDemo={async () => { const { error } = await supabase!.auth.signOut(); if (error) throw error; setSession(null); setAuthenticated(false); setMode('demo') }} onAuthenticated={(nextSession) => { setSession(nextSession); setAuthenticated(true); setMode('live') }} />
+  if (!session || !authenticated || passwordRecovery) return <AuthScreen key={passwordRecovery ? 'password-recovery' : 'sign-in'} recoveryMode={passwordRecovery} onPasswordRecovered={() => { setPasswordRecovery(false); setSession(null); setAuthenticated(false); setMode(null) }} onDemo={async () => { const { error } = await supabase!.auth.signOut(); if (error) throw error; setSession(null); setAuthenticated(false); setMode('demo') }} onAuthenticated={(nextSession) => { setPasswordRecovery(false); setSession(nextSession); setAuthenticated(true); setMode('live') }} />
   return <>{mode === 'live' ? children('live') : null}</>
 }

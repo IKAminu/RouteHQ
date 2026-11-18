@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { BookOpen, CalendarDays, CheckCircle2, Circle, ClipboardList, FileText, LoaderCircle, Pencil, Plus, Search, StickyNote, Trash2, X } from 'lucide-react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { Badge, Button, EmptyState, Field, Input, Modal, PageHeader, Select } from '@/components/ui'
 import { useAppStore } from '@/hooks/useAppStore'
 import { supabase } from '@/lib/supabase'
@@ -27,7 +27,8 @@ export function NotesPage() {
   const { mode } = useAppStore()
   const [tab, setTab] = useState<'all' | 'Note' | 'Reminder' | 'To-do'>('all')
   const [filter, setFilter] = useState<'all' | 'open' | 'completed'>('all')
-  const [query, setQuery] = useState('')
+  const [searchParams] = useSearchParams()
+  const [query, setQuery] = useState(() => searchParams.get('search') || '')
   const [notes, setNotes] = useState<AgencyNote[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)

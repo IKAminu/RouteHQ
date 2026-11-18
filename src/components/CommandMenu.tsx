@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { ArrowRight, CalendarCheck, CreditCard, LayoutDashboard, Package, Search, StickyNote, UserPlus, Users } from 'lucide-react'
 import { useAppStore } from '@/hooks/useAppStore'
@@ -33,7 +34,7 @@ export function CommandMenu({ onClose }: { onClose: () => void }) {
   useEffect(() => { inputRef.current?.focus() }, [])
   useEffect(() => { setActiveIndex(0) }, [query])
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown') { event.preventDefault(); setActiveIndex((index) => Math.min(index + 1, filtered.length - 1)) }
     if (event.key === 'ArrowUp') { event.preventDefault(); setActiveIndex((index) => Math.max(index - 1, 0)) }
     if (event.key === 'Enter' && filtered[activeIndex]) { event.preventDefault(); run(filtered[activeIndex]) }

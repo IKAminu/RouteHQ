@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button, Field, Input, Select } from '@/components/ui'
+import { PlatformConsole } from '@/auth/PlatformConsole'
 
 type Application = {
   id: string
@@ -101,58 +102,6 @@ function ApplicationStatus({ application, onRefresh, onReapply, onSignOut }: { a
   </section>
 }
 
-function PlatformConsole({ email }: { email: string }) {
-  const [applications, setApplications] = useState<Application[]>([])
-  const [busyId, setBusyId] = useState('')
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
-  const [slugs, setSlugs] = useState<Record<string,string>>({})
-  const [notes, setNotes] = useState<Record<string,string>>({})
-  const load = useCallback(async () => {
-    if (!supabase) return
-    const { data, error } = await supabase.from('agency_applications').select('*').order('submitted_at',{ascending:false})
-    if (error) throw error
-    setApplications((data || []) as Application[])
-  }, [])
-  useEffect(()=>{ void load().catch(e=>setError(e.message || 'Could not load applications.')) },[load])
-  const pending = useMemo(()=>applications.filter(a=>['pending','under_review'].includes(a.status)),[applications])
-  const review = async (application: Application, action: 'approve'|'reject') => {
-    if (!supabase) return
-    setBusyId(application.id); setError(''); setNotice('')
-    try {
-      if(action==='approve') {
-        const slug=slugs[application.id] || slugify(application.agency_name)
-        const {error: rpcError}=await supabase.rpc('approve_agency_application',{_application_id:application.id,_slug:slug})
-        if(rpcError) throw rpcError
-        setNotice(`${application.agency_name} approved. Workspace and owner membership created.`)
-      } else {
-        const {error: rpcError}=await supabase.rpc('reject_agency_application',{_application_id:application.id,_review_notes:notes[application.id] || ''})
-        if(rpcError) throw rpcError
-        setNotice(`${application.agency_name} application rejected.`)
-      }
-      await load()
-    } catch(e) { setError(e instanceof Error ? e.message : 'Review action failed.') }
-    finally { setBusyId('') }
-  }
-  return <Shell>
-    <section className="platform-heading"><div><span className="onboarding-eyebrow">WEB4 · PLATFORM OPERATIONS</span><h1>RouteHQ administration</h1><p>Signed in as {email}</p></div><Button variant="secondary" onClick={()=>supabase?.auth.signOut()}>Sign out</Button></section>
-    <div className="platform-stats"><div><strong>{applications.length}</strong><span>Total applications</span></div><div><strong>{pending.length}</strong><span>Awaiting review</span></div><div><strong>{applications.filter(a=>a.status==='approved').length}</strong><span>Approved</span></div></div>
-    {notice && <p className="onboarding-info" role="status">{notice}</p>}
-    {error && <p className="onboarding-error" role="alert">{error}</p>}
-    <section className="platform-list"><div className="platform-list-head"><div><h2>Agency applications</h2><p>Review each application before creating an agency workspace.</p></div><Button variant="secondary" onClick={()=>void load()}>Refresh</Button></div>
-      {applications.length===0 ? <p className="onboarding-copy">No agency applications have been submitted yet.</p> : applications.map(a=><article className="application-row" key={a.id}>
-        <div className="application-row-head"><div><h3>{a.agency_name}</h3><p>{a.contact_name} · {a.email} · {a.phone}</p></div><span className={`application-status status-${a.status}`}>{a.status.replace('_',' ')}</span></div>
-        <div className="application-details"><span>Plan requested: <strong>{a.requested_plan_code.toUpperCase()}</strong></span><span>CAC: {a.registration_number || 'Not supplied'}</span><span>Submitted: {new Date(a.submitted_at).toLocaleString()}</span></div>
-        {['pending','under_review'].includes(a.status) && <div className="application-actions">
-          <Field label="Agency workspace URL slug"><Input value={slugs[a.id] ?? slugify(a.agency_name)} onChange={e=>setSlugs(old=>({...old,[a.id]:slugify(e.target.value)}))} /></Field>
-          <Field label="Review note (for rejection)"><Input value={notes[a.id] || ''} onChange={e=>setNotes(old=>({...old,[a.id]:e.target.value}))} placeholder="Optional explanation" /></Field>
-          <div className="application-buttons"><Button disabled={!!busyId} onClick={()=>void review(a,'approve')}>{busyId===a.id?'Processing…':'Approve agency'}</Button><Button variant="danger" disabled={!!busyId} onClick={()=>void review(a,'reject')}>Reject</Button></div>
-        </div>}
-        {a.review_notes && <p className="review-note">{a.review_notes}</p>}
-      </article>)}
-    </section>
-  </Shell>
-}
 
 export function WorkspaceGate() {
   const [loading,setLoading]=useState(true)

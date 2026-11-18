@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
-import { Bell, BookOpen, BriefcaseBusiness, CalendarCheck, CheckCircle2, ChevronDown, CircleDollarSign, CreditCard, FileText, LayoutDashboard, LoaderCircle, LogOut, Menu, Package, Plus, Search, Settings, ShieldCheck, StickyNote, UserPlus, Users, WalletCards, X } from 'lucide-react'
+import { Bell, BookOpen, BriefcaseBusiness, CalendarCheck, CheckCircle2, ChevronDown, CircleDollarSign, CreditCard, FileText, LayoutDashboard, LoaderCircle, LogOut, Menu, Package, Plus, Settings, ShieldCheck, StickyNote, UserPlus, Users, WalletCards, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/hooks/useAppStore'
 import { Button, IconButton } from '@/components/ui'

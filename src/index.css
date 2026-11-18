@@ -2383,3 +2383,16 @@
 }
 .save-toast-undo:hover { background: color-mix(in srgb, var(--color-brand-500) 20%, transparent); }
 :root[data-theme='dark'] .save-toast-undo { color: #f0a36b; }
+
+
+.onboarding-status-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: .55rem;
+}
+.onboarding-status-topline .button {
+  flex: none;
+  min-height: 2.75rem;
+}

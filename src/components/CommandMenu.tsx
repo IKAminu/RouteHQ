@@ -33,6 +33,13 @@ export function CommandMenu({ onClose }: { onClose: () => void }) {
   useEffect(() => { inputRef.current?.focus() }, [])
   useEffect(() => { setActiveIndex(0) }, [query])
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') { event.preventDefault(); setActiveIndex((index) => Math.min(index + 1, filtered.length - 1)) }
+    if (event.key === 'ArrowUp') { event.preventDefault(); setActiveIndex((index) => Math.max(index - 1, 0)) }
+    if (event.key === 'Enter' && filtered[activeIndex]) { event.preventDefault(); run(filtered[activeIndex]) }
+    if (event.key === 'Escape') { event.preventDefault(); onClose() }
+  }
+
   const run = (item: (typeof commands)[number]) => {
     if ('path' in item) navigate(item.path)
     else setAction(item.action)
@@ -41,7 +48,7 @@ export function CommandMenu({ onClose }: { onClose: () => void }) {
 
   return <div className="command-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
     <section className="command-dialog" role="dialog" aria-modal="true" aria-label="Command menu">
-      <div className="command-search"><Search size={18} /><input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search pages and actions…" aria-label="Search commands" /><kbd>ESC</kbd></div>
+      <div className="command-search"><Search size={18} /><input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={handleKeyDown} placeholder="Search pages and actions…" aria-label="Search commands" /><kbd>ESC</kbd></div>
       <div className="command-results" role="listbox" aria-label="Available commands">
         {filtered.length ? filtered.map((item, index) => {
           const Icon = item.icon

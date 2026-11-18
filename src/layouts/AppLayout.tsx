@@ -40,7 +40,7 @@ export function AppLayout() {
   const [query, setQuery] = useState('')
   const shortcutLabel = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K'
   const navigate = useNavigate()
-  const { mode, saveNotice, leads, customers, bookings, travellers, supplierCosts, setAction } = useAppStore()
+  const { mode, saveNotice, undoAvailable, undoDelete, leads, customers, bookings, travellers, supplierCosts, setAction } = useAppStore()
 
   useEffect(() => {
     let active = true
@@ -156,7 +156,7 @@ export function AppLayout() {
 
   return <div className="app-shell">
     <a className="skip-link" href="#main-content">Skip to main content</a>
-    {saveNotice && <div className={`save-toast ${saveNotice.includes('Could not') ? 'save-toast-error' : ''}`} role="status" aria-live="polite">{saveNotice.includes('Updating') || saveNotice.includes('Saving') ? <LoaderCircle size={16} className="toast-spinner" /> : <CheckCircle2 size={16} />}<span>{saveNotice}</span></div>}
+    {(saveNotice || undoAvailable) && <div className={`save-toast ${saveNotice?.includes('Could not') ? 'save-toast-error' : ''}`} role="status" aria-live="polite">{saveNotice?.includes('Updating') || saveNotice?.includes('Saving') ? <LoaderCircle size={16} className="toast-spinner" /> : <CheckCircle2 size={16} />}<span>{undoAvailable ? 'Record removed' : saveNotice}</span>{undoAvailable && <button type="button" className="save-toast-undo" onClick={undoDelete}>Undo</button>}</div>}
     <aside className={`sidebar ${menuOpen ? 'sidebar-open' : ''}`}>
       <div className="brand"><img className="brand-logo" src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="RouteHQ" /><div className="brand-name"><strong>RouteHQ</strong><span>Travel operations</span></div><IconButton label="Close navigation" className="mobile-close" onClick={() => setMenuOpen(false)}><X size={18} /></IconButton></div>
       <nav>{groups.map((group) => <div className="nav-group" key={group.label}><p>{group.label}</p>{group.links.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} viewTransition prefetch="intent" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}><Icon size={18} /><span>{label}</span></NavLink>)}</div>)}</nav>

@@ -24,7 +24,9 @@ type AppStore = {
   action: QuickActionType | null
   setAction: (action: QuickActionType | null, defaults?: Record<string, string>) => void
   actionDefaults: Record<string, string>
-  deleteRecords: (type: 'lead' | 'customer' | 'package' | 'booking' | 'traveller' | 'supplier-cost' | 'document', recordIds: string[]) => Promise<void>
+  deleteRecords: (type: DeletableRecordType, recordIds: string[]) => Promise<void>
+  undoAvailable: boolean
+  undoDelete: () => void
   addRecord: (type: QuickActionType, values: Record<string, string>) => void
   editing: { type: QuickActionType; id: string } | null
   setEditing: (value: { type: QuickActionType; id: string } | null) => void
@@ -80,14 +82,16 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
   const [saveNotice, setSaveNotice] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveRetry, setSaveRetry] = useState(0)
+  const [undoAvailable, setUndoAvailable] = useState(false)
+  const pendingDeleteRef = useRef<PendingDelete | null>(null)
   const saveQueue = useRef<Promise<void>>(Promise.resolve())
   const skipNextSave = useRef(false)
   const noticeTimer = useRef<number | undefined>(undefined)
-  const showNotice = (message: string) => {
+  const showNotice = (message: string, duration = 2600) => {
     setSaveNotice(message)
     if (noticeTimer.current) window.clearTimeout(noticeTimer.current)
     if (message !== 'Updating records…' && message !== 'Saving changes…') {
-      noticeTimer.current = window.setTimeout(() => setSaveNotice(null), 2600)
+      noticeTimer.current = window.setTimeout(() => setSaveNotice(null), duration)
     }
   }
 
@@ -221,10 +225,52 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
   }
 
 
-  const deleteRecords = async (type: 'lead' | 'customer' | 'package' | 'booking' | 'traveller' | 'supplier-cost' | 'document', recordIds: string[]) => {
+  const restorePendingDelete = (pending: PendingDelete) => {
+    const { type, ids, records } = pending
+    if (type === 'lead') setLeads((items) => [...records as Lead[], ...items.filter((item) => !ids.includes(item.id))])
+    if (type === 'customer') setCustomers((items) => [...records as Customer[], ...items.filter((item) => !ids.includes(item.id))])
+    if (type === 'package') setPackages((items) => [...records as TravelPackage[], ...items.filter((item) => !ids.includes(item.id))])
+    if (type === 'booking') setBookings((items) => [...records as Booking[], ...items.filter((item) => !ids.includes(item.id))])
+    if (type === 'traveller') setTravellers((items) => [...records as Traveller[], ...items.filter((item) => !ids.includes(item.id))])
+    if (type === 'supplier-cost') setSupplierCosts((items) => [...records as SupplierCost[], ...items.filter((item) => !ids.includes(item.id))])
+    if (type === 'document') setDocuments((items) => [...records as DocumentRecord[], ...items.filter((item) => !ids.includes(item.id))])
+  }
+
+  const finalizePendingDelete = async () => {
+    const pending = pendingDeleteRef.current
+    if (!pending) return
+    window.clearTimeout(pending.timer)
+    pendingDeleteRef.current = null
+    try {
+      if (!isDemo) {
+        const tableByType: Record<DeletableRecordType, string> = { lead: 'leads', customer: 'customers', package: 'packages', booking: 'bookings', traveller: 'travellers', 'supplier-cost': 'supplier_costs', document: 'documents' }
+        saveQueue.current = saveQueue.current.catch(() => undefined).then(() => deleteLiveRecords(tableByType[pending.type], pending.ids))
+        await saveQueue.current
+      }
+      setUndoAvailable(false)
+      showNotice('Records deleted')
+    } catch (error) {
+      restorePendingDelete(pending)
+      setUndoAvailable(false)
+      setSaveError(error instanceof Error ? error.message : 'Could not delete the selected records.')
+      showNotice('Could not delete records')
+    }
+  }
+
+  const undoDelete = () => {
+    const pending = pendingDeleteRef.current
+    if (!pending) return
+    window.clearTimeout(pending.timer)
+    pendingDeleteRef.current = null
+    restorePendingDelete(pending)
+    setUndoAvailable(false)
+    showNotice('Deletion undone')
+  }
+
+  const deleteRecords = async (type: DeletableRecordType, recordIds: string[]) => {
     const ids = Array.from(new Set(recordIds)).filter(Boolean)
     if (!ids.length) return
-    const dependencies: Partial<Record<typeof type, boolean>> = {
+    const dependencies: Partial<Record<DeletableRecordType, boolean>> = {
       lead: ids.some((recordId) => customers.some((item) => item.leadId === recordId)),
       customer: ids.some((recordId) => bookings.some((item) => item.customerId === recordId) || payments.some((item) => item.customerId === recordId) || travellers.some((item) => item.customerId === recordId)),
       package: ids.some((recordId) => bookings.some((item) => item.packageId === recordId) || payments.some((item) => item.packageId === recordId)),
@@ -232,13 +278,18 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
       'supplier-cost': ids.some((recordId) => supplierPayments.some((item) => item.supplierCostId === recordId)),
     }
     if (dependencies[type]) throw new Error('Some selected records have linked records. Remove or reassign those links first. Booking and financial history is protected.')
-    if (!isDemo) {
-      const tableByType: Record<typeof type, string> = { lead: 'leads', customer: 'customers', package: 'packages', booking: 'bookings', traveller: 'travellers', 'supplier-cost': 'supplier_costs', document: 'documents' }
-      // Put deletions in the same queue as snapshot upserts. Otherwise an older
-      // debounced save could finish after the delete and recreate the removed row.
-      saveQueue.current = saveQueue.current.catch(() => undefined).then(() => deleteLiveRecords(tableByType[type], ids))
-      await saveQueue.current
+    if (pendingDeleteRef.current) await finalizePendingDelete()
+    const recordsByType: Record<DeletableRecordType, DeletableRecord[]> = {
+      lead: leads.filter((item) => ids.includes(item.id)),
+      customer: customers.filter((item) => ids.includes(item.id)),
+      package: packages.filter((item) => ids.includes(item.id)),
+      booking: bookings.filter((item) => ids.includes(item.id)),
+      traveller: travellers.filter((item) => ids.includes(item.id)),
+      'supplier-cost': supplierCosts.filter((item) => ids.includes(item.id)),
+      document: documents.filter((item) => ids.includes(item.id)),
     }
+    const records = recordsByType[type]
+    if (!records.length) return
     if (type === 'lead') setLeads((items) => items.filter((item) => !ids.includes(item.id)))
     if (type === 'customer') setCustomers((items) => items.filter((item) => !ids.includes(item.id)))
     if (type === 'package') setPackages((items) => items.filter((item) => !ids.includes(item.id)))
@@ -246,6 +297,11 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
     if (type === 'traveller') setTravellers((items) => items.filter((item) => !ids.includes(item.id)))
     if (type === 'supplier-cost') setSupplierCosts((items) => items.filter((item) => !ids.includes(item.id)))
     if (type === 'document') setDocuments((items) => items.filter((item) => !ids.includes(item.id)))
+    const pending: PendingDelete = { type, ids, records, timer: 0 }
+    pending.timer = window.setTimeout(() => { void finalizePendingDelete() }, 7000)
+    pendingDeleteRef.current = pending
+    setUndoAvailable(true)
+    showNotice('Records removed', 7000)
   }
 
   const convertLead = (leadId: string, values: Record<string, string> = {}) => {
@@ -319,7 +375,7 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
 
   const retrySave = () => { setSaveError(null); setSaveRetry((attempt) => attempt + 1) }
 
-  const value = useMemo(() => ({ mode, saveNotice, saveError, retrySave, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, action, setAction, actionDefaults, deleteRecords, addRecord, editing, setEditing, updateRecord, convertLead, reversePayment, voidSupplierPayment }), [mode, saveNotice, saveError, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, action, actionDefaults, editing])
+  const value = useMemo(() => ({ mode, saveNotice, saveError, retrySave, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, action, setAction, actionDefaults, deleteRecords, undoAvailable, undoDelete, addRecord, editing, setEditing, updateRecord, convertLead, reversePayment, voidSupplierPayment }), [mode, saveNotice, saveError, undoAvailable, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, action, actionDefaults, editing])
   return <StoreContext.Provider value={value}>{!isDemo && dataError ? <div role="alert" className="data-connection-error">Live database error: {dataError}. The workspace has been paused so that changes cannot overwrite records that failed to load.</div> : !isDemo && !dataReady ? (showLoadingSkeleton ? <WorkspaceSkeleton /> : <div className="workspace-loading-pending" role="status" aria-label="Loading workspace" />) : <>{!isDemo && saveError && <div className="data-save-error" role="alert"><div><strong>Some changes haven't reached the database.</strong><span>{saveError}</span></div><button type="button" onClick={retrySave}>Retry save</button></div>}{children}</>}</StoreContext.Provider>
 }
 

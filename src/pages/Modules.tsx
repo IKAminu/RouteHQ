@@ -74,7 +74,6 @@ function Module({ title, description, actionLabel, actionType, children, options
   const selection: SelectionContextValue = { ids, selected: selectedIds, toggle: (id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]), toggleAll: () => setSelectedIds((current) => ids.every((id) => current.includes(id)) ? current.filter((id) => !ids.includes(id)) : Array.from(new Set([...current, ...ids]))) }
   const removeSelected = async () => {
     if (!recordType || !activeSelectedIds.length) return
-    if (!window.confirm(`Delete ${activeSelectedIds.length} selected ${recordType.replace('-', ' ')} record(s)? This cannot be undone.`)) return
     try { await deleteRecords(recordType, activeSelectedIds); setSelectedIds((current) => current.filter((id) => !activeSelectedIds.includes(id))) }
     catch (error) { window.alert(error instanceof Error ? error.message : 'The selected records could not be deleted.') }
   }

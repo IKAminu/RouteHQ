@@ -111,6 +111,7 @@ export function AppLayout() {
         setAccountOpen(false)
         setQuickActionsOpen(false)
         setMenuOpen(false)
+        setCommandOpen(false)
       }
     }
     window.addEventListener('keydown', closeOverlays)

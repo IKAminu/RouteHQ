@@ -1,66 +1,56 @@
 # RouteHQ
 
-RouteHQ is a travel-agency operations platform in product development. It brings enquiries, customer records, travel packages, bookings, travellers, payments, supplier obligations and document references into one workspace.
+RouteHQ is a multi-tenant travel-agency operations application. Agency workspaces, platform administration, authentication and operational records are served through the dedicated RouteHQ Supabase project.
 
-**Current release status: preview/demo only.** The public GitHub Pages deployment runs with bundled demonstration data. It is not an open-registration SaaS service and must not be used to store third-party agencies' customer information.
+**Current operating model:** live Supabase authentication and tenant-scoped data. The former bundled mock-data mode has been removed from the application. Synthetic starter records are stored in Supabase under the Horizon Travel agency so they exercise the same database, RLS and application paths as normal records. Newly approved agencies start with empty operational tables.
 
 ## Technology
 
-- React 19 and TypeScript
-- Vite 8 and Tailwind CSS 4
+- React 19, TypeScript, Vite 8 and Tailwind CSS 4
 - React Router 7
-- Supabase JS client and a separate RouteHQ multi-tenant PostgreSQL project
-- GitHub Actions and GitHub Pages for preview deployment
+- Supabase Auth with TOTP MFA
+- Supabase PostgreSQL, Row Level Security and private Storage
+- GitHub Actions and GitHub Pages hosting
 
 ## Run locally
 
 1. Install Node.js 22 and pnpm 10.
 2. Run `pnpm install --frozen-lockfile`.
 3. Copy `.env.example` to `.env.local`.
-4. Keep `VITE_USE_MOCK_DATA=true` for the safe demo.
-5. Run `pnpm dev`.
+4. Run `pnpm dev`.
 
 Checks: `pnpm typecheck` and `pnpm build`.
 
-## Current interface refinements
+## Authentication and routing
 
-The current preview includes:
-- A charcoal oval global search control beside navigation, with keyboard access (`Ctrl + K` / `⌘ K`) and search across demo records.
-- A unified, responsive authentication layout for login, account recovery and Supabase TOTP verification.
-- Six-digit TOTP auto-submit, paste support and one-time-code autocomplete.
-- RouteHQ's orange visual identity with a quieter, more consistent surface and typography system.
+One login screen serves both account types. After password and TOTP verification, the application checks the authenticated user's active platform-admin record and agency membership:
 
-The public preview uses demonstration records only. The authenticated live workspace is still gated while the operational-data adapter is completed, so live cross-agency search is not yet available to agency users.
+- Platform administrators open the RouteHQ platform control centre.
+- Active agency members open their own agency workspace.
+- Users without an active membership see their application status or the agency application form.
 
-## Demo and live data
+The platform console and agency workspace are separate surfaces. Agency-owned records are read and written through the signed-in user's Supabase session and database-enforced tenant policies. The frontend never chooses an agency ID supplied by a form or URL.
 
-- `VITE_USE_MOCK_DATA=true` loads bundled synthetic demonstration records. Changes exist only in browser memory and reset when the session reloads.
-- `VITE_USE_MOCK_DATA=false` activates the RouteHQ authentication and onboarding gate. The new agency operational schema is not yet connected to the existing module store, so approved workspaces remain safely gated.
-- Never put a Supabase secret/service-role key, payment secret, Meta token, or Google credential in a `VITE_*` variable. Browser variables are public.
+## Data ownership
 
-## Preview deployment
+- Supabase is the source of truth for all operational records.
+- Every agency-owned row carries an `agency_id` and is protected by Row Level Security.
+- The starter dataset belongs only to Horizon Travel.
+- New agencies are not pre-populated with Horizon records.
+- Payment confirmation, reversal and supplier-payment voiding use audited database functions.
+- Document references may point to private Storage objects or external URLs; actual sensitive files must use private storage and controlled access.
+- Do not place service-role keys, payment secrets, Meta tokens or other privileged credentials in browser code or `VITE_*` variables. The Supabase publishable key is intended for browser use and relies on RLS for protection.
 
-The GitHub Pages workflow deploys the `main` branch when it is updated, or when the workflow is manually run. It always builds with `VITE_USE_MOCK_DATA=true`.
+## Deployment
+
+The GitHub Pages workflow builds the live application with the RouteHQ Supabase URL and publishable key. Supabase Auth must allow the deployed application URL in its redirect URL configuration. The Pages deployment is a static host for the authenticated application, not a source of operational data.
 
 Preview: https://ikaminu.github.io/RouteHQ/
 
-The preview is not a production tenant environment. A successful preview build does not certify the application for customer data.
+## Platform and agency separation
 
-## Productisation boundary
+The platform control centre manages agency applications, agencies, subscriptions, system health and platform audit activity. Agency users never receive platform-wide data access. Future custom domains or subdomains can be added without changing the current single-login role routing.
 
-RouteHQ needs three distinct surfaces:
+## Operational readiness
 
-1. Marketing website: product explanation, features, plans, demo request, FAQs, support and legal pages.
-2. Application: authenticated agency workspaces.
-3. Platform operations: internal administration for tenant onboarding, subscriptions, support, usage, security events and billing reconciliation.
-
-The existing Supabase project named `DandurguAgencyManager` is the original Dandurgu system. Its operational tables and authorised-account policies are Dandurgu-specific. They do not yet provide commercial multi-tenant isolation.
-
-Before external agencies can store real records, RouteHQ needs a dedicated production host, completed operational adapter, team invitations, permission UI, transactional financial operations, private document access review, backups and cross-tenant tests. See [PRODUCT_READINESS.md](./PRODUCT_READINESS.md).
-
-## Security
-
-- Do not add real customer, lead, payment, passport, or supplier data to this public repository.
-- Do not enable public signup against the legacy Dandurgu database.
-- Do not relax existing Dandurgu Row Level Security policies to make the preview work.
-- Keep document storage private. A URL in a record is not proof that its permissions are safe.
+The live tenant schema and RLS policies are in place. The operational adapter maps the UI's travel-agency model to the normalized database schema. The Horizon starter records are present in Supabase. Remaining production work includes automated end-to-end tenant-isolation tests, real payment-provider webhook integration, billing lifecycle, backup/restore rehearsal, management API observability and secure document-upload/download verification.

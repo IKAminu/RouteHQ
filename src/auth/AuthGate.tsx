@@ -349,7 +349,7 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
         }
       }
     }
-    supabase.auth.getSession().then(({ data, error }) => {
+    supabase!.auth.getSession().then(({ data, error }) => {
       if (error) throw error
       return checkSession(data.session)
     }).catch((error: unknown) => {
@@ -357,7 +357,7 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
       setAuthError(error instanceof Error ? error.message : 'The sign-in service could not be reached. Check your connection and try again.')
       setReady(true)
     })
-    const { data: listener } = supabase.auth.onAuthStateChange((event, current) => {
+    const { data: listener } = supabase!.auth.onAuthStateChange((event, current) => {
       if (event === 'PASSWORD_RECOVERY') {
         setPasswordRecovery(true)
         setSession(current)

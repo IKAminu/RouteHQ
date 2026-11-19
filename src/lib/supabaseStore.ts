@@ -169,18 +169,23 @@ async function saveRows(table: string, records: Row[]) {
   if (error) throw error
 }
 
-async function saveStore(data: StoreData) {
+const changedRecords = <T extends { id: string }>(current: T[], previous: T[] = []) => {
+  const prior = new Map(previous.map(record => [record.id, JSON.stringify(record)]))
+  return current.filter(record => prior.get(record.id) !== JSON.stringify(record))
+}
+
+async function saveStore(data: StoreData, previous?: StoreData) {
   const { agencyId, userId } = await agencyContext()
   const base = { agency_id:agencyId }
-  const leadRows = data.leads.map(r => ({ ...base, id:r.id, lead_ref:r.reference || null, full_name:r.name, email:r.email || null, phone:r.phone || null,
+  const leadRows = changedRecords(data.leads, previous?.leads).map(r => ({ ...base, id:r.id, lead_ref:r.reference || null, full_name:r.name, email:r.email || null, phone:r.phone || null,
     source:r.source || null, status:key(r.status), interest:r.service || null, follow_up_at:asDateTime(r.followUp), notes:r.notes || null,
     created_by:userId, metadata:{ service:r.service, travelPeriod:r.travelPeriod, preferredDepartureDate:r.preferredDepartureDate,
       departureLocation:r.departureLocation, state:r.state, travelTiming:r.travelTiming, paymentPlan:r.paymentPlan,
       campaign:r.campaign, groupSize:r.groupSize, city:r.city } }))
-  const customerRows = data.customers.map(r => ({ ...base, id:r.id, customer_ref:r.reference || null, full_name:r.name,
+  const customerRows = changedRecords(data.customers, previous?.customers).map(r => ({ ...base, id:r.id, customer_ref:r.reference || null, full_name:r.name,
     email:r.email || null, phone:r.phone || null, nationality:r.nationality || null, address:r.city || null, notes:r.notes || null,
     created_by:userId, metadata:{ historical:Boolean(r.historical), leadId:r.leadId || null } }))
-  const packageRows = data.packages.map(r => {
+  const packageRows = changedRecords(data.packages, previous?.packages).map(r => {
     const days = Number.parseInt(r.duration, 10)
     const status = ({ Draft:'draft', Active:'published', 'Fully Booked':'full', Unavailable:'archived', Archived:'archived' } as Record<string,string>)[r.status] || 'draft'
     return { ...base, id:r.id, package_ref:r.code || null, name:r.name, package_type:r.category, description:r.destination,
@@ -189,7 +194,7 @@ async function saveStore(data: StoreData) {
       status, supplier_name:r.sourceAgent || null, notes:r.notes || null,
       metadata:{ destination:r.destination, duration:r.duration, estimatedCostMinor:r.estimatedCost == null ? null : minor(r.estimatedCost) } }
   })
-  const bookingRows = data.bookings.map(r => {
+  const bookingRows = changedRecords(data.bookings, previous?.bookings).map(r => {
     const status = ({ Enquiry:'enquiry', 'Pending Confirmation':'reserved', 'In Preparation':'reserved', Confirmed:'confirmed',
       'Ready for Travel':'confirmed', Travelling:'confirmed', Completed:'completed', Cancelled:'cancelled' } as Record<string,string>)[r.status] || 'enquiry'
     return { ...base, id:r.id, booking_ref:r.reference || null, customer_id:r.customerId || null, package_id:r.packageId || null,
@@ -198,30 +203,35 @@ async function saveStore(data: StoreData) {
       currency_code:'NGN', created_by:userId,
       metadata:{ packageName:r.packageName, supplier:r.supplier, historical:Boolean(r.historical), uiStatus:r.status } }
   })
-  const travellerRows = data.travellers.map(r => ({ ...base, id:r.id, booking_id:r.bookingId || null, customer_id:r.customerId || null,
+  const travellerRows = changedRecords(data.travellers, previous?.travellers).map(r => ({ ...base, id:r.id, booking_id:r.bookingId || null, customer_id:r.customerId || null,
     full_name:r.name, nationality:r.nationality || null, visa_status:null, passport_expiry:r.passportExpiry || null,
     room_group:r.group || null, metadata:{ uiStatus:r.status, documentsComplete:Boolean(r.documentsComplete) } }))
   const supplierCache = new Map<string,string>()
-  const supplierCostRows = await Promise.all(data.supplierCosts.map(async r => ({ ...base, id:r.id, booking_id:r.bookingId || null,
+  const supplierCostRows = await Promise.all(changedRecords(data.supplierCosts, previous?.supplierCosts).map(async r => ({ ...base, id:r.id, booking_id:r.bookingId || null,
     supplier_id:await ensureSupplierId(agencyId,r.supplier,supplierCache), description:r.category || r.supplier,
     amount_minor:minor(r.amount), currency_code:'NGN', due_date:r.dueDate || null,
     status:r.status==='Paid'?'paid':r.paid>0?'part_paid':'unpaid' })))
-  const [existingPayments,existingSupplierPayments] = await Promise.all([rows('payments',agencyId),rows('supplier_payments',agencyId)])
+  const changedPayments = changedRecords(data.payments, previous?.payments)
+  const changedSupplierPayments = changedRecords(data.supplierPayments, previous?.supplierPayments)
+  const [existingPayments,existingSupplierPayments] = await Promise.all([
+    changedPayments.length ? rows('payments',agencyId) : Promise.resolve([]),
+    changedSupplierPayments.length ? rows('supplier_payments',agencyId) : Promise.resolve([]),
+  ])
   const existingPaymentIds = new Set(existingPayments.map(r=>r.id))
   const existingSupplierPaymentIds = new Set(existingSupplierPayments.map(r=>r.id))
-  const newPayments = data.payments.filter(r=>!existingPaymentIds.has(r.id)).map(r => ({
+  const newPayments = changedPayments.filter(r=>!existingPaymentIds.has(r.id)).map(r => ({
     ...base, id:r.id, booking_id:r.bookingId || null, customer_id:r.customerId || null, payment_ref:r.reference || null,
     amount_minor:minor(r.amount), currency_code:'NGN', payment_method:key(r.method),
     payment_date:asDateTime(r.date) || new Date().toISOString(), status:key(r.status),
     external_reference:r.transactionReference || null, recorded_by:userId, notes:r.purpose || null,
     metadata:{ purpose:r.purpose, packageId:r.packageId || null, historical:Boolean(r.historical) },
   }))
-  const newSupplierPayments = data.supplierPayments.filter(r=>!existingSupplierPaymentIds.has(r.id)).map(r => ({
+  const newSupplierPayments = changedSupplierPayments.filter(r=>!existingSupplierPaymentIds.has(r.id)).map(r => ({
     ...base, id:r.id, supplier_cost_id:r.supplierCostId, amount_minor:minor(r.amount), currency_code:'NGN',
     payment_date:asDateTime(r.date) || new Date().toISOString(), status:'confirmed', reference:r.reference || null,
     recorded_by:userId, notes:`Method: ${r.method || 'Other'}`,
   }))
-  const documentRows = data.documents.map(r => {
+  const documentRows = changedRecords(data.documents, previous?.documents).map(r => {
     const traveller = r.relatedType === 'Traveller' ? data.travellers.find(x=>x.name===r.relatedReference) : undefined
     const customer = r.relatedType === 'Customer' ? data.customers.find(x=>x.name===r.relatedReference || x.reference===r.relatedReference) : undefined
     const booking = r.relatedType === 'Booking' ? data.bookings.find(x=>x.reference===r.relatedReference) : undefined
@@ -247,14 +257,14 @@ async function saveStore(data: StoreData) {
     const { error } = await client().from('supplier_payments').insert(newSupplierPayments)
     if (error) throw error
   }
-  for (const record of data.payments) {
+  for (const record of changedPayments) {
     const old = existingPayments.find(r=>r.id===record.id)
     if (old && key(old.status)!==key(record.status)) {
       const { error } = await client().rpc('transition_agency_payment',{_payment_id:record.id,_status:key(record.status),_reason:record.reversalReason || null})
       if (error) throw error
     }
   }
-  for (const record of data.supplierPayments) {
+  for (const record of changedSupplierPayments) {
     const old = existingSupplierPayments.find(r=>r.id===record.id)
     if (old && key(old.status)!==key(record.status) && record.status==='Voided') {
       const { error } = await client().rpc('void_agency_supplier_payment',{_supplier_payment_id:record.id,_reason:record.voidReason || 'Voided by agency operator'})
@@ -265,7 +275,7 @@ async function saveStore(data: StoreData) {
 }
 
 export const loadLiveStore = () => loadStore()
-export const saveLiveStore = (data: StoreData) => saveStore(data)
+export const saveLiveStore = (data: StoreData, previous?: StoreData) => saveStore(data, previous)
 
 export async function deleteLiveRecords(table: string, ids: string[]) {
   if (!ids.length) return

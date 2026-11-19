@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button, Field, Input, Select } from '@/components/ui'
-import { PlatformConsole } from '@/auth/PlatformConsole'\nimport { AppStoreProvider } from '@/hooks/useAppStore'\nimport { RouterProvider } from 'react-router'\nimport { router } from '@/app/routes'
+import { PlatformConsole } from '@/auth/PlatformConsole'
+import { AppStoreProvider } from '@/hooks/useAppStore'
+import { RouterProvider } from 'react-router'
+import { router } from '@/app/routes'
 
 type Application = {
   id: string

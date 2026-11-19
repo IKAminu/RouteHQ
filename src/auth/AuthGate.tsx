@@ -20,7 +20,7 @@ function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
     {variant === 'dashboard' && <div className="auth-dashboard-preview" aria-hidden="true">
       <div className="auth-preview-heading">
         <div><span>WORKSPACE OVERVIEW</span><h2>Your operations,<br />in one place.</h2></div>
-        <i><b></b> LIVE WORKSPACE</i>
+        <i><b></b> PRODUCT PREVIEW</i>
       </div>
       <div className="auth-preview-window">
         <div className="auth-preview-window-top"><span>Overview</span><span>Last 30 days&nbsp;⌄</span></div>

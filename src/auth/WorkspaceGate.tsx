@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button, Field, Input, Select } from '@/components/ui'
-import { PlatformConsole } from '@/auth/PlatformConsole'
+import { PlatformConsole } from '@/auth/PlatformConsole'\nimport { AppStoreProvider } from '@/hooks/useAppStore'\nimport { RouterProvider } from 'react-router'\nimport { router } from '@/app/routes'
 
 type Application = {
   id: string
@@ -136,7 +136,7 @@ export function WorkspaceGate() {
   if(loading)return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /><span>Checking your agency access</span><i /></div>
   if(error)return <Shell><section className="onboarding-card"><h1>We couldn't verify your access</h1><p className="onboarding-error">{error}</p><Button onClick={()=>void refresh()}>Try again</Button></section></Shell>
   if(isAdmin)return <PlatformConsole email={email}/>
-  if(agency)return <Shell><section className="onboarding-card"><span className="onboarding-eyebrow">AGENCY WORKSPACE</span><h1>{agency.agency_name}</h1><p className="onboarding-copy">Your agency is approved. We are finishing the secure operational-data connection before enabling live records.</p><div className="platform-stats"><div><strong>{agency.plan_name || agency.plan_code || 'Plan pending'}</strong><span>Plan</span></div><div><strong>{agency.subscription_status || 'Not set'}</strong><span>Subscription</span></div><div><strong>{agency.role_code}</strong><span>Your role</span></div></div><p className="onboarding-copy">This account is not yet connected to the operational modules. Your agency data will remain untouched until that connection is verified.</p><Button variant="secondary" onClick={()=>supabase?.auth.signOut()}>Sign out</Button></section></Shell>
+  if(agency)return <AppStoreProvider><RouterProvider router={router}/></AppStoreProvider>
   if(application)return <Shell><ApplicationStatus application={application} onRefresh={()=>void refresh()} onReapply={()=>setApplication(null)} onSignOut={()=>void supabase?.auth.signOut()}/></Shell>
   return <Shell><AgencyApplication email={email} onSubmitted={()=>void refresh()}/></Shell>
 }

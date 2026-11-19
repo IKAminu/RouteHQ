@@ -195,7 +195,7 @@ async function saveStore(data: StoreData) {
     return { ...base, id:r.id, booking_ref:r.reference || null, customer_id:r.customerId || null, package_id:r.packageId || null,
       status, booking_date:r.bookingDate || new Date().toISOString().slice(0,10), departure_date:r.departureDate || null,
       return_date:r.returnDate || null, traveller_count:Math.max(1,r.partySize || 1), total_amount_minor:minor(r.agreedPrice),
-      currency_code:r.currency || 'NGN', created_by:userId,
+      currency_code:'NGN', created_by:userId,
       metadata:{ packageName:r.packageName, supplier:r.supplier, historical:Boolean(r.historical), uiStatus:r.status } }
   })
   const travellerRows = data.travellers.map(r => ({ ...base, id:r.id, booking_id:r.bookingId || null, customer_id:r.customerId || null,

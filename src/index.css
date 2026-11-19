@@ -2677,3 +2677,13 @@
   .routehq-search-mobile-nav button:disabled { opacity: .35; }
   .routehq-search-footer { align-items: center; justify-content: space-between; gap: 8px 12px; }
 }
+
+
+/* Mobile search: remove desktop keyboard instructions from the touch layout. */
+@media (max-width: 640px) {
+  .routehq-search-footer { display: none !important; }
+  .routehq-search-panel { background: #252529 !important; color: #e8e8eb !important; border-color: #38383e !important; }
+  .routehq-search-field input { color: #f1f1f3 !important; }
+  .routehq-search-results > button:hover,
+  .routehq-search-results > button.is-active { background: #35353b !important; color: #fff !important; }
+}

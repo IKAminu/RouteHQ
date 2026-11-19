@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { BookOpen, CalendarDays, CheckCircle2, Circle, ClipboardList, FileText, LoaderCircle, Pencil, Plus, Search, StickyNote, Trash2, X } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
 import { Badge, Button, EmptyState, Field, Input, Modal, PageHeader, Select } from '@/components/ui'
-import { useAppStore } from '@/hooks/useAppStore'
 import { supabase } from '@/lib/supabase'
 
 type NoteKind = 'Note' | 'Reminder' | 'To-do'

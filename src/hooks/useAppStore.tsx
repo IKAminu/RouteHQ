@@ -69,6 +69,7 @@ function WorkspaceSkeleton() {
 }
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
+  const mode: AppMode = 'live'
   const [leads, setLeads] = useState<Lead[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
   const [bookings, setBookings] = useState<Booking[]>([])

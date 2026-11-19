@@ -330,7 +330,7 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
           }
           return
         }
-        const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+        const { data, error } = await supabase!.auth.mfa.getAuthenticatorAssuranceLevel()
         if (error) throw error
         await waitForMinimumLoadingTime()
         if (alive) {

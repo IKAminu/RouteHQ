@@ -322,9 +322,15 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
       try {
         if (!current) {
           await waitForMinimumLoadingTime()
+          if (alive) {
+            setSession(null)
+            setAuthenticated(false)
+            setAuthError('')
+            setReady(true)
+          }
           return
         }
-        const { data, error } = await supabase!.auth.mfa.getAuthenticatorAssuranceLevel()
+        const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
         if (error) throw error
         await waitForMinimumLoadingTime()
         if (alive) {
@@ -343,7 +349,7 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
         }
       }
     }
-    supabase!.auth.getSession().then(({ data, error }) => {
+    supabase.auth.getSession().then(({ data, error }) => {
       if (error) throw error
       return checkSession(data.session)
     }).catch((error: unknown) => {
@@ -351,7 +357,7 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
       setAuthError(error instanceof Error ? error.message : 'The sign-in service could not be reached. Check your connection and try again.')
       setReady(true)
     })
-    const { data: listener } = supabase!.auth.onAuthStateChange((event, current) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, current) => {
       if (event === 'PASSWORD_RECOVERY') {
         setPasswordRecovery(true)
         setSession(current)
@@ -360,14 +366,31 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
         return
       }
       if (event === 'SIGNED_OUT') setPasswordRecovery(false)
-      // Avoid calling Supabase APIs inside onAuthStateChange; defer the AAL check
-      // until the auth callback has returned to prevent client-lock deadlocks.
       window.setTimeout(() => { void checkSession(current) }, 0)
     })
     return () => { alive = false; listener.subscription.unsubscribe() }
   }, [])
+
   if (!supabase) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Configuration required</h1><p className="auth-description">Supabase connection settings are missing. Contact the app administrator.</p></section><AuthVisual /></div></div>
   if (!ready) return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /><span>Preparing secure workspace</span><i /></div>
   if (authError) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section><AuthVisual /></div></div>
+  if (!session || !authenticated || passwordRecovery) {
+    return <AuthScreen
+      key={passwordRecovery ? 'password-recovery' : 'sign-in'}
+      recoveryMode={passwordRecovery}
+      onPasswordRecovered={() => {
+        setPasswordRecovery(false)
+        setSession(null)
+        setAuthenticated(false)
+        setReady(true)
+      }}
+      onAuthenticated={(nextSession) => {
+        setPasswordRecovery(false)
+        setSession(nextSession)
+        setAuthenticated(true)
+        setReady(true)
+      }}
+    />
+  }
   return <>{children('live')}</>
 }

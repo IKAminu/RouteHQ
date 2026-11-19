@@ -1,175 +1,277 @@
 import type { Booking, Customer, DocumentRecord, Lead, Payment, SupplierCost, SupplierPayment, TravelPackage, Traveller } from '@/types'
 import { supabase } from '@/lib/supabase'
 
+type Row = Record<string, any>
+type StoreData = {
+  leads: Lead[]; customers: Customer[]; packages: TravelPackage[]; bookings: Booking[]
+  travellers: Traveller[]; payments: Payment[]; supplierCosts: SupplierCost[]
+  supplierPayments: SupplierPayment[]; documents: DocumentRecord[]
+}
+
 const client = () => {
   if (!supabase) throw new Error('Supabase is not configured. Check the project URL and publishable key.')
   return supabase
 }
 
-async function rows(table: string) {
+async function agencyContext() {
+  const { data, error } = await client().rpc('get_my_agency_context')
+  if (error) throw error
+  const context = Array.isArray(data) ? data[0] : data
+  if (!context?.agency_id) throw new Error('This account is not linked to an active agency workspace.')
+  const { data: userData, error: userError } = await client().auth.getUser()
+  if (userError) throw userError
+  return { agencyId: String(context.agency_id), userId: userData.user?.id ?? null }
+}
+
+async function rows(table: string, agencyId: string): Promise<Row[]> {
   const pageSize = 500
-  const records: Record<string, any>[] = []
+  const records: Row[] = []
   let lastId: string | null = null
-
-  // Keyset pagination avoids the silent 1,000-row API cap and offset drift
-  // when new records are inserted while a large table is being loaded.
   while (true) {
-    let query = client()
-      .from(table)
-      .select('*')
-      .eq('is_demo', false)
-      .order('id', { ascending: true })
-      .limit(pageSize)
-
+    let query = client().from(table).select('*').eq('agency_id', agencyId).order('id', { ascending: true }).limit(pageSize)
     if (lastId) query = query.gt('id', lastId)
-
     const { data, error } = await query
     if (error) throw error
-
-    const page = (data ?? []) as Record<string, any>[]
+    const page = (data ?? []) as Row[]
     records.push(...page)
     if (page.length < pageSize) break
-
-    const nextLastId = page[page.length - 1]?.id
-    if (typeof nextLastId !== 'string' || nextLastId === lastId) {
-      throw new Error(`Could not continue loading ${table}: pagination did not advance.`)
-    }
-    lastId = nextLastId
+    const next = page[page.length - 1]?.id
+    if (typeof next !== 'string' || next === lastId) throw new Error(`Could not continue loading ${table}: pagination did not advance.`)
+    lastId = next
   }
-
   return records
 }
 
-async function loadStore() {
-  const [leadRows, customerRows, packageRows, bookingRows, travellerRows, paymentRows, costRows, supplierPaymentRows, documentRows] =
-    await Promise.all(['leads','customers','packages','bookings','travellers','payments','supplier_costs','supplier_payments','documents'].map((table) => rows(table)))
+const dateOnly = (value: unknown) => value ? String(value).slice(0, 10) : ''
+const key = (value: unknown) => String(value ?? '').trim().toLowerCase().replace(/[ -]+/g, '_')
+const money = (minor: unknown) => Number(minor ?? 0) / 100
+const minor = (major: number) => Math.round(Number(major || 0) * 100)
+const asDateTime = (value?: string) => value ? (value.length === 10 ? `${value}T12:00:00.000Z` : value) : null
 
-  const leads: Lead[] = leadRows.map((r) => ({
-    id:r.id, reference:r.reference, name:r.name, phone:r.phone, email:r.email ?? undefined,
-    service:r.service, travelPeriod:r.travel_period, preferredDepartureDate:r.preferred_departure_date ?? undefined,
-    departureLocation:r.departure_location ?? undefined, state:r.state ?? undefined,
-    travelTiming:r.travel_timing ?? undefined, paymentPlan:r.payment_plan ?? undefined,
-    source:r.source, campaign:r.campaign ?? undefined,
-    status:r.status, receivedAt:r.received_at, followUp:r.follow_up ?? undefined,
-    groupSize:r.group_size, city:r.city ?? undefined, notes:r.notes ?? undefined,
-  }))
-  const customers: Customer[] = customerRows.map((r) => ({
-    id:r.id, reference:r.reference, name:r.name, phone:r.phone, email:r.email ?? undefined,
-    nationality:r.nationality, city:r.city ?? undefined, leadId:r.lead_id ?? undefined,
-    historical:r.historical, notes:r.notes ?? undefined, createdAt:r.created_at,
-  }))
-  const packages: TravelPackage[] = packageRows.map((r) => ({
-    id:r.id, code:r.code, name:r.name, category:r.category, destination:r.destination,
-    departureLocation:r.departure_location ?? undefined, departureDate:r.departure_date ?? undefined,
-    sourceAgent:r.source_agent ?? undefined, notes:r.notes ?? undefined,
-    duration:r.duration, price:Number(r.price), estimatedCost:r.estimated_cost == null ? null : Number(r.estimated_cost),
-    currency:r.currency, availability:r.availability == null ? null : Number(r.availability), status:r.status,
-  }))
-  const bookings: Booking[] = bookingRows.map((r) => ({
-    id:r.id, reference:r.reference, customerId:r.customer_id, packageId:r.package_id ?? undefined,
-    packageName:r.package_name, agreedPrice:Number(r.agreed_price), partySize:r.party_size,
-    currency:r.currency, bookingDate:r.booking_date, departureDate:r.departure_date,
-    returnDate:r.return_date, status:r.status, supplier:r.supplier ?? undefined, historical:r.historical,
-  }))
-  const travellers: Traveller[] = travellerRows.map((r) => ({
-    id:r.id, name:r.name, customerId:r.customer_id ?? undefined, bookingId:r.booking_id,
-    nationality:r.nationality, status:r.status, group:r.group_label ?? undefined,
-    documentsComplete:r.documents_complete, passportExpiry:r.passport_expiry ?? undefined,
-  }))
-  const payments: Payment[] = paymentRows.map((r) => ({
-    id:r.id, reference:r.reference, bookingId:r.booking_id ?? undefined, customerId:r.customer_id,
-    packageId:r.package_id ?? undefined, purpose:r.purpose, amount:Number(r.amount),
-    date:r.payment_date, method:r.method, status:r.status,
-    transactionReference:r.transaction_reference ?? undefined, reversalReason:r.reversal_reason ?? undefined,
-    historical:r.historical,
-  }))
-  const supplierCosts: SupplierCost[] = costRows.map((r) => ({
-    id:r.id, bookingId:r.booking_id, supplier:r.supplier_name, category:r.category,
-    amount:Number(r.amount), dueDate:r.due_date, paid:Number(r.paid), status:r.status,
-  }))
-  const supplierPayments: SupplierPayment[] = supplierPaymentRows.map((r) => ({
-    id:r.id, supplierCostId:r.supplier_cost_id, amount:Number(r.amount), date:r.payment_date,
-    method:r.method, reference:r.reference ?? undefined, status:r.status, voidReason:r.void_reason ?? undefined,
-  }))
-  const documents: DocumentRecord[] = documentRows.map((r) => ({
-    id:r.id, name:r.name, category:r.category, relatedType:r.related_type,
-    relatedReference:r.related_reference, url:r.url, recordedAt:r.recorded_at, status:r.status,
-  }))
-  return { leads, customers, packages, bookings, travellers, payments, supplierCosts, supplierPayments, documents }
+function leadFromRow(r: Row): Lead {
+  const m = r.metadata || {}
+  const statuses: Record<string, Lead['status']> = { new:'New', contacted:'Contacted', follow_up_required:'Follow-up Required', interested:'Interested', nurture:'Nurture', converted:'Converted', not_interested:'Not Interested', lost:'Lost' }
+  return {
+    id:r.id, reference:r.lead_ref || '', name:r.full_name, phone:r.phone || '', email:r.email || undefined,
+    service:m.service || r.interest || 'General Travel', travelPeriod:m.travelPeriod || 'Flexible',
+    preferredDepartureDate:m.preferredDepartureDate || undefined, departureLocation:m.departureLocation || undefined,
+    state:m.state || undefined, travelTiming:m.travelTiming || undefined, paymentPlan:m.paymentPlan || undefined,
+    source:r.source || 'Other', campaign:m.campaign || undefined, status:statuses[key(r.status)] || 'New',
+    receivedAt:dateOnly(r.created_at), followUp:dateOnly(r.follow_up_at) || undefined,
+    groupSize:Number(m.groupSize || 1), city:m.city || undefined, notes:r.notes || undefined,
+  }
 }
 
-async function save(table: string, records: Record<string, unknown>[]) {
+function customerFromRow(r: Row): Customer {
+  const m = r.metadata || {}
+  return { id:r.id, reference:r.customer_ref || '', name:r.full_name, phone:r.phone || '', email:r.email || undefined,
+    nationality:r.nationality || 'Nigerian', city:r.address || undefined, leadId:m.leadId || undefined,
+    historical:Boolean(m.historical), notes:r.notes || undefined, createdAt:dateOnly(r.created_at) }
+}
+
+function packageFromRow(r: Row): TravelPackage {
+  const m = r.metadata || {}
+  const statuses: Record<string, TravelPackage['status']> = { draft:'Draft', published:'Active', full:'Fully Booked', completed:'Archived', archived:'Archived' }
+  return { id:r.id, code:r.package_ref || '', name:r.name, category:r.package_type || 'Other Tours',
+    destination:m.destination || r.description || '', departureLocation:r.departure_location || undefined,
+    departureDate:dateOnly(r.departure_date) || undefined, sourceAgent:r.supplier_name || undefined,
+    notes:r.notes || undefined, duration:r.duration_days ? `${r.duration_days} days` : (m.duration || ''),
+    price:money(r.price_minor), estimatedCost:m.estimatedCostMinor == null ? null : money(m.estimatedCostMinor),
+    currency:'NGN', availability:r.capacity == null ? null : Number(r.capacity), status:statuses[key(r.status)] || 'Draft' }
+}
+
+function bookingFromRow(r: Row): Booking {
+  const m = r.metadata || {}
+  const statuses: Record<string, Booking['status']> = { enquiry:'Enquiry', reserved:'Pending Confirmation', confirmed:'Confirmed', cancelled:'Cancelled', completed:'Completed' }
+  return { id:r.id, reference:r.booking_ref || '', customerId:r.customer_id || '', packageId:r.package_id || undefined,
+    packageName:m.packageName || '', agreedPrice:money(r.total_amount_minor), partySize:Number(r.traveller_count || 1),
+    currency:'NGN', bookingDate:dateOnly(r.booking_date), departureDate:dateOnly(r.departure_date),
+    returnDate:dateOnly(r.return_date), status:m.uiStatus || statuses[key(r.status)] || 'Enquiry',
+    supplier:m.supplier || undefined, historical:Boolean(m.historical) }
+}
+
+function travellerFromRow(r: Row): Traveller {
+  const m = r.metadata || {}
+  return { id:r.id, name:r.full_name, customerId:r.customer_id || undefined, bookingId:r.booking_id || '',
+    nationality:r.nationality || 'Nigerian', status:m.uiStatus || m.status || (r.visa_status ? String(r.visa_status) : 'Not Started'),
+    group:r.room_group || undefined, documentsComplete:Boolean(m.documentsComplete), passportExpiry:dateOnly(r.passport_expiry) || undefined }
+}
+
+function paymentFromRow(r: Row, reversalReason?: string): Payment {
+  const m = r.metadata || {}
+  const statuses: Record<string, Payment['status']> = { pending:'Pending', confirmed:'Confirmed', failed:'Failed', reversed:'Reversed' }
+  const methods: Record<string, Payment['method']> = { bank_transfer:'Bank Transfer', cash:'Cash', pos:'POS', other:'Other' }
+  return { id:r.id, reference:r.payment_ref || '', bookingId:r.booking_id || undefined, customerId:r.customer_id || '',
+    packageId:m.packageId || undefined, purpose:m.purpose || r.notes || 'Payment', amount:money(r.amount_minor),
+    date:dateOnly(r.payment_date), method:methods[key(r.payment_method)] || 'Other',
+    status:statuses[key(r.status)] || 'Pending', transactionReference:r.external_reference || undefined,
+    reversalReason:reversalReason || undefined, historical:Boolean(m.historical) }
+}
+
+async function loadStore(): Promise<StoreData> {
+  const { agencyId } = await agencyContext()
+  const [leadRows, customerRows, packageRows, bookingRows, travellerRows, paymentRows, supplierRows, costRows, supplierPaymentRows, documentRows, reversalRows] =
+    await Promise.all(['leads','customers','packages','bookings','travellers','payments','suppliers','supplier_costs','supplier_payments','documents'].map(table => rows(table, agencyId))
+      .concat([rows('payment_reversals', agencyId)]))
+  const supplierNames = new Map(supplierRows.map(r => [r.id, r.name]))
+  const paidByCost = new Map<string, number>()
+  for (const payment of supplierPaymentRows) if (key(payment.status) === 'confirmed') paidByCost.set(payment.supplier_cost_id, (paidByCost.get(payment.supplier_cost_id) || 0) + money(payment.amount_minor))
+  const bookingsById = new Map(bookingRows.map(r => [r.id, r]))
+  const customersById = new Map(customerRows.map(r => [r.id, r]))
+  const travellersById = new Map(travellerRows.map(r => [r.id, r]))
+  const paymentsById = new Map(paymentRows.map(r => [r.id, r]))
+  const reversalReasonByPayment = new Map<string,string>(reversalRows.map(r => [r.payment_id, r.reason]))
+  return {
+    leads:leadRows.map(leadFromRow),
+    customers:customerRows.map(customerFromRow),
+    packages:packageRows.map(packageFromRow),
+    bookings:bookingRows.map(bookingFromRow),
+    travellers:travellerRows.map(travellerFromRow),
+    payments:paymentRows.map(r => paymentFromRow(r, reversalReasonByPayment.get(r.id))),
+    supplierCosts:costRows.map(r => {
+      const paid = paidByCost.get(r.id) || 0
+      const dueDate = dateOnly(r.due_date)
+      const status: SupplierCost['status'] = key(r.status) === 'paid' ? 'Paid' : paid > 0 ? 'Partially Paid' : dueDate && dueDate < new Date().toISOString().slice(0,10) ? 'Overdue' : 'Unpaid'
+      return { id:r.id, bookingId:r.booking_id || '', supplier:supplierNames.get(r.supplier_id) || 'Supplier',
+        category:r.description, amount:money(r.amount_minor), dueDate, paid, status }
+    }),
+    supplierPayments:supplierPaymentRows.map(r => ({ id:r.id, supplierCostId:r.supplier_cost_id, amount:money(r.amount_minor),
+      date:dateOnly(r.payment_date), method:(r.notes?.match(/Method: ([^;\n]+)/)?.[1] || 'Other') as SupplierPayment['method'],
+      reference:r.reference || undefined, status:key(r.status)==='void'?'Voided':'Confirmed',
+      voidReason:r.notes?.match(/Voided: ([^;\n]+)/)?.[1] })),
+    documents:documentRows.map(r => {
+      const relatedType: DocumentRecord['relatedType'] = r.traveller_id ? 'Traveller' : r.booking_id ? 'Booking' : r.customer_id ? 'Customer' : 'Booking'
+      const relatedId = r.traveller_id || r.booking_id || r.customer_id
+      const related = r.traveller_id ? travellersById.get(relatedId) : r.booking_id ? bookingsById.get(relatedId) : customersById.get(relatedId)
+      const relatedReference = related?.full_name || related?.booking_ref || related?.customer_ref || ''
+      return { id:r.id, name:r.file_name, category:r.document_type, relatedType, relatedReference,
+        url:r.external_url || r.storage_path || '', recordedAt:dateOnly(r.created_at), status:'Needs Review' as const }
+    }),
+  }
+}
+
+async function ensureSupplierId(agencyId: string, name: string, cache: Map<string,string>) {
+  const clean = name.trim() || 'Unspecified supplier'
+  const cacheKey = clean.toLowerCase()
+  const existing = cache.get(cacheKey)
+  if (existing) return existing
+  const { data: found, error: findError } = await client().from('suppliers').select('id').eq('agency_id', agencyId).ilike('name', clean).limit(1).maybeSingle()
+  if (findError) throw findError
+  if (found?.id) { cache.set(cacheKey, found.id); return found.id }
+  const { data, error } = await client().from('suppliers').insert({ agency_id:agencyId, name:clean }).select('id').single()
+  if (error) throw error
+  cache.set(cacheKey, data.id)
+  return data.id
+}
+
+async function saveRows(table: string, records: Row[]) {
   if (!records.length) return
-  const payload = records.map((record) => ({ ...record, is_demo: false }))
-  const { error } = await client().from(table).upsert(payload, { onConflict: 'id' })
+  const { error } = await client().from(table).upsert(records, { onConflict:'id' })
   if (error) throw error
 }
 
-async function saveStore(data: {
-  leads: Lead[]; customers: Customer[]; packages: TravelPackage[]; bookings: Booking[];
-  travellers: Traveller[]; payments: Payment[]; supplierCosts: SupplierCost[];
-  supplierPayments: SupplierPayment[]; documents: DocumentRecord[]
-}) {
-  // Keep parent records ahead of their dependants so foreign keys remain valid.
-  await save('leads', data.leads.map((r) => ({
-    id:r.id, reference:r.reference, name:r.name, phone:r.phone, email:r.email ?? null,
-    service:r.service, travel_period:r.travelPeriod, source:r.source, campaign:r.campaign ?? null,
-    status:r.status, received_at:r.receivedAt, follow_up:r.followUp ?? null,
-    group_size:r.groupSize, city:r.city ?? null, preferred_departure_date:r.preferredDepartureDate || null,
-    departure_location:r.departureLocation ?? null, state:r.state ?? null,
-    travel_timing:r.travelTiming ?? null, payment_plan:r.paymentPlan ?? null, notes:r.notes ?? null,
-  })))
-  await save('customers', data.customers.map((r) => ({
-    id:r.id, reference:r.reference, name:r.name, phone:r.phone, email:r.email ?? null,
-    nationality:r.nationality, city:r.city ?? null, lead_id:r.leadId ?? null,
-    historical:r.historical ?? false, notes:r.notes ?? null, created_at:r.createdAt,
-  })))
-  await save('packages', data.packages.map((r) => ({
-    id:r.id, code:r.code, name:r.name, category:r.category, destination:r.destination,
-    departure_location:r.departureLocation ?? null, departure_date:r.departureDate ?? null,
-    source_agent:r.sourceAgent ?? null, notes:r.notes ?? null,
-    duration:r.duration, price:r.price, estimated_cost:r.estimatedCost, currency:r.currency,
-    availability:r.availability, status:r.status,
-  })))
-  await save('bookings', data.bookings.map((r) => ({
-    id:r.id, reference:r.reference, customer_id:r.customerId, package_id:r.packageId ?? null,
-    package_name:r.packageName, agreed_price:r.agreedPrice, party_size:r.partySize,
-    currency:r.currency, booking_date:r.bookingDate, departure_date:r.departureDate,
-    return_date:r.returnDate, status:r.status, supplier:r.supplier ?? null, historical:r.historical ?? false,
-  })))
-  await save('travellers', data.travellers.map((r) => ({
-    id:r.id, name:r.name, customer_id:r.customerId ?? null, booking_id:r.bookingId,
-    nationality:r.nationality, status:r.status, group_label:r.group ?? null,
-    documents_complete:r.documentsComplete, passport_expiry:r.passportExpiry ?? null,
-  })))
-  await save('payments', data.payments.map((r) => ({
-    id:r.id, reference:r.reference, booking_id:r.bookingId ?? null, customer_id:r.customerId,
-    package_id:r.packageId ?? null, purpose:r.purpose, amount:r.amount, payment_date:r.date,
-    method:r.method, status:r.status, transaction_reference:r.transactionReference ?? null,
-    reversal_reason:r.reversalReason ?? null, historical:r.historical ?? false,
-  })))
-  await save('supplier_costs', data.supplierCosts.map((r) => ({
-    id:r.id, booking_id:r.bookingId, supplier_name:r.supplier, category:r.category,
-    amount:r.amount, due_date:r.dueDate, paid:r.paid, status:r.status,
-  })))
-  await save('supplier_payments', data.supplierPayments.map((r) => ({
-    id:r.id, supplier_cost_id:r.supplierCostId, amount:r.amount, payment_date:r.date,
-    method:r.method, reference:r.reference ?? null, status:r.status ?? 'Confirmed', void_reason:r.voidReason ?? null,
-  })))
-  await save('documents', data.documents.map((r) => ({
-    id:r.id, name:r.name, category:r.category, related_type:r.relatedType,
-    related_reference:r.relatedReference, url:r.url, recorded_at:r.recordedAt, status:r.status,
-  })))
+async function saveStore(data: StoreData) {
+  const { agencyId, userId } = await agencyContext()
+  const base = { agency_id:agencyId }
+  const leadRows = data.leads.map(r => ({ ...base, id:r.id, lead_ref:r.reference || null, full_name:r.name, email:r.email || null, phone:r.phone || null,
+    source:r.source || null, status:key(r.status), interest:r.service || null, follow_up_at:asDateTime(r.followUp), notes:r.notes || null,
+    created_by:userId, metadata:{ service:r.service, travelPeriod:r.travelPeriod, preferredDepartureDate:r.preferredDepartureDate,
+      departureLocation:r.departureLocation, state:r.state, travelTiming:r.travelTiming, paymentPlan:r.paymentPlan,
+      campaign:r.campaign, groupSize:r.groupSize, city:r.city } }))
+  const customerRows = data.customers.map(r => ({ ...base, id:r.id, customer_ref:r.reference || null, full_name:r.name,
+    email:r.email || null, phone:r.phone || null, nationality:r.nationality || null, address:r.city || null, notes:r.notes || null,
+    created_by:userId, metadata:{ historical:Boolean(r.historical), leadId:r.leadId || null } }))
+  const packageRows = data.packages.map(r => {
+    const days = Number.parseInt(r.duration, 10)
+    const status = ({ Draft:'draft', Active:'published', 'Fully Booked':'full', Unavailable:'archived', Archived:'archived' } as Record<string,string>)[r.status] || 'draft'
+    return { ...base, id:r.id, package_ref:r.code || null, name:r.name, package_type:r.category, description:r.destination,
+      departure_location:r.departureLocation || null, departure_date:r.departureDate || null,
+      duration_days:Number.isFinite(days) ? days : null, capacity:r.availability, price_minor:minor(r.price), currency_code:r.currency,
+      status, supplier_name:r.sourceAgent || null, notes:r.notes || null,
+      metadata:{ destination:r.destination, duration:r.duration, estimatedCostMinor:r.estimatedCost == null ? null : minor(r.estimatedCost) } }
+  })
+  const bookingRows = data.bookings.map(r => {
+    const status = ({ Enquiry:'enquiry', 'Pending Confirmation':'reserved', 'In Preparation':'reserved', Confirmed:'confirmed',
+      'Ready for Travel':'confirmed', Travelling:'confirmed', Completed:'completed', Cancelled:'cancelled' } as Record<string,string>)[r.status] || 'enquiry'
+    return { ...base, id:r.id, booking_ref:r.reference || null, customer_id:r.customerId || null, package_id:r.packageId || null,
+      status, booking_date:r.bookingDate || new Date().toISOString().slice(0,10), departure_date:r.departureDate || null,
+      return_date:r.returnDate || null, traveller_count:Math.max(1,r.partySize || 1), total_amount_minor:minor(r.agreedPrice),
+      currency_code:r.currency || 'NGN', created_by:userId,
+      metadata:{ packageName:r.packageName, supplier:r.supplier, historical:Boolean(r.historical), uiStatus:r.status } }
+  })
+  const travellerRows = data.travellers.map(r => ({ ...base, id:r.id, booking_id:r.bookingId || null, customer_id:r.customerId || null,
+    full_name:r.name, nationality:r.nationality || null, visa_status:null, passport_expiry:r.passportExpiry || null,
+    room_group:r.group || null, metadata:{ uiStatus:r.status, documentsComplete:Boolean(r.documentsComplete) } }))
+  const supplierCache = new Map<string,string>()
+  const supplierCostRows = await Promise.all(data.supplierCosts.map(async r => ({ ...base, id:r.id, booking_id:r.bookingId || null,
+    supplier_id:await ensureSupplierId(agencyId,r.supplier,supplierCache), description:r.category || r.supplier,
+    amount_minor:minor(r.amount), currency_code:'NGN', due_date:r.dueDate || null,
+    status:r.status==='Paid'?'paid':r.paid>0?'part_paid':'unpaid' })))
+  const [existingPayments,existingSupplierPayments] = await Promise.all([rows('payments',agencyId),rows('supplier_payments',agencyId)])
+  const existingPaymentIds = new Set(existingPayments.map(r=>r.id))
+  const existingSupplierPaymentIds = new Set(existingSupplierPayments.map(r=>r.id))
+  const newPayments = data.payments.filter(r=>!existingPaymentIds.has(r.id)).map(r => ({
+    ...base, id:r.id, booking_id:r.bookingId || null, customer_id:r.customerId || null, payment_ref:r.reference || null,
+    amount_minor:minor(r.amount), currency_code:r.currency || 'NGN', payment_method:key(r.method),
+    payment_date:asDateTime(r.date) || new Date().toISOString(), status:key(r.status),
+    external_reference:r.transactionReference || null, recorded_by:userId, notes:r.purpose || null,
+    metadata:{ purpose:r.purpose, packageId:r.packageId || null, historical:Boolean(r.historical) },
+  }))
+  const newSupplierPayments = data.supplierPayments.filter(r=>!existingSupplierPaymentIds.has(r.id)).map(r => ({
+    ...base, id:r.id, supplier_cost_id:r.supplierCostId, amount_minor:minor(r.amount), currency_code:'NGN',
+    payment_date:asDateTime(r.date) || new Date().toISOString(), status:'confirmed', reference:r.reference || null,
+    recorded_by:userId, notes:`Method: ${r.method || 'Other'}`,
+  }))
+  const documentRows = data.documents.map(r => {
+    const traveller = r.relatedType === 'Traveller' ? data.travellers.find(x=>x.name===r.relatedReference) : undefined
+    const customer = r.relatedType === 'Customer' ? data.customers.find(x=>x.name===r.relatedReference || x.reference===r.relatedReference) : undefined
+    const booking = r.relatedType === 'Booking' ? data.bookings.find(x=>x.reference===r.relatedReference) : undefined
+    const payment = r.relatedType === 'Payment' ? data.payments.find(x=>x.reference===r.relatedReference) : undefined
+    return { ...base, id:r.id, document_type:r.category || 'Other', file_name:r.name,
+      storage_path:r.url && !/^https?:\/\//i.test(r.url) ? r.url : null,
+      external_url:r.url && /^https?:\/\//i.test(r.url) ? r.url : null,
+      mime_type:null, file_size_bytes:null, uploaded_by:userId,
+      booking_id:booking?.id || traveller?.bookingId || null, traveller_id:traveller?.id || null,
+      customer_id:customer?.id || traveller?.customerId || null }
+  })
+  await saveRows('leads',leadRows)
+  await saveRows('customers',customerRows)
+  await saveRows('packages',packageRows)
+  await saveRows('bookings',bookingRows)
+  await saveRows('travellers',travellerRows)
+  await saveRows('supplier_costs',supplierCostRows)
+  if (newPayments.length) {
+    const { error } = await client().from('payments').insert(newPayments)
+    if (error) throw error
+  }
+  if (newSupplierPayments.length) {
+    const { error } = await client().from('supplier_payments').insert(newSupplierPayments)
+    if (error) throw error
+  }
+  for (const record of data.payments) {
+    const old = existingPayments.find(r=>r.id===record.id)
+    if (old && key(old.status)!==key(record.status)) {
+      const { error } = await client().rpc('transition_agency_payment',{_payment_id:record.id,_status:key(record.status),_reason:record.reversalReason || null})
+      if (error) throw error
+    }
+  }
+  for (const record of data.supplierPayments) {
+    const old = existingSupplierPayments.find(r=>r.id===record.id)
+    if (old && key(old.status)!==key(record.status) && record.status==='Voided') {
+      const { error } = await client().rpc('void_agency_supplier_payment',{_supplier_payment_id:record.id,_reason:record.voidReason || 'Voided by agency operator'})
+      if (error) throw error
+    }
+  }
+  await saveRows('documents',documentRows)
 }
 
-
 export const loadLiveStore = () => loadStore()
-export const saveLiveStore = (data: Parameters<typeof saveStore>[0]) => saveStore(data)
-
+export const saveLiveStore = (data: StoreData) => saveStore(data)
 
 export async function deleteLiveRecords(table: string, ids: string[]) {
   if (!ids.length) return
-  const { data, error } = await client().from(table).delete().in('id', ids).eq('is_demo', false).select('id')
+  const { agencyId } = await agencyContext()
+  const { data, error } = await client().from(table).delete().in('id',ids).eq('agency_id',agencyId).select('id')
   if (error) throw error
   if ((data?.length ?? 0) !== ids.length) throw new Error('Not all selected records could be deleted. Check permissions or whether a record has linked data.')
 }

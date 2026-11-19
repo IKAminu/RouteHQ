@@ -80,7 +80,7 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
   const [supplierCosts, setSupplierCosts] = useState<SupplierCost[]>(isDemo ? initialSupplierCosts : [])
   const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>(isDemo ? initialSupplierPayments : [])
   const [documents, setDocuments] = useState<DocumentRecord[]>(isDemo ? initialDocuments : [])
-  const [dataReady, setDataReady] = useState(isDemo)
+  const [dataReady, setDataReady] = useState(false)
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false)
   const [dataError, setDataError] = useState<string | null>(null)
   const [saveNotice, setSaveNotice] = useState<string | null>(null)
@@ -100,10 +100,10 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
   }
 
   useEffect(() => {
-    if (isDemo || dataReady) { setShowLoadingSkeleton(false); return }
+    if (dataReady) { setShowLoadingSkeleton(false); return }
     const timer = window.setTimeout(() => setShowLoadingSkeleton(true), 300)
     return () => window.clearTimeout(timer)
-  }, [isDemo, dataReady])
+  }, [dataReady])
 
   useEffect(() => {
     if (isDemo) return
@@ -122,10 +122,10 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
       if (active) { setDataError(error instanceof Error ? error.message : 'Could not load agency records from Supabase. Check your connection and account permissions.'); setDataReady(true) }
     })
     return () => { active = false }
-  }, [isDemo])
+  }, [])
 
   useEffect(() => {
-    if (isDemo || !dataReady || dataError) return
+    if (!dataReady || dataError) return
     if (skipNextSave.current) { skipNextSave.current = false; return }
     const snapshot = { leads, customers, packages, bookings, travellers, payments, supplierCosts, supplierPayments, documents }
     const timer = window.setTimeout(() => {
@@ -142,10 +142,10 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
         })
     }, 500)
     return () => window.clearTimeout(timer)
-  }, [leads, customers, packages, bookings, travellers, payments, supplierCosts, supplierPayments, documents, dataReady, dataError, isDemo, saveRetry])
+  }, [leads, customers, packages, bookings, travellers, payments, supplierCosts, supplierPayments, documents, dataReady, dataError, saveRetry])
 
   useEffect(() => {
-    if (isDemo || !dataReady || dataError || !supabase) return
+    if (!dataReady || dataError || !supabase) return
     let active = true
     let refreshTimer: number | undefined
     const tables = ['leads', 'customers', 'packages', 'bookings', 'travellers', 'payments', 'supplier_costs', 'supplier_payments', 'documents']
@@ -175,7 +175,7 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
       if (refreshTimer) window.clearTimeout(refreshTimer)
       void supabase!.removeChannel(channel)
     }
-  }, [isDemo, dataReady, dataError])
+  }, [dataReady, dataError])
   const [action, setActionState] = useState<QuickActionType | null>(null)
   const [actionDefaults, setActionDefaults] = useState<Record<string, string>>({})
   const setAction = (nextAction: QuickActionType | null, defaults: Record<string, string> = {}) => { setActionState(nextAction); setActionDefaults(nextAction ? defaults : {}) }
@@ -381,7 +381,7 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
   const retrySave = () => { setSaveError(null); setSaveRetry((attempt) => attempt + 1) }
 
   const value = useMemo(() => ({ mode, saveNotice, saveError, retrySave, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, action, setAction, actionDefaults, deleteRecords, undoAvailable, undoDelete, addRecord, editing, setEditing, updateRecord, convertLead, reversePayment, voidSupplierPayment }), [mode, saveNotice, saveError, undoAvailable, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, action, actionDefaults, editing])
-  return <StoreContext.Provider value={value}>{!isDemo && dataError ? <div role="alert" className="data-connection-error">Live database error: {dataError}. The workspace has been paused so that changes cannot overwrite records that failed to load.</div> : !isDemo && !dataReady ? (showLoadingSkeleton ? <WorkspaceSkeleton /> : <div className="workspace-loading-pending" role="status" aria-label="Loading workspace" />) : <>{!isDemo && saveError && <div className="data-save-error" role="alert"><div><strong>Some changes haven't reached the database.</strong><span>{saveError}</span></div><button type="button" onClick={retrySave}>Retry save</button></div>}{children}</>}</StoreContext.Provider>
+  return <StoreContext.Provider value={value}>{dataError ? <div role="alert" className="data-connection-error">Live database error: {dataError}. The workspace has been paused so that changes cannot overwrite records that failed to load.</div> : !dataReady ? (showLoadingSkeleton ? <WorkspaceSkeleton /> : <div className="workspace-loading-pending" role="status" aria-label="Loading workspace" />) : <>{saveError && <div className="data-save-error" role="alert"><div><strong>Some changes haven't reached the database.</strong><span>{saveError}</span></div><button type="button" onClick={retrySave}>Retry save</button></div>}{children}</>}</StoreContext.Provider>
 }
 
 export const useAppStore = () => {

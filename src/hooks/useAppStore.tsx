@@ -88,6 +88,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [undoAvailable, setUndoAvailable] = useState(false)
   const pendingDeleteRef = useRef<PendingDelete | null>(null)
   const saveQueue = useRef<Promise<void>>(Promise.resolve())
+  const lastSavedSnapshot = useRef<Awaited<ReturnType<typeof loadLiveStore>> | null>(null)
   const skipNextSave = useRef(false)
   const noticeTimer = useRef<number | undefined>(undefined)
   const showNotice = (message: string, duration = 2600) => {
@@ -112,6 +113,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       await waitForMinimumLoadingTime()
       if (!active) return
       skipNextSave.current = true
+      lastSavedSnapshot.current = data
       setLeads(data.leads); setCustomers(data.customers); setPackages(data.packages)
       setBookings(data.bookings); setTravellers(data.travellers); setPayments(data.payments)
       setSupplierCosts(data.supplierCosts); setSupplierPayments(data.supplierPayments); setDocuments(data.documents)
@@ -129,8 +131,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     const timer = window.setTimeout(() => {
       showNotice('Saving changes…')
       // Serialize full snapshots so an older, slower save cannot overwrite a newer one.
-      saveQueue.current = saveQueue.current.catch(() => undefined).then(() => saveLiveStore(snapshot))
+      saveQueue.current = saveQueue.current.catch(() => undefined).then(() => saveLiveStore(snapshot, lastSavedSnapshot.current || undefined))
         .then(() => {
+          lastSavedSnapshot.current = snapshot
           setSaveError(null)
           showNotice('Changes saved')
         })
@@ -157,6 +160,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             const data = await loadLiveStore()
             if (!active) return
             skipNextSave.current = true
+            lastSavedSnapshot.current = data
             setLeads(data.leads); setCustomers(data.customers); setPackages(data.packages)
             setBookings(data.bookings); setTravellers(data.travellers); setPayments(data.payments)
             setSupplierCosts(data.supplierCosts); setSupplierPayments(data.supplierPayments); setDocuments(data.documents)

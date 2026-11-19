@@ -42,16 +42,20 @@ function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
     </div>}
 
     {variant === 'motion' && <div className="auth-motion-stage">
-      <iframe
-        title="Abstract orange motion background by zFootage"
-        src="https://www.youtube-nocookie.com/embed/X9jC-6rBJHc?autoplay=1&mute=1&controls=0&loop=1&playlist=X9jC-6rBJHc&modestbranding=1&playsinline=1&rel=0"
-        allow="autoplay; encrypted-media; picture-in-picture"
-        referrerPolicy="strict-origin-when-cross-origin"
-        loading="eager"
-      />
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+        poster="https://images.pexels.com/videos/5649209/free-video-5649209.jpg?auto=compress&cs=tinysrgb&w=1600"
+      >
+        <source src="https://videos.pexels.com/video-files/5649209/5649209-hd_1920_1080_25fps.mp4" type="video/mp4" />
+      </video>
       <div className="auth-motion-shade"></div>
       <div className="auth-motion-copy"><span>ROUTEHQ / IN MOTION</span><h2>Move every<br />detail forward.</h2><p>Clarity for the people who keep every journey moving.</p></div>
-      <a className="auth-motion-credit" href="https://www.youtube.com/watch?v=X9jC-6rBJHc" target="_blank" rel="noreferrer">Motion background by zFootage · CC BY 4.0</a>
+      <a className="auth-motion-credit" href="https://www.pexels.com/video/an-orange-liquid-paint-in-motion-5649209/" target="_blank" rel="noreferrer">Motion background · Dan Cristian Pădureț / Pexels</a>
     </div>}
 
     {variant === 'quote' && <div className="auth-quote-stage">

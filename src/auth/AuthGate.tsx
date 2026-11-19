@@ -104,7 +104,7 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
       const normalizedEmail = email.trim().toLowerCase()
       if (!normalizedEmail) throw new Error('Enter the email address for your RouteHQ account.')
       const { error: resetError } = await supabase!.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: window.location.origin,
+        redirectTo: new URL(import.meta.env.BASE_URL, window.location.origin).toString(),
       })
       if (resetError) throw resetError
       setInfo('If an account exists for that address, Supabase has sent a password-reset link. Check your inbox and spam folder.')

@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { waitForMinimumLoadingTime } from '@/lib/loading'
 import { dynaura } from 'dynaura'
 
-export type AppMode = 'live'
+export type AppMode = 'demo' | 'live'
 type AuthStep = 'login' | 'mfa' | 'enroll' | 'forgot' | 'recover'
 
 function AuthVisual() {

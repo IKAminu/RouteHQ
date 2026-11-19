@@ -48,7 +48,10 @@ function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
           </div>}
 
     {variant === 'quote' && <div className="auth-quote-stage">
+      <div className="auth-quote-mark" aria-hidden="true">“</div>
       <blockquote>Great journeys are built on details handled well.</blockquote>
+      <div className="auth-quote-rule" aria-hidden="true"></div>
+      <p>THE ROUTEHQ PRINCIPLE</p>
     </div>}
 
   </aside>

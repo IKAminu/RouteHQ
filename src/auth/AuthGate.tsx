@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import type { FormEvent, ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
@@ -53,7 +54,7 @@ function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
   </aside>
 }
 
-function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { onAuthenticated: (session: Session) => void; recoveryMode: boolean; onPasswordRecovered: () => void }) {
+function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered, initialSession }: { onAuthenticated: (session: Session) => void; recoveryMode: boolean; onPasswordRecovered: () => void; initialSession?: Session | null }) {
   const [step, setStep] = useState<AuthStep>(recoveryMode ? 'recover' : 'login')
   const [visualVariant] = useState<AuthVisualVariant>(() => {
     const variants: AuthVisualVariant[] = ['dashboard', 'motion', 'quote']
@@ -63,6 +64,7 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [info, setInfo] = useState('')
@@ -77,6 +79,7 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
   const [error, setError] = useState('')
   const verifyFormRef = useRef<HTMLFormElement>(null)
   const verifyInFlight = useRef(false)
+  const secondFactorStarted = useRef(false)
 
   const beginSecondFactor = async () => {
     const { data: factors, error: factorsError } = await supabase!.auth.mfa.listFactors()
@@ -126,10 +129,28 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
         throw loginError
       }
       if (!data.session) throw new Error('Sign-in did not return a valid session.')
+      secondFactorStarted.current = true
       await beginSecondFactor()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not sign in. Please try again.')
     } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setError('')
+    setInfo('')
+    setBusy(true)
+    try {
+      const redirectTo = new URL(import.meta.env.BASE_URL, window.location.origin).toString()
+      const { error: oauthError } = await supabase!.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo, queryParams: { access_type: 'offline', prompt: 'select_account' } },
+      })
+      if (oauthError) throw oauthError
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Google sign-in could not be started.')
       setBusy(false)
     }
   }
@@ -247,6 +268,16 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
   }
 
   useEffect(() => {
+    if (!initialSession || step !== 'login' || secondFactorStarted.current) return
+    secondFactorStarted.current = true
+    setBusy(true)
+    beginSecondFactor().catch((err: unknown) => {
+      setError(err instanceof Error ? err.message : 'Could not start two-step verification.')
+      secondFactorStarted.current = false
+    }).finally(() => setBusy(false))
+  }, [initialSession, step])
+
+  useEffect(() => {
     if ((step === 'mfa' || step === 'enroll') && code.length === 6 && !busy && !error && !verifyInFlight.current) {
       verifyFormRef.current?.requestSubmit()
     }
@@ -261,6 +292,7 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
       }
     }
     await supabase!.auth.signOut()
+    secondFactorStarted.current = false
     setStep('login')
     setPassword('')
     setCode('')
@@ -278,15 +310,35 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
     <section className="auth-panel">
       <img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="RouteHQ" className="auth-logo" />
 
-      {step === 'login' && <form className="auth-form" onSubmit={authMode === 'signup' ? handleSignup : handleLogin}>
-        {authMode === 'signup' && <label className="field-group">Your full name<input className="field" autoComplete="name" required value={fullName} onChange={(event) => setFullName(event.target.value)} /></label>}
-        <label className="field-group">Email address<input className="field" type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
-        <label className="field-group">Password<input className="field" type="password" autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} minLength={authMode === 'signup' ? 10 : undefined} required value={password} onChange={(event) => setPassword(event.target.value)} /></label>
-        {authMode === 'signup' && <p className="auth-help">Use at least 10 characters. Email confirmation may be required before you can continue.</p>}
-        {info && <p className="auth-info" role="status">{info}</p>}
-        {error && <p className="auth-error" role="alert">{error}</p>}
-        <button className="button button-primary auth-submit" disabled={busy}>{busy ? (authMode === 'signup' ? 'Creating account…' : 'Signing in…') : (authMode === 'signup' ? 'Create account' : 'Sign in')}</button>
-      </form>}
+      {step === 'login' && <>
+        <div className="auth-form-heading">
+          <h1>{authMode === 'signup' ? 'Create account' : 'Login'}</h1>
+          <div className="auth-mode-switch" role="group" aria-label="Choose login or sign up">
+            <button type="button" className={authMode === 'login' ? 'active' : ''} aria-pressed={authMode === 'login'} onClick={() => { setAuthMode('login'); setError(''); setInfo('') }}>Login</button>
+            <button type="button" className={authMode === 'signup' ? 'active' : ''} aria-pressed={authMode === 'signup'} onClick={() => { setAuthMode('signup'); setError(''); setInfo('') }}>Sign up</button>
+          </div>
+        </div>
+        <form className="auth-form" onSubmit={authMode === 'signup' ? handleSignup : handleLogin}>
+          {authMode === 'signup' && <label className="field-group">Full name<input className="field" autoComplete="name" required value={fullName} onChange={(event) => setFullName(event.target.value)} /></label>}
+          <label className="field-group">Email<input className="field" type="email" autoComplete="username" placeholder="you@example.com" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+          <label className="field-group">Password
+            <span className="auth-password-wrap">
+              <input className="field" type={showPassword ? 'text' : 'password'} autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} placeholder="Enter password" minLength={authMode === 'signup' ? 10 : undefined} required value={password} onChange={(event) => setPassword(event.target.value)} />
+              <button className="auth-password-toggle" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+            </span>
+          </label>
+          {authMode === 'login' && <div className="auth-forgot-row"><button type="button" onClick={() => { setStep('forgot'); setError(''); setInfo('') }}>Forgot password?</button></div>}
+          {authMode === 'signup' && <p className="auth-help">Use at least 10 characters. Email confirmation may be required.</p>}
+          {info && <p className="auth-info" role="status">{info}</p>}
+          {error && <p className="auth-error" role="alert">{error}</p>}
+          <button className="button button-primary auth-submit" disabled={busy}>{busy ? (authMode === 'signup' ? 'Creating account…' : 'Signing in…') : (authMode === 'signup' ? 'Create account' : 'Login')}</button>
+          <div className="auth-divider"><span>OR</span></div>
+          <button className="auth-google-button" type="button" disabled={busy} onClick={handleGoogleSignIn}>
+            <svg width="20" height="20" viewBox="0 0 21 20" fill="none" aria-hidden="true"><path d="M19.6 10.23c0-.68-.06-1.34-.18-1.98H10.5v3.75h5.1a4.36 4.36 0 0 1-1.89 2.86v2.34h3.06c1.79-1.65 2.83-4.08 2.83-6.97Z" fill="#4285F4"/><path d="M10.5 20c2.55 0 4.69-.85 6.25-2.3l-3.06-2.34c-.85.57-1.93.91-3.19.91-2.46 0-4.54-1.66-5.28-3.89H2.06v2.41A9.44 9.44 0 0 0 10.5 20Z" fill="#34A853"/><path d="M5.22 12.38a5.67 5.67 0 0 1 0-3.76V6.21H2.06a9.5 9.5 0 0 0 0 8.58l3.16-2.41Z" fill="#FBBC05"/><path d="M10.5 4.73c1.39 0 2.64.48 3.62 1.43l2.72-2.72C15.18 1.91 13.05 1 10.5 1a9.44 9.44 0 0 0-8.44 5.21l3.16 2.41c.74-2.23 2.82-3.89 5.28-3.89Z" fill="#EA4335"/></svg>
+            <span>Continue with Google</span>
+          </button>
+        </form>
+      </>}
       {step === 'forgot' && <form className="auth-form" onSubmit={handleSendPasswordReset}>
         <label className="field-group">Email address<input className="field" type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
         {error && <p className="auth-error" role="alert">{error}</p>}
@@ -298,8 +350,6 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
         {error && <p className="auth-error" role="alert">{error}</p>}
         <button className="button button-primary auth-submit" disabled={busy || newPassword.length < 10 || newPassword !== confirmPassword}>{busy ? 'Updating password…' : 'Update password'}</button>
       </form>}
-      {step === 'login' && authMode === 'login' && <button className="auth-back" type="button" onClick={() => { setStep('forgot'); setError(''); setInfo('') }}>Forgot password?</button>}
-      {step === 'login' && <button className="auth-back" type="button" onClick={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setError(''); setInfo('') }}>{authMode === 'signup' ? 'Already registered? Sign in' : 'New to RouteHQ? Create an account'}</button>}
 
       {step === 'enroll' && <form ref={verifyFormRef} className="auth-form" onSubmit={handleVerify}>
         <div className="auth-qr"><img src={qrCode} alt="Authenticator setup QR code" /></div>
@@ -334,7 +384,6 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
       </form>}
 
       {step !== 'login' && <button className="auth-back" type="button" onClick={async () => { await handleBackToLogin(); onPasswordRecovered() }}>Cancel and return to sign in</button>}
-      <p className="auth-footnote">Agency workspaces are activated after RouteHQ reviews and approves an application.</p>
     </section>
     <AuthVisual variant={visualVariant} />
     </div>
@@ -412,6 +461,7 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
     return <AuthScreen
       key={passwordRecovery ? 'password-recovery' : 'sign-in'}
       recoveryMode={passwordRecovery}
+      initialSession={session}
       onPasswordRecovered={() => {
         setPasswordRecovery(false)
         setSession(null)

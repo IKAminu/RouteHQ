@@ -316,7 +316,6 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
   const [passwordRecovery, setPasswordRecovery] = useState(() => new URLSearchParams(window.location.hash.replace(/^#/, '')).get('type') === 'recovery')
 
   useEffect(() => {
-    // Public preview builds use local demo data and must not initialise Supabase auth.
     if (!supabase) return
     let alive = true
     const checkSession = async (current: Session | null) => {

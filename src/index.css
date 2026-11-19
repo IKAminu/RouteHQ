@@ -2634,3 +2634,46 @@
   .routehq-search-trigger kbd { min-width:40px; font-size:8px; }
   .routehq-search.is-open { top:.35rem; left:.55rem; width:calc(100vw - 1.1rem); }
 }
+
+
+/* Global search: keep the expanded surface charcoal in both themes. */
+.routehq-search-panel {
+  border-color: #38383e;
+  background: #252529;
+  color: #e8e8eb;
+}
+.routehq-search-field { color: #c4c4cb; }
+.routehq-search-field input { color: #f1f1f3; }
+.routehq-search-field input::placeholder { color: #a1a1aa; }
+.routehq-search-field > button { background: #38383e; color: #dedee3; }
+.routehq-search-results { border-color: #3a3a40; }
+.routehq-search-results > button { color: #c6c6cd; }
+.routehq-search-results > button:hover,
+.routehq-search-results > button.is-active { background: #35353b; color: #fff; }
+.routehq-result-copy strong { color: #f0f0f2; }
+.routehq-result-copy small { color: #aaaab3; }
+.routehq-search-hint { color: #b4b4bd; }
+.routehq-search-footer { border-color: #3a3a40; color: #b2b2bb; }
+.routehq-search-footer kbd { border-color: #4a4a52; background: #333339; color: #dedee3; }
+.routehq-search-mobile-nav { display: none; }
+:root[data-theme='dark'] .routehq-search-panel { background: #252529; color: #e8e8eb; }
+:root[data-theme='dark'] .routehq-search-field input { color: #f1f1f3; }
+:root[data-theme='dark'] .routehq-search-results > button:hover,
+:root[data-theme='dark'] .routehq-search-results > button.is-active { background: #35353b; }
+@media (max-width: 640px) {
+  .routehq-search-keyboard-nav { display: none !important; }
+  .routehq-search-mobile-nav { display: inline-flex; align-items: center; gap: 8px; }
+  .routehq-search-mobile-nav button {
+    display: inline-grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border: 1px solid #4a4a52;
+    border-radius: 7px;
+    background: #333339;
+    color: #f1f1f3;
+    touch-action: manipulation;
+  }
+  .routehq-search-mobile-nav button:disabled { opacity: .35; }
+  .routehq-search-footer { align-items: center; justify-content: space-between; gap: 8px 12px; }
+}

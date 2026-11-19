@@ -4,7 +4,6 @@ import { deleteLiveRecords, loadLiveStore, saveLiveStore } from '@/lib/supabaseS
 import { supabase } from '@/lib/supabase'
 import { waitForMinimumLoadingTime } from '@/lib/loading'
 import type { AppMode } from '@/auth/AuthGate'
-import { initialBookings, initialCustomers, initialLeads, initialPackages, initialPayments, initialTravellers, initialSupplierPayments, supplierCosts as initialSupplierCosts, documents as initialDocuments } from '@/data/mockData'
 import type { Booking, Customer, Lead, Payment, DocumentRecord, QuickActionType, SupplierCost, SupplierPayment, TravelPackage, Traveller } from '@/types'
 
 type DeletableRecordType = 'lead' | 'customer' | 'package' | 'booking' | 'traveller' | 'supplier-cost' | 'document'
@@ -69,17 +68,16 @@ function WorkspaceSkeleton() {
   </div>
 }
 
-export function AppStoreProvider({ children, mode }: { children: ReactNode; mode: AppMode }) {
-  const isDemo = mode === 'demo'
-  const [leads, setLeads] = useState<Lead[]>(isDemo ? initialLeads : [])
-  const [customers, setCustomers] = useState<Customer[]>(isDemo ? initialCustomers : [])
-  const [bookings, setBookings] = useState<Booking[]>(isDemo ? initialBookings : [])
-  const [packages, setPackages] = useState<TravelPackage[]>(isDemo ? initialPackages : [])
-  const [payments, setPayments] = useState<Payment[]>(isDemo ? initialPayments : [])
-  const [travellers, setTravellers] = useState<Traveller[]>(isDemo ? initialTravellers : [])
-  const [supplierCosts, setSupplierCosts] = useState<SupplierCost[]>(isDemo ? initialSupplierCosts : [])
-  const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>(isDemo ? initialSupplierPayments : [])
-  const [documents, setDocuments] = useState<DocumentRecord[]>(isDemo ? initialDocuments : [])
+export function AppStoreProvider({ children }: { children: ReactNode }) {
+  const [leads, setLeads] = useState<Lead[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [packages, setPackages] = useState<TravelPackage[]>([])
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [travellers, setTravellers] = useState<Traveller[]>([])
+  const [supplierCosts, setSupplierCosts] = useState<SupplierCost[]>([])
+  const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>([])
+  const [documents, setDocuments] = useState<DocumentRecord[]>([])
   const [dataReady, setDataReady] = useState(false)
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false)
   const [dataError, setDataError] = useState<string | null>(null)
@@ -106,7 +104,6 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
   }, [dataReady])
 
   useEffect(() => {
-    if (isDemo) return
     let active = true
     setDataReady(false)
     setDataError(null)
@@ -247,7 +244,7 @@ export function AppStoreProvider({ children, mode }: { children: ReactNode; mode
     pendingDeleteRef.current = null
     setUndoAvailable(false)
     try {
-      if (!isDemo) {
+      {
         const tableByType: Record<DeletableRecordType, string> = { lead: 'leads', customer: 'customers', package: 'packages', booking: 'bookings', traveller: 'travellers', 'supplier-cost': 'supplier_costs', document: 'documents' }
         saveQueue.current = saveQueue.current.catch(() => undefined).then(() => deleteLiveRecords(tableByType[pending.type], pending.ids))
         await saveQueue.current

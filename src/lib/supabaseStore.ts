@@ -119,7 +119,6 @@ async function loadStore(): Promise<StoreData> {
   const bookingsById = new Map(bookingRows.map(r => [r.id, r]))
   const customersById = new Map(customerRows.map(r => [r.id, r]))
   const travellersById = new Map(travellerRows.map(r => [r.id, r]))
-  const paymentsById = new Map(paymentRows.map(r => [r.id, r]))
   const reversalReasonByPayment = new Map<string,string>(reversalRows.map(r => [r.payment_id, r.reason]))
   return {
     leads:leadRows.map(leadFromRow),

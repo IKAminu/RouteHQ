@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { waitForMinimumLoadingTime } from '@/lib/loading'
 import { dynaura } from 'dynaura'
 
-export type AppMode = 'demo' | 'live'
+export type AppMode = 'live'
 type AuthStep = 'login' | 'mfa' | 'enroll' | 'forgot' | 'recover'
 
 function AuthVisual() {
@@ -18,7 +18,7 @@ function AuthVisual() {
   </aside>
 }
 
-function AuthScreen({ onAuthenticated, onDemo, recoveryMode, onPasswordRecovered }: { onAuthenticated: (session: Session) => void; onDemo: () => void; recoveryMode: boolean; onPasswordRecovered: () => void }) {
+function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { onAuthenticated: (session: Session) => void; recoveryMode: boolean; onPasswordRecovered: () => void }) {
   const [step, setStep] = useState<AuthStep>(recoveryMode ? 'recover' : 'login')
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [fullName, setFullName] = useState('')
@@ -318,14 +318,14 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
 
   useEffect(() => {
     // Public preview builds use local demo data and must not initialise Supabase auth.
-    if (import.meta.env.VITE_USE_MOCK_DATA === 'true' || !supabase) return
+    if (!supabase) return
     let alive = true
     const checkSession = async (current: Session | null) => {
       if (!alive) return
       try {
         if (!current) {
           await waitForMinimumLoadingTime()
-          if (alive) { setSession(null); setAuthenticated(false); setMode((previous) => previous === 'demo' ? 'demo' : null); setAuthError(''); setReady(true) }
+          if (alive) { setSession(null); setAuthenticated(false); setMode(null); setAuthError(''); setReady(true) }
           return
         }
         const { data, error } = await supabase!.auth.mfa.getAuthenticatorAssuranceLevel()
@@ -379,6 +379,6 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
   if (!ready) return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /><span>Preparing secure workspace</span><i /></div>
   if (authError) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section><AuthVisual /></div></div>
   if (mode === 'demo') return <>{children('demo')}</>
-  if (!session || !authenticated || passwordRecovery) return <AuthScreen key={passwordRecovery ? 'password-recovery' : 'sign-in'} recoveryMode={passwordRecovery} onPasswordRecovered={() => { setPasswordRecovery(false); setSession(null); setAuthenticated(false); setMode(null) }} onDemo={async () => { const { error } = await supabase!.auth.signOut(); if (error) throw error; setSession(null); setAuthenticated(false); setMode('demo') }} onAuthenticated={(nextSession) => { setPasswordRecovery(false); setSession(nextSession); setAuthenticated(true); setMode('live') }} />
+  if (!session || !authenticated || passwordRecovery) return <AuthScreen key={passwordRecovery ? 'password-recovery' : 'sign-in'} recoveryMode={passwordRecovery} onPasswordRecovered={() => { setPasswordRecovery(false); setSession(null); setAuthenticated(false); setMode(null) }} onAuthenticated={(nextSession) => { setPasswordRecovery(false); setSession(nextSession); setAuthenticated(true); setMode('live') }} />
   return <>{mode === 'live' ? children('live') : null}</>
 }

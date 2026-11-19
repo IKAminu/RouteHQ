@@ -49,8 +49,8 @@ jobs:
         env:
           VITE_BASE_PATH: /RouteHQ/
           VITE_USE_MOCK_DATA: "false"
-          VITE_SUPABASE_URL: ${{ vars.ROUTEHQ_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.ROUTEHQ_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: https://viohesitrhrtkulcdnqk.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_MCGMXtcnCTL5nuSoq8WOwA_-sQI3uVu
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -62,6 +62,6 @@ jobs:
         with:
           path: ./dist
 
-      - name: Deploy demo preview
+      - name: Deploy RouteHQ application
         id: deployment
         uses: actions/deploy-pages@v4

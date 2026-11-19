@@ -211,7 +211,7 @@ async function saveStore(data: StoreData) {
   const existingSupplierPaymentIds = new Set(existingSupplierPayments.map(r=>r.id))
   const newPayments = data.payments.filter(r=>!existingPaymentIds.has(r.id)).map(r => ({
     ...base, id:r.id, booking_id:r.bookingId || null, customer_id:r.customerId || null, payment_ref:r.reference || null,
-    amount_minor:minor(r.amount), currency_code:r.currency || 'NGN', payment_method:key(r.method),
+    amount_minor:minor(r.amount), currency_code:'NGN', payment_method:key(r.method),
     payment_date:asDateTime(r.date) || new Date().toISOString(), status:key(r.status),
     external_reference:r.transactionReference || null, recorded_by:userId, notes:r.purpose || null,
     metadata:{ purpose:r.purpose, packageId:r.packageId || null, historical:Boolean(r.historical) },

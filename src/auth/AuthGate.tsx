@@ -12,17 +12,8 @@ type AuthVisualVariant = 'dashboard' | 'motion' | 'quote'
 
 function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
   return <aside className={"auth-visual auth-visual-" + variant} aria-label="RouteHQ product introduction">
-    <div className="auth-visual-top">
-      <img src={import.meta.env.BASE_URL + 'brand/routehq-logo.svg'} alt="RouteHQ" />
-      <span>TRAVEL OPERATIONS</span>
-    </div>
-
     {variant === 'dashboard' && <div className="auth-dashboard-preview" aria-hidden="true">
-      <div className="auth-preview-heading">
-        <div><span>WORKSPACE OVERVIEW</span><h2>Your operations,<br />in one place.</h2></div>
-        <i><b></b> PRODUCT PREVIEW</i>
-      </div>
-      <div className="auth-preview-window">
+            <div className="auth-preview-window">
         <div className="auth-preview-window-top"><span>Overview</span><span>Last 30 days&nbsp;⌄</span></div>
         <div className="auth-preview-metrics">
           <div><small>Active enquiries</small><strong>128</strong><em>↑ 12.8%</em></div>
@@ -38,7 +29,6 @@ function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
           <div className="auth-preview-activity"><strong>Recent activity</strong><div><i></i><span><b>New enquiry received</b><small>Umrah · 4 travellers</small></span></div><div><i></i><span><b>Booking confirmed</b><small>December departure</small></span></div><div><i></i><span><b>Payment recorded</b><small>Customer account</small></span></div></div>
         </div>
       </div>
-      <p className="auth-preview-caption">One connected workspace for every part of the journey.</p>
     </div>}
 
     {variant === 'motion' && <div className="auth-motion-stage">
@@ -54,19 +44,12 @@ function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
         <source src="https://videos.pexels.com/video-files/5649209/5649209-hd_1920_1080_25fps.mp4" type="video/mp4" />
       </video>
       <div className="auth-motion-shade"></div>
-      <div className="auth-motion-copy"><span>ROUTEHQ / IN MOTION</span><h2>Move every<br />detail forward.</h2><p>Clarity for the people who keep every journey moving.</p></div>
-      <a className="auth-motion-credit" href="https://www.pexels.com/video/an-orange-liquid-paint-in-motion-5649209/" target="_blank" rel="noreferrer">Motion background · Dan Cristian Pădureț / Pexels</a>
-    </div>}
+          </div>}
 
     {variant === 'quote' && <div className="auth-quote-stage">
-      <span className="auth-quote-kicker">A ROUTEHQ PRINCIPLE</span>
-      <div className="auth-quote-mark">“</div>
       <blockquote>Great journeys are built on details handled well.</blockquote>
-      <div className="auth-quote-rule"></div>
-      <p>THE ROUTEHQ APPROACH</p>
     </div>}
 
-    <div className="auth-visual-foot"><span>BUILT FOR TRAVEL AGENCIES</span><span>ROUTEHQ · 01</span></div>
   </aside>
 }
 
@@ -293,12 +276,7 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
   return <div className="auth-screen">
     <div className="auth-layout">
     <section className="auth-panel">
-      <img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" />
-      <p className="auth-eyebrow">AGENCY OPERATIONS</p>
-      <h1>{step === 'login' ? (authMode === 'signup' ? 'Create your RouteHQ account' : 'Sign in to RouteHQ') : step === 'forgot' ? 'Reset your password' : step === 'recover' ? 'Choose a new password'  : step === 'enroll' ? 'Secure your account' : 'Verify it’s you'}</h1>
-      <p className="auth-description">
-        {step === 'login' ? (authMode === 'signup' ? 'Create an account first. You will submit your agency details after verifying your email.' : 'Sign in to manage your agency or submit an application to join RouteHQ.') : step === 'forgot' ? 'We will send a secure password-reset link to the email address on your account.' : step === 'recover' ? 'Choose a new password for your RouteHQ account. You will sign in again and complete two-step verification afterwards.' : step === 'enroll' ? 'Connect an authenticator app to secure your account.' : 'Enter the six-digit code from your authenticator app.'}
-      </p>
+      <img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="RouteHQ" className="auth-logo" />
 
       {step === 'login' && <form className="auth-form" onSubmit={authMode === 'signup' ? handleSignup : handleLogin}>
         {authMode === 'signup' && <label className="field-group">Your full name<input className="field" autoComplete="name" required value={fullName} onChange={(event) => setFullName(event.target.value)} /></label>}
@@ -427,9 +405,9 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
     return () => { alive = false; listener.subscription.unsubscribe() }
   }, [])
 
-  if (!supabase) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Configuration required</h1><p className="auth-description">Supabase connection settings are missing. Contact the app administrator.</p></section><AuthVisual variant="dashboard" /></div></div>
-  if (!ready) return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /><span>Preparing secure workspace</span><i /></div>
-  if (authError) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section><AuthVisual variant="dashboard" /></div></div>
+  if (!supabase) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="RouteHQ" className="auth-logo" /><h1>Configuration required</h1><p className="auth-description">Supabase connection settings are missing. Contact the app administrator.</p></section><AuthVisual variant="dashboard" /></div></div>
+  if (!ready) return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="" /><span>Preparing secure workspace</span><i /></div>
+  if (authError) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="RouteHQ" className="auth-logo" /><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section><AuthVisual variant="dashboard" /></div></div>
   if (!session || !authenticated || passwordRecovery) {
     return <AuthScreen
       key={passwordRecovery ? 'password-recovery' : 'sign-in'}

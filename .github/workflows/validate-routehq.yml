@@ -40,8 +40,8 @@ jobs:
       - name: Check TypeScript
         run: pnpm typecheck
 
-      - name: Build demo preview
+      - name: Build RouteHQ application
         run: pnpm build
         env:
           VITE_BASE_PATH: /RouteHQ/
-          VITE_USE_MOCK_DATA: "true"
+          VITE_USE_MOCK_DATA: "false"

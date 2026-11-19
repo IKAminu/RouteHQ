@@ -19,12 +19,10 @@ type AgencyNote = {
   updated_at: string
 }
 
-const demoNotes: AgencyNote[] = []
 const today = () => { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` }
 const dateLabel = (value: string | null) => value ? new Date(`${value}T00:00:00`).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No due date'
 
 export function NotesPage() {
-  const { mode } = useAppStore()
   const [tab, setTab] = useState<'all' | 'Note' | 'Reminder' | 'To-do'>('all')
   const [filter, setFilter] = useState<'all' | 'open' | 'completed'>('all')
   const [searchParams] = useSearchParams()
@@ -43,11 +41,6 @@ export function NotesPage() {
   const [completed, setCompleted] = useState(false)
 
   const loadNotes = useCallback(async () => {
-    if (mode === 'demo') {
-      setNotes(demoNotes)
-      setLoading(false)
-      return
-    }
     if (!supabase) {
       setError('The database connection is not configured.')
       setLoading(false)
@@ -56,9 +49,12 @@ export function NotesPage() {
     setLoading(true)
     const { data, error: loadError } = await supabase.from('agency_notes').select('*').order('created_at', { ascending: false })
     if (loadError) setError(loadError.message)
-    else { setNotes((data || []) as AgencyNote[]); setError('') }
+    else {
+      setNotes((data || []).map((row) => ({ ...row, kind: (row.category || 'Note') as NoteKind })) as AgencyNote[])
+      setError('')
+    }
     setLoading(false)
-  }, [mode])
+  }, [])
 
   useEffect(() => { void loadNotes() }, [loadNotes])
 
@@ -77,32 +73,45 @@ export function NotesPage() {
   }
   const saveNote = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!title.trim()) return
+    if (!title.trim() || !supabase) return
     setSaving(true); setError('')
-    const values = { title: title.trim(), body: body.trim(), kind, priority, due_date: dueDate || null, completed, updated_at: new Date().toISOString() }
-    if (mode === 'demo') {
-      const next: AgencyNote = { id: editing?.id || crypto.randomUUID(), ...values, created_at: editing?.created_at || new Date().toISOString() }
-      setNotes((current) => editing ? current.map((item) => item.id === editing.id ? next : item) : [next, ...current])
-    } else if (supabase) {
+    try {
+      const [{ data: contextData, error: contextError }, { data: userData, error: userError }] = await Promise.all([
+        supabase.rpc('get_my_agency_context'),
+        supabase.auth.getUser(),
+      ])
+      if (contextError) throw contextError
+      if (userError) throw userError
+      const context = Array.isArray(contextData) ? contextData[0] : contextData
+      const user = userData.user
+      if (!context?.agency_id || !user) throw new Error('Your active agency session could not be verified.')
+      const values = {
+        title: title.trim(), body: body.trim(), category: kind, priority,
+        due_date: dueDate || null, completed, updated_at: new Date().toISOString(), updated_by: user.id,
+      }
       const result = editing
-        ? await supabase.from('agency_notes').update(values).eq('id', editing.id)
-        : await supabase.from('agency_notes').insert(values)
-      if (result.error) { setError(result.error.message); setSaving(false); return }
+        ? await supabase.from('agency_notes').update(values).eq('id', editing.id).eq('agency_id', context.agency_id)
+        : await supabase.from('agency_notes').insert({ ...values, agency_id: context.agency_id, created_by: user.id })
+      if (result.error) throw result.error
       await loadNotes()
-    }
-    setSaving(false); setEditorOpen(false)
+      setEditorOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save this agency note.')
+    } finally { setSaving(false) }
   }
   const toggleCompleted = async (note: AgencyNote) => {
-    const next = !note.completed
-    if (mode === 'demo') { setNotes((current) => current.map((item) => item.id === note.id ? { ...item, completed: next, updated_at: new Date().toISOString() } : item)); return }
     if (!supabase) return
-    setNotes((current) => current.map((item) => item.id === note.id ? { ...item, completed: next } : item))
-    const { error: updateError } = await supabase.from('agency_notes').update({ completed: next, updated_at: new Date().toISOString() }).eq('id', note.id)
-    if (updateError) { setError(updateError.message); await loadNotes() }
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    if (userError || !userData.user) { setError(userError?.message || 'Your session could not be verified.'); return }
+    const next = !note.completed
+    const { error: updateError } = await supabase.from('agency_notes')
+      .update({ completed: next, updated_at: new Date().toISOString(), updated_by: userData.user.id })
+      .eq('id', note.id)
+    if (updateError) setError(updateError.message)
+    else setNotes((current) => current.map((item) => item.id === note.id ? { ...item, completed: next } : item))
   }
   const deleteNote = async (note: AgencyNote) => {
     if (!window.confirm(`Delete “${note.title}”? This cannot be undone.`)) return
-    if (mode === 'demo') { setNotes((current) => current.filter((item) => item.id !== note.id)); return }
     if (!supabase) return
     const { error: deleteError } = await supabase.from('agency_notes').delete().eq('id', note.id)
     if (deleteError) setError(deleteError.message)
@@ -123,7 +132,6 @@ export function NotesPage() {
       <div><span>Overdue</span><strong className={overdueCount ? 'notes-overdue' : ''}>{overdueCount}</strong></div>
       <div><span>Completed</span><strong>{notes.filter((note) => note.completed).length}</strong></div>
     </div>
-    {mode === 'demo' && <div className="notes-demo-banner">Demo Mode: notes are temporary and will not be saved to the agency database.</div>}
     <div className="notes-toolbar">
       <div className="notes-search"><Search size={16} /><Input aria-label="Search notes" placeholder="Search notes and reminders…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
       <div className="notes-filters">
@@ -142,7 +150,7 @@ export function NotesPage() {
       <div className="note-main"><div className="note-title-row"><h2>{note.title}</h2><Badge>{note.kind}</Badge></div>{note.body && <p>{note.body}</p>}<div className="note-meta"><span className={note.priority === 'High' ? 'note-priority-high' : ''}>{note.priority} priority</span><span>{note.due_date ? `Due ${dateLabel(note.due_date)}` : 'No due date'}</span><span>{new Date(note.created_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}</span></div></div>
       <div className="note-actions"><button aria-label="Edit note" onClick={() => openEdit(note)}><Pencil size={15} /></button><button aria-label="Delete note" onClick={() => void deleteNote(note)}><Trash2 size={15} /></button></div>
     </article>)}</div> : <EmptyState title={query || tab !== 'all' || filter !== 'all' ? 'No matching notes' : 'Nothing written yet'} text={query || tab !== 'all' || filter !== 'all' ? 'Try changing your search or filters.' : 'Add a note, reminder or to-do to keep agency work organised.'} />}
-    {editorOpen && <Modal title={editing ? 'Edit item' : kind === 'To-do' ? 'Create to-do' : kind === 'Reminder' ? 'Add reminder' : 'Write a note'} description="Notes are shared with authorised RouteHQ accounts in Live Mode." onClose={() => setEditorOpen(false)}>
+    {editorOpen && <Modal title={editing ? 'Edit item' : kind === 'To-do' ? 'Create to-do' : kind === 'Reminder' ? 'Add reminder' : 'Write a note'} description="Notes are shared with authorised members of this agency." onClose={() => setEditorOpen(false)}>
       <form className="form-grid notes-editor" onSubmit={saveNote}>
         <Field label="Title"><Input autoFocus required maxLength={180} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="What needs to be remembered?" /></Field>
         <Field label="Details"><textarea className="field notes-body-input" rows={5} value={body} onChange={(event) => setBody(event.target.value)} placeholder="Add context, steps, names or useful details…" /></Field>

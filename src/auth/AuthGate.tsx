@@ -423,9 +423,9 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
     return () => { alive = false; listener.subscription.unsubscribe() }
   }, [])
 
-  if (!supabase) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Configuration required</h1><p className="auth-description">Supabase connection settings are missing. Contact the app administrator.</p></section><AuthVisual /></div></div>
+  if (!supabase) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Configuration required</h1><p className="auth-description">Supabase connection settings are missing. Contact the app administrator.</p></section><AuthVisual variant="dashboard" /></div></div>
   if (!ready) return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /><span>Preparing secure workspace</span><i /></div>
-  if (authError) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section><AuthVisual /></div></div>
+  if (authError) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section><AuthVisual variant="dashboard" /></div></div>
   if (!session || !authenticated || passwordRecovery) {
     return <AuthScreen
       key={passwordRecovery ? 'password-recovery' : 'sign-in'}

@@ -311,7 +311,6 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(false)
   const [authenticated, setAuthenticated] = useState(false)
-  const [mode, setMode] = useState<AppMode | null>(null)
   const [authError, setAuthError] = useState('')
   const [passwordRecovery, setPasswordRecovery] = useState(() => new URLSearchParams(window.location.hash.replace(/^#/, '')).get('type') === 'recovery')
 
@@ -323,7 +322,6 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
       try {
         if (!current) {
           await waitForMinimumLoadingTime()
-          if (alive) { setSession(null); setAuthenticated(false); setMode(null); setAuthError(''); setReady(true) }
           return
         }
         const { data, error } = await supabase!.auth.mfa.getAuthenticatorAssuranceLevel()
@@ -332,7 +330,6 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
         if (alive) {
           setSession(current)
           setAuthenticated(data.currentLevel === 'aal2')
-          setMode(data.currentLevel === 'aal2' ? 'live' : null)
           setAuthError('')
           setReady(true)
         }
@@ -341,7 +338,6 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
         if (alive) {
           setSession(null)
           setAuthenticated(false)
-          setMode(null)
           setAuthError(error instanceof Error ? error.message : 'The sign-in service could not be reached. Check your connection and try again.')
           setReady(true)
         }
@@ -360,7 +356,6 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
         setPasswordRecovery(true)
         setSession(current)
         setAuthenticated(false)
-        setMode(null)
         setReady(true)
         return
       }
@@ -374,6 +369,5 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
   if (!supabase) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Configuration required</h1><p className="auth-description">Supabase connection settings are missing. Contact the app administrator.</p></section><AuthVisual /></div></div>
   if (!ready) return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /><span>Preparing secure workspace</span><i /></div>
   if (authError) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section><AuthVisual /></div></div>
-  if (!session || !authenticated || passwordRecovery) return <AuthScreen key={passwordRecovery ? 'password-recovery' : 'sign-in'} recoveryMode={passwordRecovery} onPasswordRecovered={() => { setPasswordRecovery(false); setSession(null); setAuthenticated(false); setMode(null) }} onAuthenticated={(nextSession) => { setPasswordRecovery(false); setSession(nextSession); setAuthenticated(true); setMode('live') }} />
   return <>{children('live')}</>
 }

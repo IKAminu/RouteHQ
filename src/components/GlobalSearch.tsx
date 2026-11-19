@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { ArrowDown, ArrowRight, ArrowUp, LoaderCircle, Search, X } from 'lucide-react'
+import { ArrowRight, LoaderCircle, Search, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/hooks/useAppStore'
 
@@ -167,7 +167,7 @@ export function GlobalSearch() {
         {!error && !loading && query.trim().length >= 2 && results.length === 0 && <p className="routehq-search-hint">No matching records</p>}
         {results.map((result,index) => <button type="button" role="option" aria-selected={active===index} className={active===index?'is-active':''} key={`${result.path}-${result.id}`} onMouseEnter={() => setActive(index)} onClick={() => select(result)}><span className="routehq-result-copy"><strong>{result.title}</strong><small>{result.detail}</small></span><ArrowRight size={15} /></button>)}
       </div>
-      <footer className="routehq-search-footer"><span className="routehq-search-keyboard-nav"><kbd>↑</kbd><kbd>↓</kbd> Navigate</span><span className="routehq-search-mobile-nav"><button type="button" aria-label="Previous result" title="Previous result" disabled={!results.length || active === 0} onClick={() => setActive(i => Math.max(i - 1, 0))}><ArrowUp size={16} /></button><span>Navigate</span><button type="button" aria-label="Next result" title="Next result" disabled={!results.length || active >= results.length - 1} onClick={() => setActive(i => Math.min(i + 1, results.length - 1))}><ArrowDown size={16} /></button></span><span><kbd>↵</kbd> Open record list</span><span><kbd>Esc</kbd> Close</span></footer>
+      <footer className="routehq-search-footer"><span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span><span><kbd>↵</kbd> Open record list</span><span><kbd>Esc</kbd> Close</span></footer>
       <span className="sr-only" role="status" aria-live="polite">{announcement}</span>
     </section>}
   </div>

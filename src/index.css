@@ -815,7 +815,7 @@
 :root[data-theme='dark'] .nav-group a:hover,
 :root[data-theme='dark'] .search-results button:hover,
 :root[data-theme='dark'] .notifications button:hover,
-:root[data-theme='dark'] .quick-action-menu button:hover { background: #173655; color: #f2f6fc; }
+:root[data-theme='dark'] .quick-action-menu button:hover { background: #202024; color: #f2f6fc; }
 :root[data-theme='dark'] .nav-group a.active { background: #202024; color: #ffb276; }
 :root[data-theme='dark'] .nav-group > p,
 :root[data-theme='dark'] .metric-head,
@@ -857,7 +857,7 @@
 :root[data-theme='dark'] .badge-success { border-color: #28634f; background: #123d38; color: #9fe1c2; }
 :root[data-theme='dark'] .badge-warning { border-color: #72552b; background: #49391f; color: #f6d18c; }
 :root[data-theme='dark'] .badge-danger { border-color: #75413f; background: #482a31; color: #f2b0aa; }
-:root[data-theme='dark'] .code-line { background: #173655; color: #d0d0d6; }
+:root[data-theme='dark'] .code-line { background: #202024; color: #d0d0d6; }
 :root[data-theme='dark'] .settings-section dl > div { border-color: var(--color-line); }
 :root[data-theme='dark'] .settings-section dt { color: var(--color-muted); }
 :root[data-theme='dark'] .settings-section dd { color: var(--color-ink); }

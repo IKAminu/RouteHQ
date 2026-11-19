@@ -266,7 +266,6 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
       </form>}
       {step === 'login' && authMode === 'login' && <button className="auth-back" type="button" onClick={() => { setStep('forgot'); setError(''); setInfo('') }}>Forgot password?</button>}
       {step === 'login' && <button className="auth-back" type="button" onClick={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setError(''); setInfo('') }}>{authMode === 'signup' ? 'Already registered? Sign in' : 'New to RouteHQ? Create an account'}</button>}
-      {step === 'login' && <button className="button button-secondary auth-demo" type="button" onClick={onDemo}>Explore the demo</button>}
 
       {step === 'enroll' && <form ref={verifyFormRef} className="auth-form" onSubmit={handleVerify}>
         <div className="auth-qr"><img src={qrCode} alt="Authenticator setup QR code" /></div>
@@ -373,12 +372,9 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
     })
     return () => { alive = false; listener.subscription.unsubscribe() }
   }, [])
-
-  if (import.meta.env.VITE_USE_MOCK_DATA === 'true') return <>{children('demo')}</>
   if (!supabase) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Configuration required</h1><p className="auth-description">Supabase connection settings are missing. Contact the app administrator.</p></section><AuthVisual /></div></div>
   if (!ready) return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /><span>Preparing secure workspace</span><i /></div>
   if (authError) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="auth-logo" /><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section><AuthVisual /></div></div>
-  if (mode === 'demo') return <>{children('demo')}</>
   if (!session || !authenticated || passwordRecovery) return <AuthScreen key={passwordRecovery ? 'password-recovery' : 'sign-in'} recoveryMode={passwordRecovery} onPasswordRecovered={() => { setPasswordRecovery(false); setSession(null); setAuthenticated(false); setMode(null) }} onAuthenticated={(nextSession) => { setPasswordRecovery(false); setSession(nextSession); setAuthenticated(true); setMode('live') }} />
-  return <>{mode === 'live' ? children('live') : null}</>
+  return <>{children('live')}</>
 }

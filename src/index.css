@@ -2806,3 +2806,12 @@
 @media(prefers-reduced-motion:reduce) {
   .auth-motion-stage video { display:none; }
 }
+
+@media(max-width:820px) {
+  .auth-visual-dashboard { min-height:320px; height:320px; }
+  .auth-visual-motion,.auth-visual-quote { min-height:220px; height:220px; }
+}
+@media(max-width:420px) {
+  .auth-visual-dashboard { min-height:320px; height:320px; }
+  .auth-visual-motion,.auth-visual-quote { min-height:220px; height:220px; }
+}

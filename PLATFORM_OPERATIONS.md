@@ -30,10 +30,11 @@ Agency approval currently creates a **pending** subscription record. It does not
 
 ## Production readiness
 
-Before external agencies store real operational records:
+The normalized operational adapter is now connected to the live agency workspace. Horizon Travel has the synthetic starter dataset in Supabase; newly approved agencies start empty. The remaining work before inviting external agencies into production is:
 
-1. The current Free plan has no automatic daily backups. Either implement and test an off-site CLI backup/restore process, or upgrade to Pro+ for managed daily backups.
+1. The current Free plan has no automatic daily backups. Implement and test an off-site backup/restore process, or upgrade to Pro+ for managed daily backups.
 2. Supabase leaked-password protection is a Pro+ feature. Upgrade before enabling it; on Free, record the limitation and enforce strong passwords plus TOTP MFA.
-3. Connect the Management API through a server-side Edge Function and scoped secret.
-4. Add subscription activation, renewal and cancellation workflows backed by a payment provider or auditable manual billing operations.
-5. Add automated tests for cross-tenant isolation and platform-admin access boundaries.
+3. Connect the Management API through a server-side Edge Function and scoped secret. Unsupported metrics must remain unavailable, not display as zero.
+4. Add subscription activation, renewal, failed-payment, grace-period and cancellation workflows backed by verified payment webhooks or auditable manual billing operations.
+5. Add automated cross-tenant, role-permission and platform-admin access tests.
+6. Verify private document uploads/downloads, password recovery redirects, session expiry and restore procedures on the deployed host.

@@ -8,10 +8,10 @@
   --color-brand-600: #c95f14;
   --color-brand-700: #a84b10;
   --color-ink: #18181b;
-  --color-muted: #85858e;
-  --color-line: #303036;
-  --color-canvas: #09090b;
-  --color-surface: #111114;
+  --color-muted: #71717a;
+  --color-line: #e4e4e7;
+  --color-canvas: #f4f4f5;
+  --color-surface: #ffffff;
 }
 
 @layer base {

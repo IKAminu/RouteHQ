@@ -8,18 +8,70 @@ import { dynaura } from 'dynaura'
 export type AppMode = 'demo' | 'live'
 type AuthStep = 'login' | 'mfa' | 'enroll' | 'forgot' | 'recover'
 
-function AuthVisual() {
-  return <aside className="auth-visual" aria-label="RouteHQ travel operations">
-    <div className="auth-visual-top"><img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="RouteHQ" /><span>TRAVEL OPERATIONS</span></div>
-    <div className="auth-visual-main"><p>ROUTEHQ WORKSPACE</p><h2>Every journey.<br/>One clear view.</h2><span>Keep enquiries, bookings, travellers and payments connected from one workspace.</span>
-      <div className="auth-route-flow"><div><i>01</i><span><strong>Enquiries</strong><small>Capture and qualify</small></span></div><b></b><div><i>02</i><span><strong>Bookings</strong><small>Coordinate each trip</small></span></div><b></b><div><i>03</i><span><strong>Departures</strong><small>Keep operations moving</small></span></div></div>
+type AuthVisualVariant = 'dashboard' | 'motion' | 'quote'
+
+function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
+  return <aside className={"auth-visual auth-visual-" + variant} aria-label="RouteHQ product introduction">
+    <div className="auth-visual-top">
+      <img src={import.meta.env.BASE_URL + 'brand/routehq-logo.svg'} alt="RouteHQ" />
+      <span>TRAVEL OPERATIONS</span>
     </div>
+
+    {variant === 'dashboard' && <div className="auth-dashboard-preview" aria-hidden="true">
+      <div className="auth-preview-heading">
+        <div><span>WORKSPACE OVERVIEW</span><h2>Your operations,<br />in one place.</h2></div>
+        <i><b></b> LIVE WORKSPACE</i>
+      </div>
+      <div className="auth-preview-window">
+        <div className="auth-preview-window-top"><span>Overview</span><span>Last 30 days&nbsp;⌄</span></div>
+        <div className="auth-preview-metrics">
+          <div><small>Active enquiries</small><strong>128</strong><em>↑ 12.8%</em></div>
+          <div><small>Confirmed bookings</small><strong>64</strong><em>↑ 8.4%</em></div>
+          <div><small>Upcoming departures</small><strong>18</strong><em>Next 30 days</em></div>
+        </div>
+        <div className="auth-preview-lower">
+          <div className="auth-preview-chart">
+            <div><strong>Booking activity</strong><small>Enquiries converted over time</small></div>
+            <div className="auth-preview-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div className="auth-preview-axis"><span>01 Nov</span><span>08 Nov</span><span>15 Nov</span><span>20 Nov</span></div>
+          </div>
+          <div className="auth-preview-activity"><strong>Recent activity</strong><div><i></i><span><b>New enquiry received</b><small>Umrah · 4 travellers</small></span></div><div><i></i><span><b>Booking confirmed</b><small>December departure</small></span></div><div><i></i><span><b>Payment recorded</b><small>Customer account</small></span></div></div>
+        </div>
+      </div>
+      <p className="auth-preview-caption">One connected workspace for every part of the journey.</p>
+    </div>}
+
+    {variant === 'motion' && <div className="auth-motion-stage">
+      <iframe
+        title="Abstract orange motion background by zFootage"
+        src="https://www.youtube-nocookie.com/embed/X9jC-6rBJHc?autoplay=1&mute=1&controls=0&loop=1&playlist=X9jC-6rBJHc&modestbranding=1&playsinline=1&rel=0"
+        allow="autoplay; encrypted-media; picture-in-picture"
+        referrerPolicy="strict-origin-when-cross-origin"
+        loading="eager"
+      />
+      <div className="auth-motion-shade"></div>
+      <div className="auth-motion-copy"><span>ROUTEHQ / IN MOTION</span><h2>Move every<br />detail forward.</h2><p>Clarity for the people who keep every journey moving.</p></div>
+      <a className="auth-motion-credit" href="https://www.youtube.com/watch?v=X9jC-6rBJHc" target="_blank" rel="noreferrer">Motion background by zFootage · CC BY 4.0</a>
+    </div>}
+
+    {variant === 'quote' && <div className="auth-quote-stage">
+      <span className="auth-quote-kicker">A ROUTEHQ PRINCIPLE</span>
+      <div className="auth-quote-mark">“</div>
+      <blockquote>Great journeys are built on details handled well.</blockquote>
+      <div className="auth-quote-rule"></div>
+      <p>THE ROUTEHQ APPROACH</p>
+    </div>}
+
     <div className="auth-visual-foot"><span>BUILT FOR TRAVEL AGENCIES</span><span>ROUTEHQ · 01</span></div>
   </aside>
 }
 
 function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { onAuthenticated: (session: Session) => void; recoveryMode: boolean; onPasswordRecovered: () => void }) {
   const [step, setStep] = useState<AuthStep>(recoveryMode ? 'recover' : 'login')
+  const [visualVariant] = useState<AuthVisualVariant>(() => {
+    const variants: AuthVisualVariant[] = ['dashboard', 'motion', 'quote']
+    return variants[Math.floor(Math.random() * variants.length)]
+  })
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -302,7 +354,7 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered }: { on
       {step !== 'login' && <button className="auth-back" type="button" onClick={async () => { await handleBackToLogin(); onPasswordRecovered() }}>Cancel and return to sign in</button>}
       <p className="auth-footnote">Agency workspaces are activated after RouteHQ reviews and approves an application.</p>
     </section>
-    <AuthVisual />
+    <AuthVisual variant={visualVariant} />
     </div>
   </div>
 }

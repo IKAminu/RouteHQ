@@ -57,6 +57,34 @@ function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
   </aside>
 }
 
+function VerificationCodeInput({ value, onChange, description, hasError = false, autoFocus = false }: { value: string; onChange: (value: string) => void; description: string; hasError?: boolean; autoFocus?: boolean }) {
+  return <div className={`auth-pin-input ${hasError ? 'has-error' : ''}`}>
+    <label className="auth-pin-label" htmlFor="auth-verification-code">Secure code</label>
+    <div className="auth-pin-group">
+      <input
+        id="auth-verification-code"
+        className="auth-pin-native-input"
+        type="text"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        pattern="[0-9]{6}"
+        maxLength={6}
+        required
+        autoFocus={autoFocus}
+        aria-label="Six-digit authenticator code"
+        aria-invalid={hasError}
+        aria-describedby="auth-code-help"
+        value={value}
+        onChange={(event) => onChange(event.target.value.replace(/\\D/g, '').slice(0, 6))}
+      />
+      {Array.from({ length: 6 }, (_, index) => <span key={index} className={`auth-pin-slot ${index === 3 ? 'auth-pin-slot-break' : ''} ${value[index] ? 'is-filled' : ''}`}>
+        {value[index] ?? <i />}
+      </span>)}
+    </div>
+    <p id="auth-code-help" className="auth-pin-description">{description}</p>
+  </div>
+}
+
 function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered, initialSession }: { onAuthenticated: (session: Session) => void; recoveryMode: boolean; onPasswordRecovered: () => void; initialSession?: Session | null }) {
   const [step, setStep] = useState<AuthStep>(recoveryMode ? 'recover' : 'login')
   const [visualVariant] = useState<AuthVisualVariant>(() => {
@@ -375,13 +403,13 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered, initia
           <p className="auth-help">In your authenticator app, choose the option to enter a setup key manually. Use the account name RouteHQ and select time-based (TOTP) if asked.</p>
           <p className="auth-help">Keep this key private. Anyone who has it can generate your verification codes.</p>
         </div>
-        <label className="field-group">Enter the code<input className={`field auth-code ${error ? 'has-error' : ''} ${code ? 'has-value' : ''}`} type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required autoFocus aria-invalid={!!error} aria-label="Six-digit authenticator code" aria-describedby="auth-code-help" value={code} onChange={(event) => { setCode(event.target.value.replace(/\D/g, '').slice(0, 6)); setError('') }} placeholder="••••••" /></label><span id="auth-code-help" className="auth-code-help">Codes refresh every 30 seconds</span>
+        <VerificationCodeInput value={code} onChange={(value) => { setCode(value); setError('') }} description="Codes refresh every 30 seconds" hasError={!!error} autoFocus />
         {error && <p className="auth-error" role="alert">{error}</p>}
         <button className="button button-primary auth-submit" disabled={busy || code.length !== 6}>{busy ? 'Verifying…' : 'Enable two-step verification'}</button>
       </form>}
 
       {step === 'mfa' && <form ref={verifyFormRef} className="auth-form" onSubmit={handleVerify}>
-        <label className="field-group">Enter the code<input className={`field auth-code ${error ? 'has-error' : ''} ${code ? 'has-value' : ''}`} type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required aria-label="Six-digit authenticator code" aria-describedby="auth-code-help" value={code} onChange={(event) => { setCode(event.target.value.replace(/\D/g, '').slice(0, 6)); setError('') }} placeholder="••••••" /></label><span id="auth-code-help" className="auth-code-help">Use the current code from your authenticator app</span>
+        <VerificationCodeInput value={code} onChange={(value) => { setCode(value); setError('') }} description="Use the current code from your authenticator app" hasError={!!error} autoFocus />
         {error && <p className="auth-error" role="alert">{error}</p>}
         <button className="button button-primary auth-submit" disabled={busy || code.length !== 6}>{busy ? 'Verifying…' : 'Verify and continue'}</button>
       </form>}

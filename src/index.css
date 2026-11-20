@@ -3479,3 +3479,24 @@
 @media(prefers-reduced-motion:reduce) {
   .auth-preview-window,.auth-dashboard-preview:hover .auth-preview-window { transform:none; transition:none; }
 }
+
+
+/* Six-digit TOTP pin input */
+.auth-pin-input { display:flex; width:100%; flex-direction:column; gap:10px; }
+.auth-pin-label { color:#d4d4d8; font-size:12px; font-weight:600; letter-spacing:.01em; }
+.auth-pin-group { position:relative; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:9px; width:100%; }
+.auth-pin-native-input { position:absolute; z-index:2; inset:0; width:100%; height:100%; margin:0; border:0; border-radius:10px; background:transparent; color:transparent; caret-color:transparent; cursor:text; opacity:.015; }
+.auth-pin-native-input:focus-visible { outline:2px solid #ed873b; outline-offset:4px; border-radius:12px; }
+.auth-pin-slot { display:flex; min-width:0; height:56px; align-items:center; justify-content:center; border:1px solid #35353d; border-radius:10px; background:linear-gradient(180deg,#1c1c22,#17171c); color:#f4f4f5; font-size:22px; font-weight:650; font-variant-numeric:tabular-nums; transition:border-color .16s ease,background .16s ease,box-shadow .16s ease; }
+.auth-pin-slot i { width:5px; height:5px; border-radius:50%; background:#55545d; }
+.auth-pin-slot-break { margin-left:5px; }
+.auth-pin-slot.is-filled { border-color:#9c5a32; background:linear-gradient(180deg,#29201b,#201b19); box-shadow:inset 0 0 0 1px rgb(237 135 59 / 9%); }
+.auth-pin-input:focus-within .auth-pin-slot { border-color:#55515a; }
+.auth-pin-input:focus-within .auth-pin-slot.is-filled { border-color:#c87943; }
+.auth-pin-input.has-error .auth-pin-slot { border-color:#a94b4b; background:#241819; }
+.auth-pin-description { margin:0; color:#92929b; font-size:11px; line-height:1.5; }
+@media(max-width:420px) {
+  .auth-pin-group { gap:6px; }
+  .auth-pin-slot { height:52px; border-radius:8px; font-size:20px; }
+  .auth-pin-slot-break { margin-left:3px; }
+}

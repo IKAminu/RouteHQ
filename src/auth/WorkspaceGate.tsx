@@ -136,7 +136,7 @@ export function WorkspaceGate() {
     finally{setLoading(false)}
   },[])
   useEffect(()=>{void refresh()},[refresh])
-  if(loading)return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /><span>Checking your agency access</span><i /></div>
+  if(loading)return <div className="auth-loading"><picture><source srcSet={`${import.meta.env.BASE_URL}brand/loading/routehq-loader.gif`} type="image/gif" /><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /></picture><span>Checking your agency access</span><i /></div>
   if(error)return <Shell><section className="onboarding-card"><h1>We couldn't verify your access</h1><p className="onboarding-error">{error}</p><Button onClick={()=>void refresh()}>Try again</Button></section></Shell>
   if(isAdmin)return <PlatformConsole email={email}/>
   if(agency)return <AppStoreProvider><RouterProvider router={router}/></AppStoreProvider>

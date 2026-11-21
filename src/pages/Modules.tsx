@@ -340,7 +340,7 @@ export function DocumentsPage() {
     const resolve=async()=>{
       if(!supabase)return
       const pairs=await Promise.all(documents.filter(row=>row.url&&!row.url.startsWith('https://')&&!row.url.startsWith('http://')).map(async row=>{
-        const {data,error}=await supabase.storage.from('routehq-documents').createSignedUrl(row.url,300)
+        const {data,error}=await supabase!.storage.from('routehq-documents').createSignedUrl(row.url,300)
         return error?null:[row.id,data.signedUrl] as const
       }))
       if(active)setSignedLinks(Object.fromEntries(pairs.filter((x):x is readonly [string,string]=>!!x)))

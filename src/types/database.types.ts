@@ -388,9 +388,12 @@ export type Database = {
           agency_id: string
           body: string
           category: string | null
+          completed: boolean
           created_at: string
           created_by: string | null
+          due_date: string | null
           id: string
+          priority: string
           title: string
           updated_at: string
           updated_by: string | null
@@ -399,9 +402,12 @@ export type Database = {
           agency_id: string
           body?: string
           category?: string | null
+          completed?: boolean
           created_at?: string
           created_by?: string | null
+          due_date?: string | null
           id?: string
+          priority?: string
           title: string
           updated_at?: string
           updated_by?: string | null
@@ -410,9 +416,12 @@ export type Database = {
           agency_id?: string
           body?: string
           category?: string | null
+          completed?: boolean
           created_at?: string
           created_by?: string | null
+          due_date?: string | null
           id?: string
+          priority?: string
           title?: string
           updated_at?: string
           updated_by?: string | null
@@ -422,6 +431,56 @@ export type Database = {
             foreignKeyName: "agency_notes_agency_id_fkey"
             columns: ["agency_id"]
             isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agency_website_connections: {
+        Row: {
+          agency_id: string
+          allowed_origin: string
+          created_at: string
+          created_by: string | null
+          id: string
+          last_rotated_at: string
+          status: string
+          token_hash: string
+          token_last_four: string
+          updated_at: string
+          website_url: string
+        }
+        Insert: {
+          agency_id: string
+          allowed_origin: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_rotated_at?: string
+          status?: string
+          token_hash: string
+          token_last_four: string
+          updated_at?: string
+          website_url: string
+        }
+        Update: {
+          agency_id?: string
+          allowed_origin?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_rotated_at?: string
+          status?: string
+          token_hash?: string
+          token_last_four?: string
+          updated_at?: string
+          website_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_website_connections_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
             referencedRelation: "agencies"
             referencedColumns: ["id"]
           },
@@ -585,11 +644,15 @@ export type Database = {
           created_at: string
           customer_id: string | null
           document_type: string
+          external_url: string | null
           file_name: string
           file_size_bytes: number | null
           id: string
           mime_type: string | null
-          storage_path: string
+          ocr_result: Json
+          ocr_status: string
+          payment_id: string | null
+          storage_path: string | null
           traveller_id: string | null
           uploaded_by: string | null
         }
@@ -599,11 +662,15 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           document_type: string
+          external_url?: string | null
           file_name: string
           file_size_bytes?: number | null
           id?: string
           mime_type?: string | null
-          storage_path: string
+          ocr_result?: Json
+          ocr_status?: string
+          payment_id?: string | null
+          storage_path?: string | null
           traveller_id?: string | null
           uploaded_by?: string | null
         }
@@ -613,11 +680,15 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           document_type?: string
+          external_url?: string | null
           file_name?: string
           file_size_bytes?: number | null
           id?: string
           mime_type?: string | null
-          storage_path?: string
+          ocr_result?: Json
+          ocr_status?: string
+          payment_id?: string | null
+          storage_path?: string | null
           traveller_id?: string | null
           uploaded_by?: string | null
         }
@@ -642,6 +713,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "agencies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_agency_id_payment_id_fkey"
+            columns: ["agency_id", "payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["agency_id", "id"]
           },
           {
             foreignKeyName: "documents_agency_id_traveller_id_fkey"
@@ -988,7 +1066,7 @@ export type Database = {
         Row: {
           agency_id: string
           amount_minor: number
-          booking_id: string
+          booking_id: string | null
           created_at: string
           currency_code: string
           customer_id: string | null
@@ -1004,7 +1082,7 @@ export type Database = {
         Insert: {
           agency_id: string
           amount_minor: number
-          booking_id: string
+          booking_id?: string | null
           created_at?: string
           currency_code?: string
           customer_id?: string | null
@@ -1020,7 +1098,7 @@ export type Database = {
         Update: {
           agency_id?: string
           amount_minor?: number
-          booking_id?: string
+          booking_id?: string | null
           created_at?: string
           currency_code?: string
           customer_id?: string | null
@@ -1636,6 +1714,67 @@ export type Database = {
         }
         Relationships: []
       }
+      website_intake_submissions: {
+        Row: {
+          agency_id: string
+          connection_id: string
+          created_at: string
+          error_message: string | null
+          external_submission_id: string
+          id: string
+          lead_id: string | null
+          payload: Json
+          processed_at: string | null
+          status: string
+        }
+        Insert: {
+          agency_id: string
+          connection_id: string
+          created_at?: string
+          error_message?: string | null
+          external_submission_id: string
+          id?: string
+          lead_id?: string | null
+          payload?: Json
+          processed_at?: string | null
+          status?: string
+        }
+        Update: {
+          agency_id?: string
+          connection_id?: string
+          created_at?: string
+          error_message?: string | null
+          external_submission_id?: string
+          id?: string
+          lead_id?: string | null
+          payload?: Json
+          processed_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_intake_submissions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_intake_submissions_agency_lead_fkey"
+            columns: ["agency_id", "lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["agency_id", "id"]
+          },
+          {
+            foreignKeyName: "website_intake_submissions_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "agency_website_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1661,8 +1800,47 @@ export type Database = {
           subscription_status: string
         }[]
       }
+      get_platform_admin_overview: { Args: never; Returns: Json }
+      get_platform_website_connections: { Args: never; Returns: Json }
+      ingest_website_lead: {
+        Args: {
+          _external_submission_id: string
+          _origin: string
+          _payload: Json
+          _token_hash: string
+        }
+        Returns: Json
+      }
+      platform_configure_website_connection: {
+        Args: {
+          _agency_id: string
+          _allowed_origin: string
+          _website_url: string
+        }
+        Returns: Json
+      }
+      platform_disable_website_connection: {
+        Args: { _agency_id: string }
+        Returns: undefined
+      }
       reject_agency_application: {
         Args: { _application_id: string; _review_notes: string }
+        Returns: undefined
+      }
+      reverse_agency_payment: {
+        Args: { _payment_id: string; _reason: string }
+        Returns: undefined
+      }
+      set_platform_agency_status: {
+        Args: { _agency_id: string; _status: string }
+        Returns: undefined
+      }
+      transition_agency_payment: {
+        Args: { _payment_id: string; _reason?: string; _status: string }
+        Returns: undefined
+      }
+      void_agency_supplier_payment: {
+        Args: { _reason: string; _supplier_payment_id: string }
         Returns: undefined
       }
     }

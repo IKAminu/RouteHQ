@@ -339,7 +339,7 @@ export function DocumentsPage() {
     let active=true
     const resolve=async()=>{
       if(!supabase)return
-      const pairs=await Promise.all(rows.filter(row=>row.url&&!/^https?:\\/\\//i.test(row.url)).map(async row=>{
+      const pairs=await Promise.all(documents.filter(row=>row.url&&!/^https?:\\/\\//i.test(row.url)).map(async row=>{
         const {data,error}=await supabase.storage.from('routehq-documents').createSignedUrl(row.url,300)
         return error?null:[row.id,data.signedUrl] as const
       }))
@@ -347,7 +347,7 @@ export function DocumentsPage() {
     }
     void resolve()
     return ()=>{active=false}
-  },[documents,rows.length])
+  },[documents])
   const upload=async()=>{
     if(!supabase||!file||!ownerId)return
     if(file.size>25*1024*1024){setUploadError('Maximum file size is 25 MB.');return}

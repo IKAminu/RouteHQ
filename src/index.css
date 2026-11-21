@@ -2340,10 +2340,15 @@
 .workspace-skeleton-table i { height: 2rem; border-radius: .25rem; }
 .workspace-skeleton :is(.workspace-skeleton-brand span, .workspace-skeleton-brand i, .workspace-skeleton-nav i, .workspace-skeleton-profile, .workspace-skeleton-topbar span, .workspace-skeleton-topbar i, .workspace-skeleton-heading i, .workspace-skeleton-heading span, .workspace-skeleton-metrics i, .workspace-skeleton-panels i, .workspace-skeleton-table i) {
   background: linear-gradient(100deg, color-mix(in srgb, var(--color-muted) 9%, var(--color-surface)), color-mix(in srgb, var(--color-muted) 17%, var(--color-surface)), color-mix(in srgb, var(--color-muted) 9%, var(--color-surface)));
-  background-size: 220% 100%;
-  animation: workspace-skeleton-shimmer 1.35s ease-in-out infinite;
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  animation: workspace-skeleton-shimmer 2.1s linear infinite;
 }
-@keyframes workspace-skeleton-shimmer { to { background-position: -220% 0; } }
+/* The shimmer's first and last stops match, so a full linear pass can loop without a visible reset. */
+@keyframes workspace-skeleton-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
 :root[data-theme='dark'] .workspace-skeleton :is(.workspace-skeleton-brand span, .workspace-skeleton-brand i, .workspace-skeleton-nav i, .workspace-skeleton-profile, .workspace-skeleton-topbar span, .workspace-skeleton-topbar i, .workspace-skeleton-heading i, .workspace-skeleton-heading span, .workspace-skeleton-metrics i, .workspace-skeleton-panels i, .workspace-skeleton-table i) {
   background: linear-gradient(100deg, #202026, #2b2b33, #202026);
   background-size: 220% 100%;

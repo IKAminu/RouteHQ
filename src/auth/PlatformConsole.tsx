@@ -7,7 +7,7 @@ import { Badge, Button, EmptyState, ProgressSteps } from '@/components/ui'
 type Application = { id:string; agency_name:string; legal_name:string|null; contact_name:string; email:string; phone:string; requested_plan_code:string; status:string; submitted_at:string; reviewed_at:string|null; review_notes:string|null }
 type Agency = { id:string; name:string; slug:string; email:string|null; status:string; created_at:string; approved_at:string|null }
 type Subscription = { id:string; agency_id:string; agency_name:string; agency_status:string; plan_code:string|null; plan_name:string|null; status:string; currency_code:string; amount_minor:number|null; billing_interval:string; started_at:string|null; ends_at:string|null; cancel_at_period_end:boolean; created_at:string }
-type ActivityItem = { id:string; action:string; entity_type:string|null; created_at:string; actor_email:string|null; details:Record<string,unknown> }\ntype WebsiteConnection = { agency_id:string; agency_name:string; agency_status:string; website_url:string|null; connection_id:string|null; connection_status:string; allowed_origin:string|null; token_last_four:string|null; last_rotated_at:string|null; submission_count:number; last_submission_at:string|null }
+type ActivityItem = { id:string; action:string; entity_type:string|null; created_at:string; actor_email:string|null; details:Record<string,unknown> }\ntype UserActivity = { users_total:number; users_active:number; memberships_active:number }\ntype WebsiteConnection = { agency_id:string; agency_name:string; agency_status:string; website_url:string|null; connection_id:string|null; connection_status:string; allowed_origin:string|null; token_last_four:string|null; last_rotated_at:string|null; submission_count:number; last_submission_at:string|null }
 type Overview = {
  generated_at:string
  metrics:Record<string,number>
@@ -36,7 +36,7 @@ function UserActivityGauge({users,activeMemberships}:{users:number;activeMembers
  const radius=62
  const circumference=2*Math.PI*radius
  const dash=circumference*percentage/100
- return <div className="platform-user-gauge"><div className="platform-user-gauge-chart"><svg viewBox="0 0 180 180" role="img" aria-label={percentage+'% active membership coverage across '+users+' registered users'}><circle cx="90" cy="90" r={radius} fill="none" stroke="#e7edf5" strokeWidth="13"/><circle cx="90" cy="90" r={radius} fill="none" stroke="#4b78dc" strokeWidth="13" strokeLinecap="round" strokeDasharray={dash+' '+(circumference-dash)} transform="rotate(-90 90 90)"/></svg><div><strong>{users.toLocaleString()}</strong><span>Registered users</span></div></div><div className="platform-user-gauge-legend"><span><i/>Active memberships <strong>{activeMemberships.toLocaleString()}</strong></span><span><i/>Coverage <strong>{percentage}%</strong></span></div></div>
+ return <div className="platform-user-gauge"><div className="platform-user-gauge-chart"><svg viewBox="0 0 180 180" role="img" aria-label={percentage+'% active account coverage across '+users+' registered users'}><circle cx="90" cy="90" r={radius} fill="none" stroke="#e7edf5" strokeWidth="13"/><circle cx="90" cy="90" r={radius} fill="none" stroke="#4b78dc" strokeWidth="13" strokeLinecap="round" strokeDasharray={dash+' '+(circumference-dash)} transform="rotate(-90 90 90)"/></svg><div><strong>{users.toLocaleString()}</strong><span>Registered users</span></div></div><div className="platform-user-gauge-legend"><span><i/>Active accounts <strong>{activeUsers.toLocaleString()}</strong></span><span><i/>Coverage <strong>{percentage}%</strong></span></div></div>
 }
 
 function Metric({label,value,detail,icon:Icon}:{label:string;value:string|number;detail:string;icon:typeof Building2}){return <article className="platform-metric"><div className="platform-metric-top"><span>{label}</span><Icon size={17}/></div><strong>{value}</strong><small>{detail}</small></article>}
@@ -45,7 +45,7 @@ function Panel({title,description,action,children}:{title:string;description?:st
 export function PlatformConsole({email}:{email:string}){
  const [overview,setOverview]=useState<Overview|null>(null)
  const [applications,setApplications]=useState<Application[]>([])
- const [agencies,setAgencies]=useState<Agency[]>([])\n const [websiteConnections,setWebsiteConnections]=useState<WebsiteConnection[]>([])\n const [websiteUrls,setWebsiteUrls]=useState<Record<string,string>>({})\n const [websiteOrigins,setWebsiteOrigins]=useState<Record<string,string>>({})\n const [issuedKey,setIssuedKey]=useState<{agencyName:string;apiKey:string;endpoint:string}|null>(null)
+ const [agencies,setAgencies]=useState<Agency[]>([])\n const [websiteConnections,setWebsiteConnections]=useState<WebsiteConnection[]>([])\n const [userActivity,setUserActivity]=useState<UserActivity>({users_total:0,users_active:0,memberships_active:0})\n const [websiteUrls,setWebsiteUrls]=useState<Record<string,string>>({})\n const [websiteOrigins,setWebsiteOrigins]=useState<Record<string,string>>({})\n const [issuedKey,setIssuedKey]=useState<{agencyName:string;apiKey:string;endpoint:string}|null>(null)
  const [tab,setTab]=useState<'overview'|'agencies'|'websites'|'subscriptions'|'health'|'activity'>('overview')
  const [loading,setLoading]=useState(true)
  const [error,setError]=useState('')
@@ -61,7 +61,7 @@ export function PlatformConsole({email}:{email:string}){
    if(!supabase)return
    setLoading(true);setError('')
    try{
-     const [summary,apps,agencyRows,websiteRows]=await Promise.all([
+     const [summary,apps,agencyRows,websiteRows,userRows]=await Promise.all([
        supabase.rpc('get_platform_admin_overview'),
        supabase.from('agency_applications').select('id,agency_name,legal_name,contact_name,email,phone,requested_plan_code,status,submitted_at,reviewed_at,review_notes').order('submitted_at',{ascending:false}),
        supabase.from('agencies').select('id,name,slug,email,status,created_at,approved_at').order('created_at',{ascending:false})
@@ -71,7 +71,7 @@ export function PlatformConsole({email}:{email:string}){
      if(agencyRows.error)throw agencyRows.error
      setOverview(summary.data as Overview)
      setApplications((apps.data||[]) as Application[])
-     setAgencies((agencyRows.data||[]) as Agency[])\n     setWebsiteConnections((websiteRows.data||[]) as WebsiteConnection[])
+     setAgencies((agencyRows.data||[]) as Agency[])\n     setWebsiteConnections((websiteRows.data||[]) as WebsiteConnection[])\n     setUserActivity(userRows.data as UserActivity)
    }catch(e){setError(e instanceof Error?e.message:'Could not load platform operations data.')}
    finally{setLoading(false)}
  },[])
@@ -155,7 +155,7 @@ export function PlatformConsole({email}:{email:string}){
      <Metric label="Monthly recurring revenue" value={formatMoney(metrics.mrr_minor||0,'NGN')} detail="Based on active monthly records only" icon={ArrowUpRight}/>
     </div>
     <div className="platform-two-col">
-     <Panel title="User activity" description="Registered accounts with an active agency membership."><UserActivityGauge users={metrics.users_total||0} activeMemberships={metrics.memberships_active||0}/></Panel>
+     <Panel title="User activity" description="Registered accounts with an active agency membership."><UserActivityGauge users={userActivity.users_total||0} activeUsers={userActivity.users_active||0}/></Panel>
      <Panel title="Agency growth" description="Workspace provisioning and onboarding status."><div className="platform-health-list"><div><span>Active agencies</span><strong>{metrics.agencies_active||0}</strong></div><div><span>Pending applications</span><strong>{metrics.applications_pending||0}</strong></div><div><span>All registered agencies</span><strong>{metrics.agencies_total||0}</strong></div></div></Panel>
     </div>
 

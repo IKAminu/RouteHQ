@@ -144,3 +144,6 @@
 *.stl                filter=lfs diff=lfs merge=lfs -text
 *.nc                 filter=lfs diff=lfs merge=lfs -text
 *.mat                filter=lfs diff=lfs merge=lfs -text
+
+# Keep the small, app-specific loading animation uploadable through the GitHub web interface.
+public/brand/loading/routehq-loader.gif -filter -diff -merge text

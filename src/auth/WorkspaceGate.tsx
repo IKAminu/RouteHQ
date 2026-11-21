@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { Button, Field, Input, Select } from '@/components/ui'
 import { PlatformConsole } from '@/auth/PlatformConsole'
 import { AppStoreProvider } from '@/hooks/useAppStore'
+import { AppErrorScreen } from '@/components/AppErrorScreen'
 import { RouterProvider } from 'react-router'
 import { router } from '@/app/routes'
 
@@ -114,7 +115,7 @@ export function WorkspaceGate() {
   const [agency,setAgency]=useState<AgencyContext|null>(null)
   const [error,setError]=useState('')
   const refresh=useCallback(async()=>{
-    if(!supabase)return
+    if(!supabase){setError('Supabase is not configured. Check the application environment settings.');setLoading(false);return}
     setLoading(true);setError('')
     try{
       const {data:{user},error:userError}=await supabase.auth.getUser()
@@ -137,7 +138,7 @@ export function WorkspaceGate() {
   },[])
   useEffect(()=>{void refresh()},[refresh])
   if(loading)return <div className="auth-loading"><picture><source srcSet={`${import.meta.env.BASE_URL}brand/loading/routehq-loader.gif`} type="image/gif" /><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" /></picture><span>Checking your agency access</span><i /></div>
-  if(error)return <Shell><section className="onboarding-card"><h1>We couldn't verify your access</h1><p className="onboarding-error">{error}</p><Button onClick={()=>void refresh()}>Try again</Button></section></Shell>
+  if(error)return <AppErrorScreen kind="database" detail={error} onRetry={()=>void refresh()} />
   if(isAdmin)return <PlatformConsole email={email}/>
   if(agency)return <AppStoreProvider><RouterProvider router={router}/></AppStoreProvider>
   if(application)return <Shell><ApplicationStatus application={application} onRefresh={()=>void refresh()} onReapply={()=>setApplication(null)} onSignOut={()=>void supabase?.auth.signOut()}/></Shell>

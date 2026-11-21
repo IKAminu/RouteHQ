@@ -118,7 +118,8 @@ async function loadStore(): Promise<StoreData> {
   for (const payment of supplierPaymentRows) if (key(payment.status) === 'confirmed') paidByCost.set(payment.supplier_cost_id, (paidByCost.get(payment.supplier_cost_id) || 0) + money(payment.amount_minor))
   const bookingsById = new Map(bookingRows.map(r => [r.id, r]))
   const customersById = new Map(customerRows.map(r => [r.id, r]))
-  const travellersById = new Map(travellerRows.map(r => [r.id, r]))\n  const paymentsById = new Map(paymentRows.map(r => [r.id, r]))
+  const travellersById = new Map(travellerRows.map(r => [r.id, r]))
+  const paymentsById = new Map(paymentRows.map(r => [r.id, r]))
   const reversalReasonByPayment = new Map<string,string>(reversalRows.map(r => [r.payment_id, r.reason]))
   return {
     leads:leadRows.map(leadFromRow),

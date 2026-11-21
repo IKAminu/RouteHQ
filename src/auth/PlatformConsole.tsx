@@ -7,7 +7,9 @@ import { Badge, Button, EmptyState, ProgressSteps } from '@/components/ui'
 type Application = { id:string; agency_name:string; legal_name:string|null; contact_name:string; email:string; phone:string; requested_plan_code:string; status:string; submitted_at:string; reviewed_at:string|null; review_notes:string|null }
 type Agency = { id:string; name:string; slug:string; email:string|null; status:string; created_at:string; approved_at:string|null }
 type Subscription = { id:string; agency_id:string; agency_name:string; agency_status:string; plan_code:string|null; plan_name:string|null; status:string; currency_code:string; amount_minor:number|null; billing_interval:string; started_at:string|null; ends_at:string|null; cancel_at_period_end:boolean; created_at:string }
-type ActivityItem = { id:string; action:string; entity_type:string|null; created_at:string; actor_email:string|null; details:Record<string,unknown> }\ntype UserActivity = { users_total:number; users_active:number; memberships_active:number }\ntype WebsiteConnection = { agency_id:string; agency_name:string; agency_status:string; website_url:string|null; connection_id:string|null; connection_status:string; allowed_origin:string|null; token_last_four:string|null; last_rotated_at:string|null; submission_count:number; last_submission_at:string|null }
+type ActivityItem = { id:string; action:string; entity_type:string|null; created_at:string; actor_email:string|null; details:Record<string,unknown> }
+type UserActivity = { users_total:number; users_active:number; memberships_active:number }
+type WebsiteConnection = { agency_id:string; agency_name:string; agency_status:string; website_url:string|null; connection_id:string|null; connection_status:string; allowed_origin:string|null; token_last_four:string|null; last_rotated_at:string|null; submission_count:number; last_submission_at:string|null }
 type Overview = {
  generated_at:string
  metrics:Record<string,number>
@@ -31,8 +33,8 @@ function PlatformPager({page,total,onChange}:{page:number;total:number;onChange:
  return <div className="platform-pagination"><span>Showing <strong>{start}–{end}</strong> of <strong>{total.toLocaleString()}</strong></span><div><button type="button" disabled={page<=1} onClick={()=>onChange(page-1)}><ChevronLeft size={14}/> Previous</button><span>Page {page} of {pages}</span><button type="button" disabled={page>=pages} onClick={()=>onChange(page+1)}>Next <ChevronRight size={14}/></button></div></div>
 }
 
-function UserActivityGauge({users,activeMemberships}:{users:number;activeMemberships:number}){
- const percentage=users>0?Math.min(100,Math.round(activeMemberships/users*100)):0
+function UserActivityGauge({users,activeUsers}:{users:number;activeUsers:number}){
+ const percentage=users>0?Math.min(100,Math.round(activeUsers/users*100)):0
  const radius=62
  const circumference=2*Math.PI*radius
  const dash=circumference*percentage/100
@@ -45,7 +47,12 @@ function Panel({title,description,action,children}:{title:string;description?:st
 export function PlatformConsole({email}:{email:string}){
  const [overview,setOverview]=useState<Overview|null>(null)
  const [applications,setApplications]=useState<Application[]>([])
- const [agencies,setAgencies]=useState<Agency[]>([])\n const [websiteConnections,setWebsiteConnections]=useState<WebsiteConnection[]>([])\n const [userActivity,setUserActivity]=useState<UserActivity>({users_total:0,users_active:0,memberships_active:0})\n const [websiteUrls,setWebsiteUrls]=useState<Record<string,string>>({})\n const [websiteOrigins,setWebsiteOrigins]=useState<Record<string,string>>({})\n const [issuedKey,setIssuedKey]=useState<{agencyName:string;apiKey:string;endpoint:string}|null>(null)
+ const [agencies,setAgencies]=useState<Agency[]>([])
+ const [websiteConnections,setWebsiteConnections]=useState<WebsiteConnection[]>([])
+ const [userActivity,setUserActivity]=useState<UserActivity>({users_total:0,users_active:0,memberships_active:0})
+ const [websiteUrls,setWebsiteUrls]=useState<Record<string,string>>({})
+ const [websiteOrigins,setWebsiteOrigins]=useState<Record<string,string>>({})
+ const [issuedKey,setIssuedKey]=useState<{agencyName:string;apiKey:string;endpoint:string}|null>(null)
  const [tab,setTab]=useState<'overview'|'agencies'|'websites'|'subscriptions'|'health'|'activity'>('overview')
  const [loading,setLoading]=useState(true)
  const [error,setError]=useState('')
@@ -64,14 +71,20 @@ export function PlatformConsole({email}:{email:string}){
      const [summary,apps,agencyRows,websiteRows,userRows]=await Promise.all([
        supabase.rpc('get_platform_admin_overview'),
        supabase.from('agency_applications').select('id,agency_name,legal_name,contact_name,email,phone,requested_plan_code,status,submitted_at,reviewed_at,review_notes').order('submitted_at',{ascending:false}),
-       supabase.from('agencies').select('id,name,slug,email,status,created_at,approved_at').order('created_at',{ascending:false})
+       supabase.from('agencies').select('id,name,slug,email,status,created_at,approved_at').order('created_at',{ascending:false}),
+       supabase.rpc('get_platform_website_connections'),
+       supabase.rpc('get_platform_user_activity')
      ])
      if(summary.error)throw summary.error
      if(apps.error)throw apps.error
      if(agencyRows.error)throw agencyRows.error
+     if(websiteRows.error)throw websiteRows.error
+     if(userRows.error)throw userRows.error
      setOverview(summary.data as Overview)
      setApplications((apps.data||[]) as Application[])
-     setAgencies((agencyRows.data||[]) as Agency[])\n     setWebsiteConnections((websiteRows.data||[]) as WebsiteConnection[])\n     setUserActivity(userRows.data as UserActivity)
+     setAgencies((agencyRows.data||[]) as Agency[])
+     setWebsiteConnections((websiteRows.data||[]) as WebsiteConnection[])
+     setUserActivity(userRows.data as UserActivity)
    }catch(e){setError(e instanceof Error?e.message:'Could not load platform operations data.')}
    finally{setLoading(false)}
  },[])

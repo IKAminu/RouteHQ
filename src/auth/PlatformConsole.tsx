@@ -23,6 +23,14 @@ const formatDate=(value:string|null)=>value?new Date(value).toLocaleDateString('
 const formatMoney=(minor:number|null,currency:string)=>minor===null?'Not configured':new Intl.NumberFormat('en-NG',{style:'currency',currency:currency||'NGN',maximumFractionDigits:0}).format(minor/100)
 const remaining=(end:string|null)=>{if(!end)return 'No end date';const days=Math.ceil((new Date(end).getTime()-Date.now())/86400000);return days<0?`Expired ${Math.abs(days)}d ago`:days===0?'Ends today':`${days} days left`}
 
+function UserActivityGauge({users,activeMemberships}:{users:number;activeMemberships:number}){
+ const percentage=users>0?Math.min(100,Math.round(activeMemberships/users*100)):0
+ const radius=62
+ const circumference=2*Math.PI*radius
+ const dash=circumference*percentage/100
+ return <div className="platform-user-gauge"><div className="platform-user-gauge-chart"><svg viewBox="0 0 180 180" role="img" aria-label={percentage+'% active membership coverage across '+users+' registered users'}><circle cx="90" cy="90" r={radius} fill="none" stroke="#e7edf5" strokeWidth="13"/><circle cx="90" cy="90" r={radius} fill="none" stroke="#4b78dc" strokeWidth="13" strokeLinecap="round" strokeDasharray={dash+' '+(circumference-dash)} transform="rotate(-90 90 90)"/></svg><div><strong>{users.toLocaleString()}</strong><span>Registered users</span></div></div><div className="platform-user-gauge-legend"><span><i/>Active memberships <strong>{activeMemberships.toLocaleString()}</strong></span><span><i/>Coverage <strong>{percentage}%</strong></span></div></div>
+}
+
 function Metric({label,value,detail,icon:Icon}:{label:string;value:string|number;detail:string;icon:typeof Building2}){return <article className="platform-metric"><div className="platform-metric-top"><span>{label}</span><Icon size={17}/></div><strong>{value}</strong><small>{detail}</small></article>}
 function Panel({title,description,action,children}:{title:string;description?:string;action?:ReactNode;children:ReactNode}){return <section className="platform-panel"><header><div><h2>{title}</h2>{description&&<p>{description}</p>}</div>{action}</header>{children}</section>}
 
@@ -135,6 +143,10 @@ export function PlatformConsole({email}:{email:string}){
      <Metric label="Monthly recurring revenue" value={formatMoney(metrics.mrr_minor||0,'NGN')} detail="Based on active monthly records only" icon={ArrowUpRight}/>
     </div>
     <div className="platform-two-col">
+     <Panel title="User activity" description="Registered accounts with an active agency membership."><UserActivityGauge users={metrics.users_total||0} activeMemberships={metrics.memberships_active||0}/></Panel>
+     <Panel title="Agency growth" description="Workspace provisioning and onboarding status."><div className="platform-health-list"><div><span>Active agencies</span><strong>{metrics.agencies_active||0}</strong></div><div><span>Pending applications</span><strong>{metrics.applications_pending||0}</strong></div><div><span>All registered agencies</span><strong>{metrics.agencies_total||0}</strong></div></div></Panel>
+    </div>
+
      <Panel title="Applications requiring review" description="New agencies waiting for a decision" action={<button className="platform-text-action" onClick={()=>setTab('agencies')}>View all agencies →</button>}>
       {pending.length===0?<EmptyState title="No pending applications" text="New agency applications will appear here."/>:pending.slice(0,4).map(a=><article className="platform-review-row" key={a.id}><div className="platform-review-info"><strong>{a.agency_name}</strong><span>{a.contact_name} · {a.requested_plan_code.toUpperCase()} · {formatDate(a.submitted_at)}</span></div><Badge>{a.status.replace('_',' ')}</Badge><div className="platform-row-actions"><Button disabled={!!busyId} onClick={()=>void review(a,'approve')}>{busyId===a.id?'Working…':'Approve'}</Button><Button variant="danger" disabled={!!busyId} onClick={()=>void review(a,'reject')}>Reject</Button></div></article>)}</Panel>
      <Panel title="Subscription watchlist" description="Upcoming end dates and subscriptions needing attention" action={<button className="platform-text-action" onClick={()=>setTab('subscriptions')}>View subscriptions →</button>}>

@@ -1801,6 +1801,7 @@ export type Database = {
         }[]
       }
       get_platform_admin_overview: { Args: never; Returns: Json }
+      get_platform_user_activity: { Args: never; Returns: Json }
       get_platform_website_connections: { Args: never; Returns: Json }
       ingest_website_lead: {
         Args: {

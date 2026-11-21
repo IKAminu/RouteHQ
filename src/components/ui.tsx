@@ -1,6 +1,6 @@
-import { X } from 'lucide-react'
-import { useRef, useState } from 'react'
-import type { ButtonHTMLAttributes, InputHTMLAttributes, PointerEvent as ReactPointerEvent, ReactNode, SelectHTMLAttributes } from 'react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { Children, cloneElement, isValidElement, useMemo, useRef, useState } from 'react'
+import type { ButtonHTMLAttributes, InputHTMLAttributes, PointerEvent as ReactPointerEvent, ReactElement, ReactNode, SelectHTMLAttributes } from 'react'
 
 export const Button = ({ className = '', variant = 'primary', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'ghost' | 'danger' }) => (
   <button className={`button button-${variant} ${className}`} {...props} />
@@ -71,6 +71,46 @@ export function Modal({ title, description, onClose, children }: { title: string
   </div>
 }
 
+const TABLE_PAGE_SIZE = 50
+
+function countTableRows(node: ReactNode): number {
+  if (!isValidElement(node)) return 0
+  const element = node as ReactElement<{ children?: ReactNode }>
+  if (element.type === 'tbody') return Children.count(element.props.children)
+  return countTableRows(element.props.children)
+}
+
+function sliceTableRows(node: ReactNode, start: number, end: number): ReactNode {
+  if (!isValidElement(node)) return node
+  const element = node as ReactElement<{ children?: ReactNode }>
+  if (element.type === 'tbody') {
+    const rows = Children.toArray(element.props.children)
+    return cloneElement(element, undefined, rows.slice(start, end))
+  }
+  return cloneElement(element, undefined, sliceTableRows(element.props.children, start, end))
+}
+
 export function TableShell({ children }: { children: ReactNode }) {
-  return <div className="table-shell"><div className="table-scroll">{children}</div></div>
+  const [page, setPage] = useState(1)
+  const rowCount = countTableRows(children)
+  const pageCount = Math.max(1, Math.ceil(rowCount / TABLE_PAGE_SIZE))
+  const safePage = Math.min(page, pageCount)
+  const visible = useMemo(() => sliceTableRows(children, (safePage - 1) * TABLE_PAGE_SIZE, safePage * TABLE_PAGE_SIZE), [children, safePage])
+  const start = rowCount ? (safePage - 1) * TABLE_PAGE_SIZE + 1 : 0
+  const end = Math.min(safePage * TABLE_PAGE_SIZE, rowCount)
+  const pages = Array.from({ length: pageCount }, (_, index) => index + 1).filter(value => value === 1 || value === pageCount || Math.abs(value - safePage) <= 1)
+  return <div className="table-shell">
+    <div className="table-scroll">{visible}</div>
+    {rowCount > TABLE_PAGE_SIZE && <nav className="table-pagination" aria-label="Table pagination">
+      <span>Showing <strong>{start}–{end}</strong> of <strong>{rowCount.toLocaleString()}</strong></span>
+      <div className="table-pagination-controls">
+        <button type="button" aria-label="Previous page" disabled={safePage <= 1} onClick={() => setPage(value => Math.max(1, value - 1))}><ChevronLeft size={15}/><span>Previous</span></button>
+        {pages.map((value, index) => <span className="table-pagination-page" key={value}>
+          {index > 0 && value - pages[index - 1] > 1 && <i aria-hidden="true">…</i>}
+          <button type="button" aria-label={`Page ${value}`} aria-current={safePage === value ? 'page' : undefined} onClick={() => setPage(value)}>{value}</button>
+        </span>)}
+        <button type="button" aria-label="Next page" disabled={safePage >= pageCount} onClick={() => setPage(value => Math.min(pageCount, value + 1))}><span>Next</span><ChevronRight size={15}/></button>
+      </div>
+    </nav>}
+  </div>
 }

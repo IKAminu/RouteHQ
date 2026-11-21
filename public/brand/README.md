@@ -19,3 +19,8 @@ The current application icon and favicon are:
 The interface uses a graphite/obsidian foundation with restrained orange and blue accents. The logo should remain legible on both dark and light backgrounds. If only one version is supplied, use a transparent version with sufficient contrast.
 
 **Public-folder warning:** everything inside `public/` is shipped with the public website build and can be accessed by anyone who knows its URL. Do not put customer documents, passports, receipts, credentials, or private brand drafts here.
+
+
+## Animated loading logo
+
+Upload the approved animated logo GIF to this folder as `loading/routehq-loader.gif` (create the `loading` subfolder if needed). The authentication and workspace-access loading screens already look for that exact path and fall back to the static RouteHQ logo until the GIF is present. Keep the GIF reasonably small and use a transparent background where possible. This asset is public because it is part of the application interface.

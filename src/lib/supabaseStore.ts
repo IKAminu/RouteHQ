@@ -231,18 +231,7 @@ async function saveStore(data: StoreData, previous?: StoreData) {
     payment_date:asDateTime(r.date) || new Date().toISOString(), status:'confirmed', reference:r.reference || null,
     recorded_by:userId, notes:`Method: ${r.method || 'Other'}`,
   }))
-  const documentRows = changedRecords(data.documents, previous?.documents).filter(r => !r.url || /^https?:\\/\\//i.test(r.url)).map(r => {
-    const traveller = r.relatedType === 'Traveller' ? data.travellers.find(x=>x.name===r.relatedReference) : undefined
-    const customer = r.relatedType === 'Customer' ? data.customers.find(x=>x.name===r.relatedReference || x.reference===r.relatedReference) : undefined
-    const booking = r.relatedType === 'Booking' ? data.bookings.find(x=>x.reference===r.relatedReference) : undefined
-    const payment = r.relatedType === 'Payment' ? data.payments.find(x=>x.id===r.relatedId || x.reference===r.relatedReference) : undefined
-    return { ...base, id:r.id, document_type:r.category || 'Other', file_name:r.name,
-      storage_path:r.url && !/^https?:\/\//i.test(r.url) ? r.url : null,
-      external_url:r.url && /^https?:\/\//i.test(r.url) ? r.url : null,
-      mime_type:null, file_size_bytes:null, uploaded_by:userId,
-      booking_id:booking?.id || traveller?.bookingId || null, traveller_id:traveller?.id || null,
-      customer_id:customer?.id || traveller?.customerId || null }
-  })
+  // Uploaded documents are managed by the dedicated private Storage upload flow.
   await saveRows('leads',leadRows)
   await saveRows('customers',customerRows)
   await saveRows('packages',packageRows)

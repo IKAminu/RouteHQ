@@ -74,6 +74,7 @@ export function Modal({ title, description, onClose, children }: { title: string
 const TABLE_PAGE_SIZE = 50
 
 function countTableRows(node: ReactNode): number {
+  if (Array.isArray(node)) return node.reduce((total, child) => total + countTableRows(child), 0)
   if (!isValidElement(node)) return 0
   const element = node as ReactElement<{ children?: ReactNode }>
   if (element.type === 'tbody') return Children.count(element.props.children)
@@ -81,6 +82,7 @@ function countTableRows(node: ReactNode): number {
 }
 
 function sliceTableRows(node: ReactNode, start: number, end: number): ReactNode {
+  if (Array.isArray(node)) return node.map(child => sliceTableRows(child, start, end))
   if (!isValidElement(node)) return node
   const element = node as ReactElement<{ children?: ReactNode }>
   if (element.type === 'tbody') {

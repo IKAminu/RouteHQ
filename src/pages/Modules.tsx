@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { Download, ExternalLink, Eye, Filter, Info, Moon, Pencil, Plus, Search, Sun, Trash2 } from 'lucide-react'
+import { Download, ExternalLink, Eye, FileUp, Filter, Info, LoaderCircle, Moon, Pencil, Plus, Search, Sun, Trash2, Upload, X } from 'lucide-react'
 import { Badge, Button, EmptyState, Input, Modal, PageHeader, Select, TableShell } from '@/components/ui'
 import { useAppStore } from '@/hooks/useAppStore'
 import { bookingBalance, confirmedPaid, money, shortDate, supplierOutstanding, travellerCount } from '@/lib/business'
@@ -324,9 +324,92 @@ export function SuppliersPage() {
 
 export function DocumentsPage() {
   const controls = useFilter()
-  const { documents, setAction, setEditing } = useAppStore()
+  const { documents, travellers, payments } = useAppStore()
+  const [ownerType,setOwnerType] = useState<'traveller'|'payment'>('traveller')
+  const [ownerId,setOwnerId] = useState('')
+  const [category,setCategory] = useState('Passport')
+  const [file,setFile] = useState<File|null>(null)
+  const [uploading,setUploading] = useState(false)
+  const [uploadError,setUploadError] = useState('')
+  const [uploadNotice,setUploadNotice] = useState('')
+  const [signedLinks,setSignedLinks] = useState<Record<string,string>>({})
   const rows = documents.filter((item) => (!controls.filter || item.status === controls.filter) && `${item.name} ${item.category} ${item.relatedReference}`.toLowerCase().includes(controls.query.toLowerCase()))
-  return <Module title="Documents" description="Organised document links connected to customers, bookings and other business records." actionLabel="Add document link" actionType="document" recordType="document" records={rows} options={['Valid', 'Expiring Soon', 'Needs Review']} {...controls}><TableShell><table><thead><tr><th><SelectAllCheckbox /></th><th>Document</th><th>Category</th><th>Related record</th><th>Recorded</th><th>Status</th><th>Link</th><th>Actions</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td><RecordCheckbox id={item.id} /></td><td><strong>{item.name}</strong></td><td>{item.category}</td><td>{item.relatedType}<span className="cell-sub">{item.relatedReference}</span></td><td>{shortDate(item.recordedAt)}</td><td><Badge>{item.status}</Badge></td><td><a className="table-link" href={item.url} target="_blank" rel="noreferrer">Open link <ExternalLink size={14} /></a></td><td><Button variant="secondary" onClick={() => { setEditing({ type: 'document', id: item.id }); setAction('document') }}><Pencil size={14} /> Edit</Button></td></tr>)}</tbody></table>{!rows.length && <EmptyState title="No documents found" text="Add a document link or adjust your search and filters." />}</TableShell><p className="info-note"><Info size={16} /> Headquarters stores a link only. It does not upload files to Google Drive or guarantee access permissions. Avoid public links for passports and other sensitive documents.</p></Module>
+  const owners = ownerType==='traveller' ? travellers : payments
+  useEffect(()=>{
+    let active=true
+    const resolve=async()=>{
+      if(!supabase)return
+      const pairs=await Promise.all(rows.filter(row=>row.url&&!/^https?:\\/\\//i.test(row.url)).map(async row=>{
+        const {data,error}=await supabase.storage.from('routehq-documents').createSignedUrl(row.url,300)
+        return error?null:[row.id,data.signedUrl] as const
+      }))
+      if(active)setSignedLinks(Object.fromEntries(pairs.filter((x):x is readonly [string,string]=>!!x)))
+    }
+    void resolve()
+    return ()=>{active=false}
+  },[documents,rows.length])
+  const upload=async()=>{
+    if(!supabase||!file||!ownerId)return
+    if(file.size>25*1024*1024){setUploadError('Maximum file size is 25 MB.');return}
+    const allowed=['application/pdf','image/jpeg','image/png','image/webp']
+    if(!allowed.includes(file.type)){setUploadError('Use a PDF, JPG, PNG or WebP file.');return}
+    setUploading(true);setUploadError('');setUploadNotice('')
+    let storagePath=''
+    try{
+      const {data:context,error:contextError}=await supabase.rpc('get_my_agency_context')
+      if(contextError)throw contextError
+      const agency=Array.isArray(context)?context[0]:context
+      if(!agency?.agency_id)throw new Error('This account is not linked to an active agency workspace.')
+      const {data:userData,error:userError}=await supabase.auth.getUser()
+      if(userError)throw userError
+      const safeName=file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g,'-').slice(-100)
+      const ownerFolder=ownerType==='traveller'?'travellers':'payments'
+      storagePath=`${agency.agency_id}/${ownerFolder}/${ownerId}/${crypto.randomUUID()}-${safeName}`
+      const {error:storageError}=await supabase.storage.from('routehq-documents').upload(storagePath,file,{contentType:file.type,upsert:false})
+      if(storageError)throw storageError
+      const record={
+        agency_id:agency.agency_id,
+        document_type:category,
+        file_name:file.name,
+        storage_path:storagePath,
+        mime_type:file.type,
+        file_size_bytes:file.size,
+        uploaded_by:userData.user?.id||null,
+        traveller_id:ownerType==='traveller'?ownerId:null,
+        payment_id:ownerType==='payment'?ownerId:null,
+        customer_id:null,
+        booking_id:null,
+        ocr_status:'not_configured',
+        ocr_result:{}
+      }
+      const {error:insertError}=await supabase.from('documents').insert(record)
+      if(insertError)throw insertError
+      setUploadNotice('Document uploaded and linked securely.')
+      setFile(null)
+      setOwnerId('')
+      const picker=document.getElementById('routehq-document-file') as HTMLInputElement|null
+      if(picker)picker.value=''
+    }catch(error){
+      if(storagePath)await supabase.storage.from('routehq-documents').remove([storagePath])
+      setUploadError(error instanceof Error?error.message:'The document could not be uploaded.')
+    }finally{setUploading(false)}
+  }
+  return <Module title="Documents" description="Upload private travel documents and payment evidence. Files are linked to one traveller or one payment." actionLabel="Upload document" actionType={undefined} options={['Valid', 'Expiring Soon', 'Needs Review']} {...controls}>
+    <section className="document-upload-panel">
+      <div className="document-upload-heading"><div><h2>Upload a document</h2><p>Files are stored in private RouteHQ storage. Access is checked against agency permissions.</p></div><FileUp size={21}/></div>
+      <div className="document-upload-grid">
+        <label>Attach to<select value={ownerType} onChange={e=>{setOwnerType(e.target.value as 'traveller'|'payment');setOwnerId('')}}><option value="traveller">Traveller</option><option value="payment">Payment</option></select></label>
+        <label>{ownerType==='traveller'?'Traveller':'Payment'}<select value={ownerId} onChange={e=>setOwnerId(e.target.value)}><option value="">Select {ownerType==='traveller'?'traveller':'payment'}</option>{owners.map((item:any)=><option key={item.id} value={item.id}>{ownerType==='traveller'?item.name:item.reference} · {ownerType==='traveller'?item.group||'Individual':money(item.amount)}</option>)}</select></label>
+        <label>Document type<select value={category} onChange={e=>setCategory(e.target.value)}>{(ownerType==='traveller'?['Passport','Visa','Photograph','Flight ticket','Travel insurance','Other']:['Payment receipt','Bank transfer evidence','Invoice','Refund evidence','Other']).map(value=><option key={value}>{value}</option>)}</select></label>
+      </div>
+      <label className="document-dropzone" htmlFor="routehq-document-file"><Upload size={21}/><strong>{file?file.name:'Choose a document to upload'}</strong><span>PDF, JPG, PNG or WebP · Up to 25 MB</span><input id="routehq-document-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" onChange={e=>setFile(e.target.files?.[0]||null)}/></label>
+      {uploadError&&<p className="document-upload-error" role="alert">{uploadError}</p>}
+      {uploadNotice&&<p className="document-upload-success" role="status">{uploadNotice}</p>}
+      <div className="document-upload-actions"><span>Passport files are private and never exposed through public URLs.</span><Button disabled={!file||!ownerId||uploading} onClick={()=>void upload()}>{uploading?<><LoaderCircle size={15}/> Uploading…</>:<><Upload size={15}/> Upload securely</>}</Button></div>
+    </section>
+    <TableShell><table><thead><tr><th><SelectAllCheckbox /></th><th>Document</th><th>Category</th><th>Related record</th><th>Recorded</th><th>Status</th><th>File</th><th>Actions</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td><RecordCheckbox id={item.id} /></td><td><strong>{item.name}</strong></td><td>{item.category}</td><td>{item.relatedType}<span className="cell-sub">{item.relatedReference}</span></td><td>{shortDate(item.recordedAt)}</td><td><Badge>{item.status}</Badge></td><td>{signedLinks[item.id]?<a className="table-link" href={signedLinks[item.id]} target="_blank" rel="noreferrer">Open file <ExternalLink size={14}/></a>:item.url&&/^https?:\\/\\//i.test(item.url)?<a className="table-link" href={item.url} target="_blank" rel="noreferrer">Open link <ExternalLink size={14}/></a>:'Private file'}</td><td><span className="cell-sub">Access controlled</span></td></tr>)}</tbody></table>{!rows.length && <EmptyState title="No documents found" text="Upload a document or adjust your search and filters." />}</TableShell>
+    <p className="info-note"><Info size={16}/> OCR is reserved as a future processing step. Files upload now; no passport or receipt text is extracted until an OCR provider is deliberately connected.</p>
+  </Module>
 }
 
 export function SettingsPage() {

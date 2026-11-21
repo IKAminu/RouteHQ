@@ -118,7 +118,7 @@ async function loadStore(): Promise<StoreData> {
   for (const payment of supplierPaymentRows) if (key(payment.status) === 'confirmed') paidByCost.set(payment.supplier_cost_id, (paidByCost.get(payment.supplier_cost_id) || 0) + money(payment.amount_minor))
   const bookingsById = new Map(bookingRows.map(r => [r.id, r]))
   const customersById = new Map(customerRows.map(r => [r.id, r]))
-  const travellersById = new Map(travellerRows.map(r => [r.id, r]))
+  const travellersById = new Map(travellerRows.map(r => [r.id, r]))\n  const paymentsById = new Map(paymentRows.map(r => [r.id, r]))
   const reversalReasonByPayment = new Map<string,string>(reversalRows.map(r => [r.payment_id, r.reason]))
   return {
     leads:leadRows.map(leadFromRow),
@@ -231,11 +231,11 @@ async function saveStore(data: StoreData, previous?: StoreData) {
     payment_date:asDateTime(r.date) || new Date().toISOString(), status:'confirmed', reference:r.reference || null,
     recorded_by:userId, notes:`Method: ${r.method || 'Other'}`,
   }))
-  const documentRows = changedRecords(data.documents, previous?.documents).map(r => {
+  const documentRows = changedRecords(data.documents, previous?.documents).filter(r => !r.url || /^https?:\\/\\//i.test(r.url)).map(r => {
     const traveller = r.relatedType === 'Traveller' ? data.travellers.find(x=>x.name===r.relatedReference) : undefined
     const customer = r.relatedType === 'Customer' ? data.customers.find(x=>x.name===r.relatedReference || x.reference===r.relatedReference) : undefined
     const booking = r.relatedType === 'Booking' ? data.bookings.find(x=>x.reference===r.relatedReference) : undefined
-    const payment = r.relatedType === 'Payment' ? data.payments.find(x=>x.reference===r.relatedReference) : undefined
+    const payment = r.relatedType === 'Payment' ? data.payments.find(x=>x.id===r.relatedId || x.reference===r.relatedReference) : undefined
     return { ...base, id:r.id, document_type:r.category || 'Other', file_name:r.name,
       storage_path:r.url && !/^https?:\/\//i.test(r.url) ? r.url : null,
       external_url:r.url && /^https?:\/\//i.test(r.url) ? r.url : null,

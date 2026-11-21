@@ -339,7 +339,7 @@ export function DocumentsPage() {
     let active=true
     const resolve=async()=>{
       if(!supabase)return
-      const pairs=await Promise.all(documents.filter(row=>row.url&&!/^https?:\\/\\//i.test(row.url)).map(async row=>{
+      const pairs=await Promise.all(documents.filter(row=>row.url&&!row.url.startsWith('https://')&&!row.url.startsWith('http://')).map(async row=>{
         const {data,error}=await supabase.storage.from('routehq-documents').createSignedUrl(row.url,300)
         return error?null:[row.id,data.signedUrl] as const
       }))
@@ -407,7 +407,7 @@ export function DocumentsPage() {
       {uploadNotice&&<p className="document-upload-success" role="status">{uploadNotice}</p>}
       <div className="document-upload-actions"><span>Passport files are private and never exposed through public URLs.</span><Button disabled={!file||!ownerId||uploading} onClick={()=>void upload()}>{uploading?<><LoaderCircle size={15}/> Uploading…</>:<><Upload size={15}/> Upload securely</>}</Button></div>
     </section>
-    <TableShell><table><thead><tr><th><SelectAllCheckbox /></th><th>Document</th><th>Category</th><th>Related record</th><th>Recorded</th><th>Status</th><th>File</th><th>Actions</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td><RecordCheckbox id={item.id} /></td><td><strong>{item.name}</strong></td><td>{item.category}</td><td>{item.relatedType}<span className="cell-sub">{item.relatedReference}</span></td><td>{shortDate(item.recordedAt)}</td><td><Badge>{item.status}</Badge></td><td>{signedLinks[item.id]?<a className="table-link" href={signedLinks[item.id]} target="_blank" rel="noreferrer">Open file <ExternalLink size={14}/></a>:item.url&&/^https?:\\/\\//i.test(item.url)?<a className="table-link" href={item.url} target="_blank" rel="noreferrer">Open link <ExternalLink size={14}/></a>:'Private file'}</td><td><span className="cell-sub">Access controlled</span></td></tr>)}</tbody></table>{!rows.length && <EmptyState title="No documents found" text="Upload a document or adjust your search and filters." />}</TableShell>
+    <TableShell><table><thead><tr><th><SelectAllCheckbox /></th><th>Document</th><th>Category</th><th>Related record</th><th>Recorded</th><th>Status</th><th>File</th><th>Actions</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td><RecordCheckbox id={item.id} /></td><td><strong>{item.name}</strong></td><td>{item.category}</td><td>{item.relatedType}<span className="cell-sub">{item.relatedReference}</span></td><td>{shortDate(item.recordedAt)}</td><td><Badge>{item.status}</Badge></td><td>{signedLinks[item.id]?<a className="table-link" href={signedLinks[item.id]} target="_blank" rel="noreferrer">Open file <ExternalLink size={14}/></a>:item.url&&(item.url.startsWith('https://')||item.url.startsWith('http://'))?<a className="table-link" href={item.url} target="_blank" rel="noreferrer">Open link <ExternalLink size={14}/></a>:'Private file'}</td><td><span className="cell-sub">Access controlled</span></td></tr>)}</tbody></table>{!rows.length && <EmptyState title="No documents found" text="Upload a document or adjust your search and filters." />}</TableShell>
     <p className="info-note"><Info size={16}/> OCR is reserved as a future processing step. Files upload now; no passport or receipt text is extracted until an OCR provider is deliberately connected.</p>
   </Module>
 }

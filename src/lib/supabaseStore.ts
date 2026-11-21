@@ -15,11 +15,11 @@ const client = () => {
 
 async function agencyContext() {
   const { data, error } = await client().rpc('get_my_agency_context')
-  if (error) throw error
+  if (error) throw new Error(`Could not verify your agency workspace: ${error.message}${error.code ? ` (Code: ${error.code})` : ''}${error.details ? ` · ${error.details}` : ''}${error.hint ? ` · ${error.hint}` : ''}`)
   const context = Array.isArray(data) ? data[0] : data
   if (!context?.agency_id) throw new Error('This account is not linked to an active agency workspace.')
   const { data: userData, error: userError } = await client().auth.getUser()
-  if (userError) throw userError
+  if (userError) throw new Error(`Could not verify your signed-in account: ${userError.message}${userError.code ? ` (Code: ${userError.code})` : ''}`)
   return { agencyId: String(context.agency_id), userId: userData.user?.id ?? null }
 }
 
@@ -31,7 +31,7 @@ async function rows(table: string, agencyId: string): Promise<Row[]> {
     let query = client().from(table).select('*').eq('agency_id', agencyId).order('id', { ascending: true }).limit(pageSize)
     if (lastId) query = query.gt('id', lastId)
     const { data, error } = await query
-    if (error) throw error
+    if (error) throw new Error(`Could not load the ${table.replaceAll('_', ' ')} records: ${error.message}${error.code ? ` (Code: ${error.code})` : ''}${error.details ? ` · ${error.details}` : ''}${error.hint ? ` · ${error.hint}` : ''}`)
     const page = (data ?? []) as Row[]
     records.push(...page)
     if (page.length < pageSize) break

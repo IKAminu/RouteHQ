@@ -3753,3 +3753,11 @@
  .platform-website-stats { grid-template-columns:1fr; }
  .platform-user-gauge { flex-direction:column; }
 }
+
+
+.platform-pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid #edf0f4; padding:11px 16px; color:#8290a1; font-size:10px; }
+.platform-pagination strong { color:#27384f; }
+.platform-pagination>div { display:flex; align-items:center; gap:10px; }
+.platform-pagination button { display:inline-flex; align-items:center; gap:4px; min-height:30px; border:1px solid #dce3ec; border-radius:6px; background:#fff; padding:5px 9px; color:#33465f; font:inherit; cursor:pointer; }
+.platform-pagination button:disabled { opacity:.4; cursor:not-allowed; }
+@media (max-width:600px) { .platform-pagination { align-items:flex-start; flex-direction:column; } .platform-pagination>div { width:100%; justify-content:space-between; } }

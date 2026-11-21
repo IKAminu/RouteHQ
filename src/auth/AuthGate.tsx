@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import type { FormEvent, ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
@@ -414,7 +414,7 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered, initia
         <button className="button button-primary auth-submit" disabled={busy || code.length !== 6}>{busy ? 'Verifying…' : 'Verify and continue'}</button>
       </form>}
 
-      {step !== 'login' && <button className="auth-back" type="button" onClick={async () => { await handleBackToLogin(); onPasswordRecovered() }}>Cancel and return to sign in</button>}
+      {step !== 'login' && <button className="auth-back" type="button" onClick={async () => { await handleBackToLogin(); onPasswordRecovered() }}><ArrowLeft size={15} aria-hidden="true" /> <span>Cancel and return to sign in</span></button>}
     </section>
     <AuthVisual variant={visualVariant} />
     </div>

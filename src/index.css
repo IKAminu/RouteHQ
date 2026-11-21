@@ -3500,3 +3500,82 @@
   .auth-pin-slot { height:52px; border-radius:8px; font-size:20px; }
   .auth-pin-slot-break { margin-left:3px; }
 }
+
+
+/* RouteHQ polish pass: consistent isolated cards, action spacing and dark semantic surfaces. */
+.metrics-grid {
+  gap: .7rem;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+}
+.metrics-grid .metric {
+  border: 1px solid var(--color-line);
+  border-radius: .65rem;
+  background: var(--color-surface);
+}
+.metrics-grid .metric + .metric { border-left: 1px solid var(--color-line); }
+.table-actions,
+.form-actions,
+.modal-actions,
+.page-actions,
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .55rem;
+}
+.top-actions .popover-wrap > .icon-button {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.auth-back {
+  display: inline-flex;
+  width: min(100%,390px);
+  align-self: center;
+  align-items: center;
+  justify-content: flex-start;
+  gap: .45rem;
+  margin-inline: auto;
+  padding: 0;
+  text-align: left;
+}
+.auth-loading,
+.workspace-loading {
+  background: #09090b !important;
+  color: #e4e4e7 !important;
+}
+.auth-loading img {
+  filter: drop-shadow(0 0 24px rgb(237 135 59 / 18%));
+}
+:root[data-theme='dark'] .metrics-grid { background: transparent; border: 0; }
+:root[data-theme='dark'] .metrics-grid .metric {
+  border: 1px solid #252529;
+  border-radius: .65rem;
+  background: #111114;
+}
+:root[data-theme='dark'] .metrics-grid .metric + .metric { border-left: 1px solid #252529; }
+:root[data-theme='dark'] .traveller-security-note,
+:root[data-theme='dark'] [class*='callout'],
+:root[data-theme='dark'] [class*='security-note'],
+:root[data-theme='dark'] [class*='warning'],
+:root[data-theme='dark'] .guide-intro {
+  border-color: #303036 !important;
+  background: #19191e !important;
+  color: #e4e4e7 !important;
+}
+:root[data-theme='dark'] .traveller-security-note svg,
+:root[data-theme='dark'] [class*='callout'] svg,
+:root[data-theme='dark'] [class*='security-note'] svg,
+:root[data-theme='dark'] [class*='warning'] svg {
+  color: #b8b8c0 !important;
+}
+@media (max-width: 820px) {
+  .metrics-grid { gap: .55rem; }
+  .table-actions,
+  .form-actions,
+  .modal-actions,
+  .page-actions,
+  .button-row { gap: .5rem; }
+}

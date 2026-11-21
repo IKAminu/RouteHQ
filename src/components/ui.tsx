@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { Children, cloneElement, isValidElement, useMemo, useRef, useState } from 'react'
 import type { ButtonHTMLAttributes, InputHTMLAttributes, PointerEvent as ReactPointerEvent, ReactElement, ReactNode, SelectHTMLAttributes } from 'react'
 
@@ -88,6 +88,21 @@ function sliceTableRows(node: ReactNode, start: number, end: number): ReactNode 
     return cloneElement(element, undefined, rows.slice(start, end))
   }
   return cloneElement(element, undefined, sliceTableRows(element.props.children, start, end))
+}
+
+export type ProgressStepItem = { title: string; description: string; status?: 'complete' | 'current' | 'upcoming'; icon?: ReactNode }
+
+export function ProgressSteps({ steps, className = '' }: { steps: ProgressStepItem[]; className?: string }) {
+  return <ol className={`featured-progress-steps ${className}`}>
+    {steps.map((step,index)=>{
+      const status=step.status||'upcoming'
+      return <li className={`featured-progress-step is-${status}`} key={step.title}>
+        <span className="featured-progress-icon">{step.icon||(status==='complete'?<Check size={17}/>:<span>{index+1}</span>)}</span>
+        <span className="featured-progress-copy"><strong>{step.title}</strong><small>{step.description}</small></span>
+        {index<steps.length-1&&<span className="featured-progress-connector" aria-hidden="true"/>}
+      </li>
+    })}
+  </ol>
 }
 
 export function TableShell({ children }: { children: ReactNode }) {

@@ -140,12 +140,12 @@ async function loadStore(): Promise<StoreData> {
       reference:r.reference || undefined, status:key(r.status)==='void'?'Voided':'Confirmed',
       voidReason:r.notes?.match(/Voided: ([^;\n]+)/)?.[1] })),
     documents:documentRows.map(r => {
-      const relatedType: DocumentRecord['relatedType'] = r.traveller_id ? 'Traveller' : r.booking_id ? 'Booking' : r.customer_id ? 'Customer' : 'Booking'
-      const relatedId = r.traveller_id || r.booking_id || r.customer_id
-      const related = r.traveller_id ? travellersById.get(relatedId) : r.booking_id ? bookingsById.get(relatedId) : customersById.get(relatedId)
+      const relatedType: DocumentRecord['relatedType'] = r.traveller_id ? 'Traveller' : r.payment_id ? 'Payment' : r.booking_id ? 'Booking' : r.customer_id ? 'Customer' : 'Booking'
+      const relatedId = r.traveller_id || r.payment_id || r.booking_id || r.customer_id
+      const related = r.traveller_id ? travellersById.get(relatedId) : r.payment_id ? paymentsById.get(relatedId) : r.booking_id ? bookingsById.get(relatedId) : customersById.get(relatedId)
       const relatedReference = related?.full_name || related?.booking_ref || related?.customer_ref || ''
       return { id:r.id, name:r.file_name, category:r.document_type, relatedType, relatedReference,
-        url:r.external_url || r.storage_path || '', recordedAt:dateOnly(r.created_at), status:'Needs Review' as const }
+        url:r.external_url || r.storage_path || '', mimeType:r.mime_type || undefined, fileSizeBytes:r.file_size_bytes || undefined, relatedId, recordedAt:dateOnly(r.created_at), status:'Needs Review' as const }
     }),
   }
 }

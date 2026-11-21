@@ -128,7 +128,10 @@ export interface DocumentRecord {
   category: string
   relatedType: 'Customer' | 'Booking' | 'Traveller' | 'Payment' | 'Supplier'
   relatedReference: string
+  relatedId?: string
   url: string
+  mimeType?: string
+  fileSizeBytes?: number
   recordedAt: string
   status: 'Valid' | 'Expiring Soon' | 'Needs Review'
 }

@@ -486,7 +486,7 @@ export function AuthGate({ children }: { children: (mode: AppMode) => ReactNode 
   }, [])
 
   if (!supabase) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="RouteHQ" className="auth-logo" /><h1>Configuration required</h1><p className="auth-description">Supabase connection settings are missing. Contact the app administrator.</p></section><AuthVisual variant="dashboard" /></div></div>
-  if (!ready) return <div className="auth-loading"><img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="" /><span>Preparing secure workspace</span><i /></div>
+  if (!ready) return <div className="auth-loading"><picture><source srcSet={`${import.meta.env.BASE_URL}brand/loading/routehq-loader.gif`} type="image/gif" /><img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="" /></picture><span>Preparing secure workspace</span><i /></div>
   if (authError) return <div className="auth-screen"><div className="auth-layout"><section className="auth-panel"><img src={`${import.meta.env.BASE_URL}brand/routehq-logo.svg`} alt="RouteHQ" className="auth-logo" /><h1>Could not verify your session</h1><p className="auth-description" role="alert">{authError}</p><button className="button button-primary auth-submit" type="button" onClick={() => window.location.reload()}>Try again</button></section><AuthVisual variant="dashboard" /></div></div>
   if (!session || !authenticated || passwordRecovery) {
     return <AuthScreen

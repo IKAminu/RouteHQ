@@ -3,6 +3,7 @@ import { todayDate } from '@/lib/business'
 import { deleteLiveRecords, loadLiveStore, saveLiveStore } from '@/lib/supabaseStore'
 import { supabase } from '@/lib/supabase'
 import { waitForMinimumLoadingTime } from '@/lib/loading'
+import { AppErrorScreen } from '@/components/AppErrorScreen'
 import type { AppMode } from '@/auth/AuthGate'
 import type { Booking, Customer, Lead, Payment, DocumentRecord, QuickActionType, SupplierCost, SupplierPayment, TravelPackage, Traveller } from '@/types'
 
@@ -82,6 +83,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [dataReady, setDataReady] = useState(false)
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false)
   const [dataError, setDataError] = useState<string | null>(null)
+  const [loadRetry, setLoadRetry] = useState(0)
   const [saveNotice, setSaveNotice] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveRetry, setSaveRetry] = useState(0)
@@ -119,10 +121,10 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       setSupplierCosts(data.supplierCosts); setSupplierPayments(data.supplierPayments); setDocuments(data.documents)
       setDataReady(true)
     }).catch((error: unknown) => {
-      if (active) { setDataError(error instanceof Error ? error.message : 'Could not load agency records from Supabase. Check your connection and account permissions.'); setDataReady(true) }
+      if (active) { setDataError(error instanceof Error ? error.message : [String((error as { message?: unknown })?.message || ''), String((error as { details?: unknown })?.details || ''), String((error as { hint?: unknown })?.hint || ''), (error as { code?: unknown })?.code ? `Code: ${String((error as { code?: unknown }).code)}` : ''].filter(Boolean).join(' · ') || 'The database returned an unexpected error while loading agency records.'); setDataReady(true) }
     })
     return () => { active = false }
-  }, [])
+  }, [loadRetry])
 
   useEffect(() => {
     if (!dataReady || dataError) return
@@ -381,9 +383,10 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   }
 
   const retrySave = () => { setSaveError(null); setSaveRetry((attempt) => attempt + 1) }
+  const retryLoad = () => { setDataError(null); setDataReady(false); setLoadRetry((attempt) => attempt + 1) }
 
   const value = useMemo(() => ({ mode, saveNotice, saveError, retrySave, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, action, setAction, actionDefaults, deleteRecords, undoAvailable, undoDelete, addRecord, editing, setEditing, updateRecord, convertLead, reversePayment, voidSupplierPayment }), [mode, saveNotice, saveError, undoAvailable, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, action, actionDefaults, editing])
-  return <StoreContext.Provider value={value}>{dataError ? <div role="alert" className="data-connection-error">Live database error: {dataError}. The workspace has been paused so that changes cannot overwrite records that failed to load.</div> : !dataReady ? (showLoadingSkeleton ? <WorkspaceSkeleton /> : <div className="workspace-loading-pending" role="status" aria-label="Loading workspace" />) : <>{saveError && <div className="data-save-error" role="alert"><div><strong>Some changes haven't reached the database.</strong><span>{saveError}</span></div><button type="button" onClick={retrySave}>Retry save</button></div>}{children}</>}</StoreContext.Provider>
+  return <StoreContext.Provider value={value}>{dataError ? <AppErrorScreen kind="database" detail={dataError} onRetry={retryLoad} /> : !dataReady ? (showLoadingSkeleton ? <WorkspaceSkeleton /> : <div className="workspace-loading-pending" role="status" aria-label="Loading workspace" />) : <>{saveError && <div className="data-save-error" role="alert"><div><strong>Some changes haven't reached the database.</strong><span>{saveError}</span></div><button type="button" onClick={retrySave}>Retry save</button></div>}{children}</>}</StoreContext.Provider>
 }
 
 export const useAppStore = () => {

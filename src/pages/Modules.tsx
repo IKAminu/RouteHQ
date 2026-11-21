@@ -132,24 +132,48 @@ export function LeadsPage() {
     let active = true
     if (mode === 'demo') { setFollowUpNotes([]); return () => { active = false } }
     if (!supabase) { setNotesError('Follow-up notes are unavailable because the database is not configured.'); return () => { active = false } }
-    supabase.from('lead_activities').select('id, lead_id, activity_type, note, occurred_at, is_demo').eq('is_demo', false).order('occurred_at', { ascending: false }).then(({ data, error }) => {
-      if (!active) return
-      if (error) setNotesError(error.message)
-      else { setFollowUpNotes((data || []) as LeadFollowUpNote[]); setNotesError('') }
-    })
+    const loadActivities = async () => {
+      try {
+        const { data: context, error: contextError } = await supabase!.rpc('get_my_agency_context')
+        if (contextError) throw contextError
+        const agency = Array.isArray(context) ? context[0] : context
+        if (!agency?.agency_id) throw new Error('This account is not linked to an active agency workspace.')
+        const { data, error } = await supabase!.from('lead_activities')
+          .select('id, lead_id, activity_type, note:body, occurred_at')
+          .eq('agency_id', agency.agency_id)
+          .order('occurred_at', { ascending: false })
+        if (error) throw error
+        if (active) { setFollowUpNotes((data || []) as LeadFollowUpNote[]); setNotesError('') }
+      } catch (error) {
+        if (active) setNotesError(error instanceof Error ? error.message : 'Could not load follow-up notes.')
+      }
+    }
+    void loadActivities()
     return () => { active = false }
   }, [mode])
   const addFollowUpNote = async (leadId: string, note: string) => {
     if (mode === 'demo') { setFollowUpNotes((items) => [{ id: crypto.randomUUID(), lead_id: leadId, activity_type: 'Follow-up', note, occurred_at: new Date().toISOString(), is_demo: true }, ...items]); return }
     if (!supabase) throw new Error('Database connection is unavailable.')
-    const { data, error } = await supabase.from('lead_activities').insert({ lead_id: leadId, activity_type: 'Follow-up', note, is_demo: false }).select('id, lead_id, activity_type, note, occurred_at, is_demo').single()
+    const { data: context, error: contextError } = await supabase.rpc('get_my_agency_context')
+    if (contextError) throw contextError
+    const agency = Array.isArray(context) ? context[0] : context
+    if (!agency?.agency_id) throw new Error('This account is not linked to an active agency workspace.')
+    const { data, error } = await supabase.from('lead_activities')
+      .insert({ agency_id: agency.agency_id, lead_id: leadId, activity_type: 'Follow-up', body: note })
+      .select('id, lead_id, activity_type, note:body, occurred_at').single()
     if (error) { setNotesError(error.message); throw error }
     setFollowUpNotes((items) => [data as LeadFollowUpNote, ...items]); setNotesError('')
   }
   const editFollowUpNote = async (id: string, note: string) => {
     if (mode === 'demo') { setFollowUpNotes((items) => items.map((item) => item.id === id ? { ...item, note } : item)); return }
     if (!supabase) throw new Error('Database connection is unavailable.')
-    const { data, error } = await supabase.from('lead_activities').update({ note }).eq('id', id).eq('is_demo', false).select('id, lead_id, activity_type, note, occurred_at, is_demo').single()
+    const { data: context, error: contextError } = await supabase.rpc('get_my_agency_context')
+    if (contextError) throw contextError
+    const agency = Array.isArray(context) ? context[0] : context
+    if (!agency?.agency_id) throw new Error('This account is not linked to an active agency workspace.')
+    const { data, error } = await supabase.from('lead_activities')
+      .update({ body: note }).eq('id', id).eq('agency_id', agency.agency_id)
+      .select('id, lead_id, activity_type, note:body, occurred_at').single()
     if (error) { setNotesError(error.message); throw error }
     setFollowUpNotes((items) => items.map((item) => item.id === id ? data as LeadFollowUpNote : item)); setNotesError('')
   }

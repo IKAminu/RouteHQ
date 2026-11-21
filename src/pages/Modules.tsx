@@ -248,6 +248,53 @@ export function BookingsPage() {
     </Modal>}
   </>
 }
+function RecordDocuments({ ownerType, ownerId }: { ownerType: 'traveller' | 'payment'; ownerId: string }) {
+  const { documents } = useAppStore()
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const [preview, setPreview] = useState<{ url: string; mime: string; name: string } | null>(null)
+  const attached = documents.filter(item => item.relatedType === (ownerType === 'traveller' ? 'Traveller' : 'Payment') && item.relatedId === ownerId)
+  const upload = async (file?: File) => {
+    if (!file || !supabase) return
+    const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+    if (!allowed.includes(file.type)) { setError('Use a PDF, JPG, PNG or WebP file.'); return }
+    if (file.size > 25 * 1024 * 1024) { setError('Maximum file size is 25 MB.'); return }
+    setUploading(true); setError('')
+    let storagePath = ''
+    try {
+      const { data: context, error: contextError } = await supabase.rpc('get_my_agency_context')
+      if (contextError) throw contextError
+      const agency = Array.isArray(context) ? context[0] : context
+      if (!agency?.agency_id) throw new Error('This account is not linked to an active agency workspace.')
+      const { data: userData, error: userError } = await supabase.auth.getUser()
+      if (userError) throw userError
+      const safeName = file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-100)
+      const folder = ownerType === 'traveller' ? 'travellers' : 'payments'
+      storagePath = agency.agency_id + '/' + folder + '/' + ownerId + '/' + crypto.randomUUID() + '-' + safeName
+      const { error: storageError } = await supabase.storage.from('routehq-documents').upload(storagePath, file, { contentType: file.type, upsert: false })
+      if (storageError) throw storageError
+      const record = { agency_id: agency.agency_id, document_type: ownerType === 'traveller' ? 'Travel document' : 'Payment receipt', file_name: file.name, storage_path: storagePath, mime_type: file.type, file_size_bytes: file.size, uploaded_by: userData.user?.id || null, traveller_id: ownerType === 'traveller' ? ownerId : null, payment_id: ownerType === 'payment' ? ownerId : null, customer_id: null, booking_id: null, ocr_status: 'not_configured', ocr_result: {} }
+      const { error: insertError } = await supabase.from('documents').insert(record)
+      if (insertError) throw insertError
+    } catch (reason) {
+      if (storagePath) await supabase.storage.from('routehq-documents').remove([storagePath])
+      setError(reason instanceof Error ? reason.message : 'The file could not be attached.')
+    } finally { setUploading(false) }
+  }
+  const openFile = async (item: typeof attached[number]) => {
+    if (!supabase || !item.url) return
+    const { data, error: linkError } = await supabase.storage.from('routehq-documents').createSignedUrl(item.url, 600)
+    if (linkError) { setError(linkError.message); return }
+    setPreview({ url: data.signedUrl, mime: item.mimeType || '', name: item.name })
+  }
+  return <div className='record-documents'>
+    <div className='record-document-list'>{attached.length ? attached.map(item => <button type='button' className='record-document-link' key={item.id} onClick={() => void openFile(item)} title={item.name}><Eye size={13}/><span>{item.name}</span></button>) : <span className='cell-sub'>No files attached</span>}</div>
+    <label className='record-document-upload' title='Attach a document'>{uploading ? <LoaderCircle size={14}/> : <Upload size={14}/>}<span>{uploading ? 'Uploading' : 'Attach'}</span><input type='file' accept='.pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp' disabled={uploading} onChange={event => { void upload(event.target.files?.[0]); event.currentTarget.value = '' }}/></label>
+    {error && <span className='record-document-message record-document-error'>{error}</span>}
+    {preview && <Modal title={preview.name} description='Private document preview' onClose={() => setPreview(null)}><div className='record-document-preview'>{preview.mime.startsWith('image/') ? <img src={preview.url} alt={preview.name}/> : preview.mime === 'application/pdf' ? <iframe src={preview.url} title={preview.name}/> : <p>Preview is not available for this file type.</p>}</div><div className='form-actions'><a className='button button-secondary' href={preview.url} target='_blank' rel='noreferrer'>Open in new tab <ExternalLink size={14}/></a><Button onClick={() => setPreview(null)}>Close</Button></div></Modal>}
+  </div>
+}
+
 export function TravellersPage() {
   const controls = useFilter()
   const { travellers, bookings, customers, setAction, setEditing } = useAppStore()
@@ -286,7 +333,7 @@ export function TravellersPage() {
       <div className="traveller-section-heading"><h2>Individual traveller records</h2><span className="section-info" title="Each traveller has an individual record. Document readiness is tracked separately from their current travel status."><Info size={15}/></span></div>
       <TableShell><table><thead><tr><th><SelectAllCheckbox /></th><th>Traveller</th><th>Customer profile</th><th>Booking</th><th>Group</th><th>Departure</th><th>Expected return</th><th>Documents</th><th>Travel status</th><th>Actions</th></tr></thead><tbody>{rows.map((traveller) => {
         const booking = bookings.find((item) => item.id === traveller.bookingId)
-        return <tr key={traveller.id}><td><RecordCheckbox id={traveller.id} /></td><td><strong>{traveller.name}</strong><span className="cell-sub">{traveller.nationality}</span></td><td>{traveller.customerId ? customers.find((customer) => customer.id === traveller.customerId)?.reference || 'Customer unavailable' : 'Traveller only'}</td><td>{booking?.reference || 'Booking unavailable'}</td><td>{traveller.group || 'Individual'}</td><td>{booking ? shortDate(booking.departureDate) : '—'}</td><td>{booking ? shortDate(booking.returnDate) : '—'}</td><td>{traveller.documentsComplete ? <Badge>Complete</Badge> : <Badge>Pending</Badge>}</td><td><Badge>{traveller.status}</Badge></td><td><Button variant="secondary" onClick={() => { setEditing({ type: 'traveller', id: traveller.id }); setAction('traveller') }}><Pencil size={14} /> Edit</Button></td></tr>
+        return <tr key={traveller.id}><td><RecordCheckbox id={traveller.id} /></td><td><strong>{traveller.name}</strong><span className="cell-sub">{traveller.nationality}</span></td><td>{traveller.customerId ? customers.find((customer) => customer.id === traveller.customerId)?.reference || 'Customer unavailable' : 'Traveller only'}</td><td>{booking?.reference || 'Booking unavailable'}</td><td>{traveller.group || 'Individual'}</td><td>{booking ? shortDate(booking.departureDate) : '—'}</td><td>{booking ? shortDate(booking.returnDate) : '—'}</td><td><div className='traveller-document-cell'><Badge>{traveller.documentsComplete ? 'Complete' : 'Pending'}</Badge><RecordDocuments ownerType='traveller' ownerId={traveller.id}/></div></td><td><Badge>{traveller.status}</Badge></td><td><Button variant="secondary" onClick={() => { setEditing({ type: 'traveller', id: traveller.id }); setAction('traveller') }}><Pencil size={14} /> Edit</Button></td></tr>
       })}</tbody></table>{!rows.length && <EmptyState title="No travellers found" text="Adjust the search or filter, or add a traveller to an existing booking."/>}</TableShell>
       <div className="traveller-security-note"><Info size={16}/><span>Passport numbers are intentionally excluded from tables and global search. Access sensitive travel documents only through approved, access-controlled storage.</span></div>
     </Module>
@@ -303,7 +350,7 @@ export function PaymentsPage() {
   const rows = payments.filter((item) => (!controls.filter || item.status === controls.filter) && `${item.reference} ${item.transactionReference} ${item.purpose} ${customers.find((c) => c.id === item.customerId)?.name}`.toLowerCase().includes(controls.query.toLowerCase()))
   const total = payments.filter((item) => item.status === 'Confirmed').reduce((sum, item) => sum + item.amount, 0)
   const balance = bookings.reduce((sum, booking) => sum + bookingBalance(booking, payments), 0)
-  return <Module title="Payments & balances" description="Customer money received, transaction status and calculated booking balances." actionLabel="Record payment" actionType="payment" options={['Confirmed', 'Pending', 'Reversed', 'Failed']} {...controls}><div className="finance-summary"><div><span>Confirmed payments</span><strong>{money(total)}</strong></div><div><span>Total outstanding</span><strong>{money(balance)}</strong></div><div><span>Pending review</span><strong>{money(payments.filter((item) => item.status === 'Pending').reduce((sum, item) => sum + item.amount, 0))}</strong></div></div><TableShell><table><thead><tr><th>Payment</th><th>Date</th><th>Customer</th><th>Payment for</th><th>Booking</th><th>Amount</th><th>Method</th><th>Transaction reference</th><th>Status</th><th>Reversal reason</th><th>Actions</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td><strong>{item.reference}</strong></td><td>{shortDate(item.date)}</td><td>{customers.find((customer) => customer.id === item.customerId)?.name || 'Customer unavailable'}</td><td>{item.purpose || 'Unspecified'}</td><td>{bookings.find((booking) => booking.id === item.bookingId)?.reference || '—'}</td><td><strong>{money(item.amount)}</strong></td><td>{item.method}</td><td>{item.transactionReference || '—'}</td><td><Badge>{item.status}</Badge></td><td>{item.reversalReason || '—'}</td><td><div className="table-actions">{item.status !== 'Reversed' && <Button variant="secondary" onClick={() => { setEditing({ type: 'payment', id: item.id }); setAction('payment') }}><Pencil size={14} /> Edit</Button>}{item.status === 'Confirmed' && <Button variant="danger" onClick={() => { const reason = window.prompt('Enter the reason for reversing this payment.'); if (reason?.trim()) reversePayment(item.id, reason) }}>Reverse payment</Button>}</div></td></tr>)}</tbody></table></TableShell><p className="info-note"><Info size={16} /> Only confirmed payments reduce balances. Reversed payments remain visible and do not reduce what the customer owes.</p></Module>
+  return <Module title="Payments & balances" description="Customer money received, transaction status and calculated booking balances." actionLabel="Record payment" actionType="payment" options={['Confirmed', 'Pending', 'Reversed', 'Failed']} {...controls}><div className="finance-summary"><div><span>Confirmed payments</span><strong>{money(total)}</strong></div><div><span>Total outstanding</span><strong>{money(balance)}</strong></div><div><span>Pending review</span><strong>{money(payments.filter((item) => item.status === 'Pending').reduce((sum, item) => sum + item.amount, 0))}</strong></div></div><TableShell><table><thead><tr><th>Payment</th><th>Date</th><th>Customer</th><th>Payment for</th><th>Booking</th><th>Amount</th><th>Method</th><th>Transaction reference</th><th>Documents</th><th>Status</th><th>Reversal reason</th><th>Actions</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td><strong>{item.reference}</strong></td><td>{shortDate(item.date)}</td><td>{customers.find((customer) => customer.id === item.customerId)?.name || 'Customer unavailable'}</td><td>{item.purpose || 'Unspecified'}</td><td>{bookings.find((booking) => booking.id === item.bookingId)?.reference || '—'}</td><td><strong>{money(item.amount)}</strong></td><td>{item.method}</td><td>{item.transactionReference || '—'}</td><td><RecordDocuments ownerType='payment' ownerId={item.id}/></td><td><Badge>{item.status}</Badge></td><td>{item.reversalReason || '—'}</td><td><div className="table-actions">{item.status !== 'Reversed' && <Button variant="secondary" onClick={() => { setEditing({ type: 'payment', id: item.id }); setAction('payment') }}><Pencil size={14} /> Edit</Button>}{item.status === 'Confirmed' && <Button variant="danger" onClick={() => { const reason = window.prompt('Enter the reason for reversing this payment.'); if (reason?.trim()) reversePayment(item.id, reason) }}>Reverse payment</Button>}</div></td></tr>)}</tbody></table></TableShell><p className="info-note"><Info size={16} /> Only confirmed payments reduce balances. Reversed payments remain visible and do not reduce what the customer owes.</p></Module>
 }
 
 export function SuppliersPage() {
@@ -322,95 +369,6 @@ export function SuppliersPage() {
   </Module>
 }
 
-export function DocumentsPage() {
-  const controls = useFilter()
-  const { documents, travellers, payments } = useAppStore()
-  const [ownerType,setOwnerType] = useState<'traveller'|'payment'>('traveller')
-  const [ownerId,setOwnerId] = useState('')
-  const [category,setCategory] = useState('Passport')
-  const [file,setFile] = useState<File|null>(null)
-  const [uploading,setUploading] = useState(false)
-  const [uploadError,setUploadError] = useState('')
-  const [uploadNotice,setUploadNotice] = useState('')
-  const [signedLinks,setSignedLinks] = useState<Record<string,string>>({})
-  const rows = documents.filter((item) => (!controls.filter || item.status === controls.filter) && `${item.name} ${item.category} ${item.relatedReference}`.toLowerCase().includes(controls.query.toLowerCase()))
-  const owners = ownerType==='traveller' ? travellers : payments
-  useEffect(()=>{
-    let active=true
-    const resolve=async()=>{
-      if(!supabase)return
-      const pairs=await Promise.all(documents.filter(row=>row.url&&!row.url.startsWith('https://')&&!row.url.startsWith('http://')).map(async row=>{
-        const {data,error}=await supabase!.storage.from('routehq-documents').createSignedUrl(row.url,300)
-        return error?null:[row.id,data.signedUrl] as const
-      }))
-      if(active)setSignedLinks(Object.fromEntries(pairs.filter((x):x is readonly [string,string]=>!!x)))
-    }
-    void resolve()
-    return ()=>{active=false}
-  },[documents])
-  const upload=async()=>{
-    if(!supabase||!file||!ownerId)return
-    if(file.size>25*1024*1024){setUploadError('Maximum file size is 25 MB.');return}
-    const allowed=['application/pdf','image/jpeg','image/png','image/webp']
-    if(!allowed.includes(file.type)){setUploadError('Use a PDF, JPG, PNG or WebP file.');return}
-    setUploading(true);setUploadError('');setUploadNotice('')
-    let storagePath=''
-    try{
-      const {data:context,error:contextError}=await supabase.rpc('get_my_agency_context')
-      if(contextError)throw contextError
-      const agency=Array.isArray(context)?context[0]:context
-      if(!agency?.agency_id)throw new Error('This account is not linked to an active agency workspace.')
-      const {data:userData,error:userError}=await supabase.auth.getUser()
-      if(userError)throw userError
-      const safeName=file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g,'-').slice(-100)
-      const ownerFolder=ownerType==='traveller'?'travellers':'payments'
-      storagePath=`${agency.agency_id}/${ownerFolder}/${ownerId}/${crypto.randomUUID()}-${safeName}`
-      const {error:storageError}=await supabase.storage.from('routehq-documents').upload(storagePath,file,{contentType:file.type,upsert:false})
-      if(storageError)throw storageError
-      const record={
-        agency_id:agency.agency_id,
-        document_type:category,
-        file_name:file.name,
-        storage_path:storagePath,
-        mime_type:file.type,
-        file_size_bytes:file.size,
-        uploaded_by:userData.user?.id||null,
-        traveller_id:ownerType==='traveller'?ownerId:null,
-        payment_id:ownerType==='payment'?ownerId:null,
-        customer_id:null,
-        booking_id:null,
-        ocr_status:'not_configured',
-        ocr_result:{}
-      }
-      const {error:insertError}=await supabase.from('documents').insert(record)
-      if(insertError)throw insertError
-      setUploadNotice('Document uploaded and linked securely.')
-      setFile(null)
-      setOwnerId('')
-      const picker=document.getElementById('routehq-document-file') as HTMLInputElement|null
-      if(picker)picker.value=''
-    }catch(error){
-      if(storagePath)await supabase.storage.from('routehq-documents').remove([storagePath])
-      setUploadError(error instanceof Error?error.message:'The document could not be uploaded.')
-    }finally{setUploading(false)}
-  }
-  return <Module title="Documents" description="Upload private travel documents and payment evidence. Files are linked to one traveller or one payment." actionLabel="" options={['Valid', 'Expiring Soon', 'Needs Review']} {...controls}>
-    <section className="document-upload-panel">
-      <div className="document-upload-heading"><div><h2>Upload a document</h2><p>Files are stored in private RouteHQ storage. Access is checked against agency permissions.</p></div><FileUp size={21}/></div>
-      <div className="document-upload-grid">
-        <label>Attach to<select value={ownerType} onChange={e=>{setOwnerType(e.target.value as 'traveller'|'payment');setOwnerId('')}}><option value="traveller">Traveller</option><option value="payment">Payment</option></select></label>
-        <label>{ownerType==='traveller'?'Traveller':'Payment'}<select value={ownerId} onChange={e=>setOwnerId(e.target.value)}><option value="">Select {ownerType==='traveller'?'traveller':'payment'}</option>{owners.map((item:any)=><option key={item.id} value={item.id}>{ownerType==='traveller'?item.name:item.reference} · {ownerType==='traveller'?item.group||'Individual':money(item.amount)}</option>)}</select></label>
-        <label>Document type<select value={category} onChange={e=>setCategory(e.target.value)}>{(ownerType==='traveller'?['Passport','Visa','Photograph','Flight ticket','Travel insurance','Other']:['Payment receipt','Bank transfer evidence','Invoice','Refund evidence','Other']).map(value=><option key={value}>{value}</option>)}</select></label>
-      </div>
-      <label className="document-dropzone" htmlFor="routehq-document-file"><Upload size={21}/><strong>{file?file.name:'Choose a document to upload'}</strong><span>PDF, JPG, PNG or WebP · Up to 25 MB</span><input id="routehq-document-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" onChange={e=>setFile(e.target.files?.[0]||null)}/></label>
-      {uploadError&&<p className="document-upload-error" role="alert">{uploadError}</p>}
-      {uploadNotice&&<p className="document-upload-success" role="status">{uploadNotice}</p>}
-      <div className="document-upload-actions"><span>Passport files are private and never exposed through public URLs.</span><Button disabled={!file||!ownerId||uploading} onClick={()=>void upload()}>{uploading?<><LoaderCircle size={15}/> Uploading…</>:<><Upload size={15}/> Upload securely</>}</Button></div>
-    </section>
-    <TableShell><table><thead><tr><th><SelectAllCheckbox /></th><th>Document</th><th>Category</th><th>Related record</th><th>Recorded</th><th>Status</th><th>File</th><th>Actions</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id}><td><RecordCheckbox id={item.id} /></td><td><strong>{item.name}</strong></td><td>{item.category}</td><td>{item.relatedType}<span className="cell-sub">{item.relatedReference}</span></td><td>{shortDate(item.recordedAt)}</td><td><Badge>{item.status}</Badge></td><td>{signedLinks[item.id]?<a className="table-link" href={signedLinks[item.id]} target="_blank" rel="noreferrer">Open file <ExternalLink size={14}/></a>:item.url&&(item.url.startsWith('https://')||item.url.startsWith('http://'))?<a className="table-link" href={item.url} target="_blank" rel="noreferrer">Open link <ExternalLink size={14}/></a>:'Private file'}</td><td><span className="cell-sub">Access controlled</span></td></tr>)}</tbody></table>{!rows.length && <EmptyState title="No documents found" text="Upload a document or adjust your search and filters." />}</TableShell>
-    <p className="info-note"><Info size={16}/> OCR is reserved as a future processing step. Files upload now; no passport or receipt text is extracted until an OCR provider is deliberately connected.</p>
-  </Module>
-}
 
 export function SettingsPage() {
   const { mode } = useAppStore()

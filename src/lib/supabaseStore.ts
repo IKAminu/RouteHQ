@@ -271,7 +271,7 @@ async function saveStore(data: StoreData, previous?: StoreData) {
       if (error) throw error
     }
   }
-  await saveRows('documents',documentRows)
+  // Uploaded files are created only by the dedicated private-storage upload flow.
 }
 
 export const loadLiveStore = () => loadStore()
@@ -280,7 +280,18 @@ export const saveLiveStore = (data: StoreData, previous?: StoreData) => saveStor
 export async function deleteLiveRecords(table: string, ids: string[]) {
   if (!ids.length) return
   const { agencyId } = await agencyContext()
+  let storagePaths: string[] = []
+  if (table === 'documents') {
+    const { data: files, error: fileError } = await client().from('documents').select('id,storage_path')
+      .eq('agency_id',agencyId).in('id',ids)
+    if (fileError) throw fileError
+    storagePaths = (files||[]).map(row=>row.storage_path).filter((path):path is string=>!!path)
+  }
   const { data, error } = await client().from(table).delete().in('id',ids).eq('agency_id',agencyId).select('id')
   if (error) throw error
   if ((data?.length ?? 0) !== ids.length) throw new Error('Not all selected records could be deleted. Check permissions or whether a record has linked data.')
+  if (table === 'documents' && storagePaths.length) {
+    const { error: storageError } = await client().storage.from('routehq-documents').remove(storagePaths)
+    if (storageError) throw new Error('Document record was deleted, but its private file could not be removed: '+storageError.message)
+  }
 }

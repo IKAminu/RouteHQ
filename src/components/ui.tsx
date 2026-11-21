@@ -1,5 +1,5 @@
 import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { Children, cloneElement, isValidElement, useMemo, useRef, useState } from 'react'
+import { Children, cloneElement, isValidElement, useEffect, useMemo, useRef, useState } from 'react'
 import type { ButtonHTMLAttributes, InputHTMLAttributes, PointerEvent as ReactPointerEvent, ReactElement, ReactNode, SelectHTMLAttributes } from 'react'
 
 export const Button = ({ className = '', variant = 'primary', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'ghost' | 'danger' }) => (
@@ -81,6 +81,14 @@ function countTableRows(node: ReactNode): number {
   return countTableRows(element.props.children)
 }
 
+function tableRowSignature(node: ReactNode): string {
+  if (Array.isArray(node)) return node.map(tableRowSignature).join('|')
+  if (!isValidElement(node)) return ''
+  const element = node as ReactElement<{ children?: ReactNode }>
+  if (element.type === 'tbody') return Children.toArray(element.props.children).map(child => isValidElement(child) ? String(child.key) : '').join('|')
+  return tableRowSignature(element.props.children)
+}
+
 function sliceTableRows(node: ReactNode, start: number, end: number): ReactNode {
   if (Array.isArray(node)) return node.map(child => sliceTableRows(child, start, end))
   if (!isValidElement(node)) return node
@@ -110,6 +118,8 @@ export function ProgressSteps({ steps, className = '' }: { steps: ProgressStepIt
 export function TableShell({ children }: { children: ReactNode }) {
   const [page, setPage] = useState(1)
   const rowCount = countTableRows(children)
+  const rowSignature = tableRowSignature(children)
+  useEffect(() => { setPage(1) }, [rowSignature])
   const pageCount = Math.max(1, Math.ceil(rowCount / TABLE_PAGE_SIZE))
   const safePage = Math.min(page, pageCount)
   const visible = useMemo(() => sliceTableRows(children, (safePage - 1) * TABLE_PAGE_SIZE, safePage * TABLE_PAGE_SIZE), [children, safePage])

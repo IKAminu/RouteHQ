@@ -76,6 +76,7 @@ export function PlatformConsole({email}:{email:string}){
    finally{setLoading(false)}
  },[])
  useEffect(()=>{void load()},[load])
+ useEffect(()=>{setApplicationPage(1);setAgencyPage(1);setSubscriptionPage(1)},[search])
  const pending=applications.filter(a=>['pending','under_review'].includes(a.status))
  const filteredAgencies=useMemo(()=>agencies.filter(a=>`${a.name} ${a.email||''} ${a.slug} ${a.status}`.toLowerCase().includes(search.toLowerCase())),[agencies,search])
  const filteredSubs=useMemo(()=> (overview?.subscriptions||[]).filter(s=>`${s.agency_name} ${s.plan_name||''} ${s.status}`.toLowerCase().includes(search.toLowerCase())),[overview,search])

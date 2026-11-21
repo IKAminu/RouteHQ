@@ -22,7 +22,7 @@ function RecordCheckbox({ id }: { id: string }) {
 function SelectAllCheckbox() {
   const selection = useContext(SelectionContext)
   if (!selection || !selection.ids.length) return null
-  return <input aria-label="Select all visible records" type="checkbox" checked={selection.ids.every((id) => selection.selected.includes(id))} ref={(element) => { if (element) element.indeterminate = selection.selected.length > 0 && !selection.ids.every((id) => selection.selected.includes(id)) }} onChange={selection.toggleAll} />
+  return <input aria-label="Select all matching records" type="checkbox" checked={selection.ids.every((id) => selection.selected.includes(id))} ref={(element) => { if (element) element.indeterminate = selection.selected.length > 0 && !selection.ids.every((id) => selection.selected.includes(id)) }} onChange={selection.toggleAll} />
 }
 
 function exportRecords(records: SelectableRecord[], filename: string) {
@@ -79,7 +79,7 @@ function Module({ title, description, actionLabel, actionType, children, options
     catch (error) { window.alert(error instanceof Error ? error.message : 'The selected records could not be deleted.') }
   }
   const selectionActions = recordType ? <div className="toolbar selection-toolbar"><span>{activeSelectedIds.length} selected</span><Button variant="secondary" disabled={!activeSelectedIds.length} onClick={() => exportRecords(selectedRecords, `routehq-selected-${recordType}.csv`)}><Download size={15} /> Export selected</Button><Button variant="danger" disabled={!activeSelectedIds.length} onClick={() => void removeSelected()}><Trash2 size={15} /> Delete selected</Button></div> : null
-  return <div className="page"><PageHeader title={title} description={description} action={<Button onClick={() => actionType && setAction(actionType)} disabled={!actionType}><Plus size={17} /> {actionLabel}</Button>} /><Toolbar query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} options={options} onExport={() => recordType ? exportRecords(records, `routehq-${recordType}.csv`) : exportVisibleTable()} selectionActions={selectionActions} /><SelectionContext.Provider value={selection}>{children}</SelectionContext.Provider><div className="table-footer"><span>{mode === 'demo' ? 'Showing sample records' : 'Showing agency records'}</span><span>{mode === 'demo' ? 'Changes are session-only' : 'Live database records'}</span></div></div>
+  return <div className="page"><PageHeader title={title} description={description} action={actionLabel ? <Button onClick={() => actionType && setAction(actionType)} disabled={!actionType}><Plus size={17} /> {actionLabel}</Button> : undefined} /><Toolbar query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} options={options} onExport={() => recordType ? exportRecords(records, `routehq-${recordType}.csv`) : exportVisibleTable()} selectionActions={selectionActions} /><SelectionContext.Provider value={selection}>{children}</SelectionContext.Provider><div className="table-footer"><span>{mode === 'demo' ? 'Showing sample records' : 'Showing agency records'}</span><span>{mode === 'demo' ? 'Changes are session-only' : 'Live database records'}</span></div></div>
 }
 
 const useFilter = () => {
@@ -394,7 +394,7 @@ export function DocumentsPage() {
       setUploadError(error instanceof Error?error.message:'The document could not be uploaded.')
     }finally{setUploading(false)}
   }
-  return <Module title="Documents" description="Upload private travel documents and payment evidence. Files are linked to one traveller or one payment." actionLabel="Upload document" actionType={undefined} options={['Valid', 'Expiring Soon', 'Needs Review']} {...controls}>
+  return <Module title="Documents" description="Upload private travel documents and payment evidence. Files are linked to one traveller or one payment." actionLabel="" options={['Valid', 'Expiring Soon', 'Needs Review']} {...controls}>
     <section className="document-upload-panel">
       <div className="document-upload-heading"><div><h2>Upload a document</h2><p>Files are stored in private RouteHQ storage. Access is checked against agency permissions.</p></div><FileUp size={21}/></div>
       <div className="document-upload-grid">

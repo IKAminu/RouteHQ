@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Activity, AlertTriangle, ArrowUpRight, Building2, CalendarClock, CheckCircle2, Copy, Database, FileText, HardDrive, RefreshCw, ShieldAlert, ShieldCheck, Users, WalletCards, Globe, KeyRound, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Badge, Button, EmptyState, ProgressSteps } from '@/components/ui'
+import { AppErrorScreen } from '@/components/AppErrorScreen'
 
 type Application = { id:string; agency_name:string; legal_name:string|null; contact_name:string; email:string; phone:string; requested_plan_code:string; status:string; submitted_at:string; reviewed_at:string|null; review_notes:string|null }
 type Agency = { id:string; name:string; slug:string; email:string|null; status:string; created_at:string; approved_at:string|null }
@@ -158,9 +159,9 @@ export function PlatformConsole({email}:{email:string}){
   <main className="platform-content">
    <div className="platform-title-row"><div><span className="platform-eyebrow">WEB4 DIGITAL SYSTEMS / OPERATIONS</span><h1>Platform overview</h1><p>Manage agencies, subscriptions and the infrastructure behind RouteHQ.</p></div><Button variant="secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Refresh data</Button></div>
    <nav className="platform-nav">{([{id:'overview',label:'Overview',icon:Activity},{id:'agencies',label:'Agencies',icon:Building2},{id:'websites',label:'Website intake',icon:Globe},{id:'subscriptions',label:'Subscriptions',icon:WalletCards},{id:'health',label:'System health',icon:HardDrive},{id:'activity',label:'Audit activity',icon:FileText}] as const).map(({id,label,icon:Icon})=><button key={id} className={tab===id?'active':''} onClick={()=>{setTab(id);setSearch('')}}><Icon size={16}/>{label}{id==='agencies'&&pending.length>0&&<i>{pending.length}</i>}</button>)}</nav></aside>
-   {error&&<div className="platform-alert platform-alert-error"><AlertTriangle size={17}/><span>{error}</span></div>}
+   {error&&overview&&<div className="platform-alert platform-alert-error"><AlertTriangle size={17}/><span>{error}</span></div>}
    {notice&&<div className="platform-alert platform-alert-success"><CheckCircle2 size={17}/><span>{notice}</span></div>}
-   {loading&&!overview?<div className="platform-loading"><span/><span/><span/><p>Loading platform data…</p></div>:!overview?<EmptyState title="Platform data unavailable" text="Refresh the dashboard. If the problem continues, inspect the Supabase project and admin permissions."/>:<>
+   {loading&&!overview?<div className="platform-loading"><span/><span/><span/><p>Loading platform data…</p></div>:!overview?<AppErrorScreen kind="database" detail={error || "Could not load platform operations data."} onRetry={()=>void load()}/>:<>
    {tab==='overview'&&<>
     <div className="platform-metrics-grid">
      <Metric label="Total agencies" value={metrics.agencies_total||0} detail={`${metrics.agencies_active||0} active · ${metrics.agencies_suspended||0} suspended`} icon={Building2}/>

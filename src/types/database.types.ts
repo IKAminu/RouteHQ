@@ -1449,7 +1449,7 @@ export type Database = {
       }
       supplier_costs: {
         Row: {
-          agency_id: string | null
+          agency_id: string
           amount_minor: number
           booking_id: string | null
           created_at: string
@@ -1462,7 +1462,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          agency_id: string | null
+          agency_id: string
           amount_minor: number
           booking_id?: string | null
           created_at?: string
@@ -1475,7 +1475,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          agency_id?: string | null
+          agency_id?: string
           amount_minor?: number
           booking_id?: string | null
           created_at?: string
@@ -1513,7 +1513,7 @@ export type Database = {
       }
       supplier_payments: {
         Row: {
-          agency_id: string | null
+          agency_id: string
           amount_minor: number
           created_at: string
           currency_code: string
@@ -1526,7 +1526,7 @@ export type Database = {
           supplier_cost_id: string
         }
         Insert: {
-          agency_id: string | null
+          agency_id: string
           amount_minor: number
           created_at?: string
           currency_code?: string
@@ -1539,7 +1539,7 @@ export type Database = {
           supplier_cost_id: string
         }
         Update: {
-          agency_id?: string | null
+          agency_id?: string
           amount_minor?: number
           created_at?: string
           currency_code?: string

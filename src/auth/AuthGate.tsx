@@ -248,7 +248,7 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered, initia
       const { data, error: signupError } = await supabase!.auth.signUp({
         email: normalizedEmail,
         password,
-        options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.href },
+        options: { data: { full_name: fullName.trim() }, emailRedirectTo: new URL(import.meta.env.BASE_URL, window.location.origin).toString() },
       })
       if (signupError) throw signupError
       if (data.session) {

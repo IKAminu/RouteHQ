@@ -377,7 +377,7 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered, initia
       </form>}
       {step === 'recover' && <form className="auth-form" onSubmit={handlePasswordRecovery}>
         <label className="field-group">New password<input className="field" type="password" autoComplete="new-password" minLength={12} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /></label>
-        <label className="field-group">Confirm new password<input className="field" type="password" autoComplete="new-password" minLength={10} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /></label>
+        <label className="field-group">Confirm new password<input className="field" type="password" autoComplete="new-password" minLength={12} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /></label>
         {error && <p className="auth-error" role="alert">{error}</p>}
         <button className="button button-primary auth-submit" disabled={busy || newPassword.length < 12 || newPassword !== confirmPassword}>{busy ? 'Updating password…' : 'Update password'}</button>
       </form>}

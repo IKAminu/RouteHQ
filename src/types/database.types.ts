@@ -1415,6 +1415,7 @@ export type Database = {
         }
         Update: {
           agency_id?: string | null
+          agency_name_snapshot?: string | null
           amount_minor?: number | null
           billing_interval?: string
           billing_provider?: string | null

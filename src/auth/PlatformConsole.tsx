@@ -154,7 +154,7 @@ export function PlatformConsole({email}:{email:string}){
  const storagePct=Math.min(100,storageBytes/storageLimit*100)
  return <div className="platform-console">
   <aside className="platform-sidebar"><div className="platform-brand"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt=""/><div><strong>RouteHQ</strong><span>PLATFORM CONTROL CENTRE</span></div></div><div className="platform-sidebar-caption">PLATFORM ADMINISTRATION</div>
-  <main className="platform-main"><header className="platform-top"><div className="platform-top-label">Platform operations</div><div className="platform-account"><span className="platform-live-dot"/><span>Platform administrator</span><span className="platform-account-email">{email}</span><Button variant="secondary" onClick={()=>void supabase?.auth.signOut()}>Sign out</Button></div></header>
+  <div className="platform-main"><header className="platform-top"><div className="platform-top-label">Platform operations</div><div className="platform-account"><span className="platform-live-dot"/><span>Platform administrator</span><span className="platform-account-email">{email}</span><Button variant="secondary" onClick={()=>void supabase?.auth.signOut()}>Sign out</Button></div></header>
   <main className="platform-content">
    <div className="platform-title-row"><div><span className="platform-eyebrow">WEB4 DIGITAL SYSTEMS / OPERATIONS</span><h1>Platform overview</h1><p>Manage agencies, subscriptions and the infrastructure behind RouteHQ.</p></div><Button variant="secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Refresh data</Button></div>
    <nav className="platform-nav">{([{id:'overview',label:'Overview',icon:Activity},{id:'agencies',label:'Agencies',icon:Building2},{id:'websites',label:'Website intake',icon:Globe},{id:'subscriptions',label:'Subscriptions',icon:WalletCards},{id:'health',label:'System health',icon:HardDrive},{id:'activity',label:'Audit activity',icon:FileText}] as const).map(({id,label,icon:Icon})=><button key={id} className={tab===id?'active':''} onClick={()=>{setTab(id);setSearch('')}}><Icon size={16}/>{label}{id==='agencies'&&pending.length>0&&<i>{pending.length}</i>}</button>)}</nav></aside>
@@ -219,6 +219,6 @@ Body:
    {tab==='activity'&&<Panel title="Platform audit log" description="Administrative actions recorded by the database.">{overview.recent_activity.length===0?<EmptyState title="No audit activity" text="Platform actions will appear here."/>:overview.recent_activity.map(item=><article className="platform-activity-row" key={item.id}><div className="platform-activity-icon"><ShieldCheck size={16}/></div><div><strong>{item.action}</strong><span>{item.actor_email||'System'} · {item.entity_type||'Platform'} · {new Date(item.created_at).toLocaleString()}</span></div></article>)}</Panel>}
    </>}
    <footer className="platform-footer"><span>RouteHQ Platform Operations</span><span>Data refreshed {overview?new Date(overview.generated_at).toLocaleTimeString(): '—'} · Admin access protected by MFA</span></footer>
-  </main></main>
+  </main></div>
  </div>
 }

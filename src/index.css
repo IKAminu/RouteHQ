@@ -3796,3 +3796,36 @@
 :root[data-theme='dark'] .app-error-actions button { background:#1c2026; border-color:#3a4049; color:#f4f4f5; }
 :root[data-theme='dark'] .app-error-actions button:first-child { background:var(--color-brand-500); border-color:var(--color-brand-500); color:#fff; }
 :root[data-theme='dark'] .app-error-code { background:#242830; color:#c5cbd4; }
+
+
+/* Platform console uses the same left-navigation workspace structure as agency accounts. */
+.platform-console{min-height:100vh;display:flex;background:#f4f6fa;color:#18283d;font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+.platform-sidebar{position:fixed;inset:0 auto 0 0;z-index:40;display:flex;width:16rem;flex-direction:column;overflow-y:auto;border-right:1px solid #e0e6ee;background:#fff}
+.platform-sidebar .platform-brand{min-height:4.5rem;padding:.65rem 1.25rem;border-bottom:1px solid #e0e6ee}
+.platform-sidebar-caption{margin:1.45rem .95rem .55rem;color:#9b968d;font-size:.63rem;font-weight:800;letter-spacing:.1em}
+.platform-nav{display:flex;flex:1;flex-direction:column;gap:1.3rem;overflow-y:auto;padding:.45rem .75rem 1rem}
+.platform-nav button{position:relative;display:flex;align-items:center;gap:.75rem;width:100%;min-height:2.55rem;border:0;border-radius:.5rem;background:transparent;padding:.62rem .7rem;color:#5f5b54;font-size:.82rem;font-weight:550;text-align:left;cursor:pointer}
+.platform-nav button:hover{background:#f7f5f1;color:#18181b}
+.platform-nav button.active{background:#fff7ed;color:#a84b10;font-weight:650}
+.platform-nav button.active:before{position:absolute;left:0;width:.2rem;height:1.5rem;border-radius:0 .2rem .2rem 0;background:#e87521;content:''}
+.platform-nav button i{display:grid;min-width:17px;height:17px;place-items:center;margin-left:auto;border-radius:20px;background:#fff0e3;color:#a94e17;font-size:10px;font-style:normal}
+.platform-main{min-width:0;min-height:100vh;flex:1;margin-left:16rem}
+.platform-top{position:sticky;top:0;z-index:30;height:4.5rem;padding:0 2rem;background:rgba(255,255,255,.94);border-bottom:1px solid #e0e6ee;color:#18283d;backdrop-filter:blur(.75rem)}
+.platform-top-label{font-size:.85rem;font-weight:700;color:#26364b}
+.platform-account{color:#5f6c7c}
+.platform-account-email{color:#7d8998;border-left-color:#e0e6ee}
+.platform-content{max-width:none;margin:0;padding:2rem clamp(18px,3vw,42px) 28px}
+@media(max-width:760px){
+ .platform-console{display:block}
+ .platform-sidebar{position:sticky;inset:auto;width:100%;height:auto;overflow:visible;border-right:0;border-bottom:1px solid #e0e6ee}
+ .platform-sidebar .platform-brand{min-height:3.8rem}
+ .platform-sidebar-caption{display:none}
+ .platform-nav{flex-direction:row;gap:.25rem;overflow-x:auto;padding:.45rem .65rem}
+ .platform-nav button{width:auto;min-width:max-content;min-height:2.4rem;padding:.55rem .65rem}
+ .platform-nav button.active:before{top:auto;bottom:0;left:.65rem;width:calc(100% - 1.3rem);height:2px;border-radius:2px 2px 0 0}
+ .platform-main{margin-left:0}
+ .platform-top{position:relative;height:auto;min-height:3.8rem;gap:10px;padding:.55rem .85rem}
+ .platform-account{gap:7px;font-size:10px}
+ .platform-account-email{display:none}
+ .platform-content{padding:1.2rem .85rem}
+}

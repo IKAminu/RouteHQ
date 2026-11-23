@@ -42,7 +42,7 @@ function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
         aria-hidden="true"
         poster="https://images.pexels.com/videos/5649209/free-video-5649209.jpg?auto=compress&cs=tinysrgb&w=1600"
       >
-        <source src="https://videos.pexels.com/video-files/5649209/5649209-hd_1920_1080_25fps.mp4" type="video/mp4" />
+        <source src="https://videos.pexels.com/video-files/5649209/5649209-hd_1920_1280_25fps.mp4" type="video/mp4" />
       </video>
       <div className="auth-motion-shade"></div>
           </div>}
@@ -211,8 +211,8 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered, initia
     event.preventDefault()
     setError('')
     setInfo('')
-    if (newPassword.length < 10) {
-      setError('Use a password with at least 10 characters.')
+    if (newPassword.length < 12) {
+      setError('Use a password with at least 12 characters.')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -354,18 +354,18 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered, initia
           <label className="field-group">Email<input className="field" type="email" autoComplete="username" placeholder="you@example.com" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
           <label className="field-group">Password
             <span className="auth-password-wrap">
-              <input className="field" type={showPassword ? 'text' : 'password'} autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} placeholder="Enter password" minLength={authMode === 'signup' ? 10 : undefined} required value={password} onChange={(event) => setPassword(event.target.value)} />
+              <input className="field" type={showPassword ? 'text' : 'password'} autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} placeholder="Enter password" minLength={authMode === 'signup' ? 12 : undefined} required value={password} onChange={(event) => setPassword(event.target.value)} />
               <button className="auth-password-toggle" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
             </span>
           </label>
           {authMode === 'login' && <div className="auth-forgot-row"><button type="button" onClick={() => { setStep('forgot'); setError(''); setInfo('') }}>Forgot password?</button></div>}
-          {authMode === 'signup' && <p className="auth-help">Use at least 10 characters. Email confirmation may be required.</p>}
+          {authMode === 'signup' && <p className="auth-help">Use at least 12 characters. Email confirmation may be required.</p>}
           {info && <p className="auth-info" role="status">{info}</p>}
           {error && <p className="auth-error" role="alert">{error}</p>}
           <button className="button button-primary auth-submit" disabled={busy}>{busy ? (authMode === 'signup' ? 'Creating account…' : 'Signing in…') : (authMode === 'signup' ? 'Create account' : 'Login')}</button>
           <div className="auth-divider"><span>OR</span></div>
           <button className="auth-google-button" type="button" disabled={busy} onClick={handleGoogleSignIn}>
-            <svg width="20" height="20" viewBox="0 0 21 20" fill="none" aria-hidden="true"><path d="M19.6 10.23c0-.68-.06-1.34-.18-1.98H10.5v3.75h5.1a4.36 4.36 0 0 1-1.89 2.86v2.34h3.06c1.79-1.65 2.83-4.08 2.83-6.97Z" fill="#4285F4"/><path d="M10.5 20c2.55 0 4.69-.85 6.25-2.3l-3.06-2.34c-.85.57-1.93.91-3.19.91-2.46 0-4.54-1.66-5.28-3.89H2.06v2.41A9.44 9.44 0 0 0 10.5 20Z" fill="#34A853"/><path d="M5.22 12.38a5.67 5.67 0 0 1 0-3.76V6.21H2.06a9.5 9.5 0 0 0 0 8.58l3.16-2.41Z" fill="#FBBC05"/><path d="M10.5 4.73c1.39 0 2.64.48 3.62 1.43l2.72-2.72C15.18 1.91 13.05 1 10.5 1a9.44 9.44 0 0 0-8.44 5.21l3.16 2.41c.74-2.23 2.82-3.89 5.28-3.89Z" fill="#EA4335"/></svg>
+            <svg width="20" height="20" viewBox="0 0 21 20" fill="none" aria-hidden="true"><path d="M19.6 12.23c0-.68-.06-1.34-.18-1.98H12.5v3.75h5.1a4.36 4.36 0 0 1-1.89 2.86v2.34h3.06c1.79-1.65 2.83-4.08 2.83-6.97Z" fill="#4285F4"/><path d="M12.5 20c2.55 0 4.69-.85 6.25-2.3l-3.06-2.34c-.85.57-1.93.91-3.19.91-2.46 0-4.54-1.66-5.28-3.89H2.06v2.41A9.44 9.44 0 0 0 12.5 20Z" fill="#34A853"/><path d="M5.22 12.38a5.67 5.67 0 0 1 0-3.76V6.21H2.06a9.5 9.5 0 0 0 0 8.58l3.16-2.41Z" fill="#FBBC05"/><path d="M12.5 4.73c1.39 0 2.64.48 3.62 1.43l2.72-2.72C15.18 1.91 13.05 1 12.5 1a9.44 9.44 0 0 0-8.44 5.21l3.16 2.41c.74-2.23 2.82-3.89 5.28-3.89Z" fill="#EA4335"/></svg>
             <span>Continue with Google</span>
           </button>
         </form>
@@ -376,10 +376,10 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered, initia
         <button className="button button-primary auth-submit" disabled={busy}>{busy ? 'Sending link…' : 'Send password-reset link'}</button>
       </form>}
       {step === 'recover' && <form className="auth-form" onSubmit={handlePasswordRecovery}>
-        <label className="field-group">New password<input className="field" type="password" autoComplete="new-password" minLength={10} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /></label>
-        <label className="field-group">Confirm new password<input className="field" type="password" autoComplete="new-password" minLength={10} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /></label>
+        <label className="field-group">New password<input className="field" type="password" autoComplete="new-password" minLength={12} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /></label>
+        <label className="field-group">Confirm new password<input className="field" type="password" autoComplete="new-password" minLength={12} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /></label>
         {error && <p className="auth-error" role="alert">{error}</p>}
-        <button className="button button-primary auth-submit" disabled={busy || newPassword.length < 10 || newPassword !== confirmPassword}>{busy ? 'Updating password…' : 'Update password'}</button>
+        <button className="button button-primary auth-submit" disabled={busy || newPassword.length < 12 || newPassword !== confirmPassword}>{busy ? 'Updating password…' : 'Update password'}</button>
       </form>}
 
       {step === 'enroll' && <form ref={verifyFormRef} className="auth-form" onSubmit={handleVerify}>

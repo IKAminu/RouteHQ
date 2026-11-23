@@ -7,7 +7,7 @@ import { AppErrorScreen } from '@/components/AppErrorScreen'
 
 type Application = { id:string; agency_name:string; legal_name:string|null; contact_name:string; email:string; phone:string; requested_plan_code:string; status:string; submitted_at:string; reviewed_at:string|null; review_notes:string|null }
 type Agency = { id:string; name:string; slug:string; email:string|null; status:string; created_at:string; approved_at:string|null }
-type Subscription = { id:string; agency_id:string; agency_name:string; agency_status:string; plan_code:string|null; plan_name:string|null; status:string; currency_code:string; amount_minor:number|null; billing_interval:string; started_at:string|null; ends_at:string|null; cancel_at_period_end:boolean; created_at:string }
+type Subscription = { id:string; agency_id:string|null; agency_name:string; agency_status:string; plan_code:string|null; plan_name:string|null; status:string; currency_code:string; amount_minor:number|null; billing_interval:string; started_at:string|null; ends_at:string|null; cancel_at_period_end:boolean; created_at:string }
 type ActivityItem = { id:string; action:string; entity_type:string|null; created_at:string; actor_email:string|null; details:Record<string,unknown> }
 type UserActivity = { users_total:number; users_active:number; memberships_active:number }
 type DeletionRequest = { id:string; agency_id:string|null; agency_name_snapshot:string; agency_slug_snapshot:string; requester_email_snapshot:string|null; reason:string; status:string; requested_at:string; reviewed_at:string|null; review_notes:string|null; processing_error:string|null }

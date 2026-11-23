@@ -375,6 +375,52 @@ export function SuppliersPage() {
 export function SettingsPage() {
   const { mode } = useAppStore()
   const { theme, setTheme } = useTheme()
+  const [agency, setAgency] = useState<{id:string;name:string;isOwner:boolean}|null>(null)
+  const [request, setRequest] = useState<{id:string;status:string;reason:string;requested_at:string;review_notes:string|null}|null>(null)
+  const [reason, setReason] = useState('')
+  const [loadingDeletion, setLoadingDeletion] = useState(true)
+  const [submittingDeletion, setSubmittingDeletion] = useState(false)
+  const [deletionError, setDeletionError] = useState('')
+  const [deletionNotice, setDeletionNotice] = useState('')
+
+  const loadDeletionStatus = async () => {
+    if (!supabase || mode !== 'live') { setLoadingDeletion(false); return }
+    setLoadingDeletion(true); setDeletionError('')
+    try {
+      const { data: context, error: contextError } = await supabase.rpc('get_my_agency_context')
+      if (contextError) throw contextError
+      const current = Array.isArray(context) ? context[0] : context
+      if (!current?.agency_id) throw new Error('The active agency workspace could not be verified.')
+      setAgency({ id: current.agency_id, name: current.agency_name, isOwner: Boolean(current.is_owner) })
+      const { data, error } = await supabase.from('agency_deletion_requests')
+        .select('id,status,reason,requested_at,review_notes')
+        .eq('agency_id', current.agency_id)
+        .order('requested_at', { ascending: false })
+        .limit(1)
+      if (error) throw error
+      setRequest((data?.[0] as typeof request) || null)
+    } catch (error) {
+      setDeletionError(error instanceof Error ? error.message : 'Could not load deletion request status.')
+    } finally { setLoadingDeletion(false) }
+  }
+
+  useEffect(() => { void loadDeletionStatus() }, [mode])
+
+  const submitDeletionRequest = async () => {
+    if (!supabase || !agency?.isOwner) return
+    setSubmittingDeletion(true); setDeletionError(''); setDeletionNotice('')
+    try {
+      const { data, error } = await supabase.rpc('request_agency_deletion', { _reason: reason.trim() })
+      if (error) throw error
+      setDeletionNotice('Your request has been submitted. Your workspace remains active until RouteHQ reviews and completes it.')
+      setReason('')
+      await loadDeletionStatus()
+    } catch (error) {
+      setDeletionError(error instanceof Error ? error.message : 'Could not submit the deletion request.')
+    } finally { setSubmittingDeletion(false) }
+  }
+
+  const requestOpen = request && ['pending','approved','processing'].includes(request.status)
   return <div className="page"><PageHeader title="Settings" description="Manage your workspace preferences and application configuration." /><div className="settings-grid">
     <section className="settings-section theme-settings"><h2>Appearance</h2><p>Choose how RouteHQ looks on this device. Your preference is saved automatically.</p>
       <div className="theme-options" role="group" aria-label="Colour theme">
@@ -382,10 +428,18 @@ export function SettingsPage() {
         <button type="button" className={`theme-option ${theme === 'dark' ? 'selected' : ''}`} aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}><span className="theme-preview theme-preview-dark"><Moon size={20} /></span><span><strong>Night mode</strong><small>Graphite surfaces with restrained orange highlights</small></span>{theme === 'dark' && <span className="theme-selected">Selected</span>}</button>
       </div>
     </section>
-    <section className="settings-section"><h2>Workspace identity</h2><p>This preview uses demonstration workspace details. Each customer workspace will have its own agency profile after tenant onboarding is implemented.</p><dl><div><dt>Product</dt><dd>RouteHQ</dd></div><div><dt>Workspace</dt><dd>Demo travel agency</dd></div><div><dt>Default currency</dt><dd>Nigerian Naira (NGN)</dd></div><div><dt>Time zone</dt><dd>Africa/Lagos</dd></div></dl></section>
-    <section className="settings-section"><h2>Integration status</h2><p>External services are not represented as connected until configured.</p><div className="integration-list"><div><span><strong>Supabase</strong><small>Database and authentication</small></span><Badge>{mode === 'live' ? 'Connected' : 'Demo mode'}</Badge></div><div><span><strong>Google Drive</strong><small>Document links only</small></span><Badge>Not configured</Badge></div><div><span><strong>Website lead capture</strong><small>Secure tenant-aware endpoint required</small></span><Badge>Not configured</Badge></div><div><span><strong>Meta Ads</strong><small>Attribution and lead integration</small></span><Badge>Not configured</Badge></div></div></section>
-    <section className="settings-section"><h2>Account and access</h2><p>Public customer registration and agency account provisioning are not enabled in this preview.</p><dl><div><dt>Current profile</dt><dd>{mode === 'live' ? 'Authorised account' : 'Guest user'}</dd></div><div><dt>Access</dt><dd>{mode === 'live' ? 'Connected workspace' : 'Sample records only'}</dd></div><div><dt>Agency isolation</dt><dd>Not yet implemented</dd></div></dl></section>
+    <section className="settings-section"><h2>Workspace identity</h2><p>Your workspace identity and operating defaults.</p><dl><div><dt>Product</dt><dd>RouteHQ</dd></div><div><dt>Workspace</dt><dd>{agency?.name || 'Loading workspace…'}</dd></div><div><dt>Default currency</dt><dd>Nigerian Naira (NGN)</dd></div><div><dt>Time zone</dt><dd>Africa/Lagos</dd></div></dl></section>
+    <section className="settings-section"><h2>Integration status</h2><p>External services are not represented as connected until configured.</p><div className="integration-list"><div><span><strong>Supabase</strong><small>Database and authentication</small></span><Badge>{mode === 'live' ? 'Connected' : 'Demo mode'}</Badge></div><div><span><strong>Google Drive</strong><small>Document links only</small></span><Badge>Not configured</Badge></div><div><span><strong>Website lead capture</strong><small>Agency website connection settings will be available here in a later update.</small></span><Badge>Coming later</Badge></div><div><span><strong>Meta Ads</strong><small>Attribution and lead integration</small></span><Badge>Not configured</Badge></div></div></section>
+    <section className="settings-section"><h2>Account and access</h2><p>Access is verified against your active agency membership and database permissions.</p><dl><div><dt>Current profile</dt><dd>{mode === 'live' ? 'Authorised account' : 'Guest user'}</dd></div><div><dt>Access</dt><dd>{mode === 'live' ? 'Connected workspace' : 'Sample records only'}</dd></div><div><dt>Agency isolation</dt><dd>Enforced by database row-level security</dd></div></dl></section>
     <section className="settings-section"><h2>Workspace mode</h2><p>{mode === 'live' ? 'This session is connected to the configured database. Changes are saved to that workspace.' : 'This guest workspace uses bundled sample records. Changes are temporary and are not sent to a live database.'}</p><div className="code-line">{mode === 'live' ? 'CONNECTED WORKSPACE' : 'DEMO MODE'}</div></section>
+    <section className="settings-section settings-danger-zone"><h2>Request workspace deletion</h2><p>Deleting an agency is not immediate. An agency owner must submit a request, and RouteHQ must review and approve it before a platform administrator can remove the workspace.</p>
+      {loadingDeletion ? <p>Checking deletion request status…</p> : mode !== 'live' ? <p>Deletion requests are available only in a live agency workspace.</p> : !agency?.isOwner ? <p>Only the agency owner can request workspace deletion. Contact your agency owner if this is necessary.</p> : <>
+        {request && <div className="deletion-request-status"><div><strong>Latest request</strong><Badge>{request.status}</Badge></div><p>Submitted {new Date(request.requested_at).toLocaleString()}</p>{request.reason && <p>{request.reason}</p>}{request.review_notes && <p>Review note: {request.review_notes}</p>}</div>}
+        {requestOpen ? <p>Your request is {request.status}. Your workspace remains available while it is being reviewed. No agency data has been deleted.</p> : <><label className="settings-field-label" htmlFor="agency-deletion-reason">Reason for deletion (optional)</label><textarea id="agency-deletion-reason" rows={3} maxLength={2000} value={reason} onChange={event => setReason(event.target.value)} placeholder="Tell us why you are requesting deletion."/><Button variant="danger" disabled={submittingDeletion} onClick={() => void submitDeletionRequest()}>{submittingDeletion ? 'Submitting request…' : 'Submit deletion request'}</Button></>}
+      </>}
+      {deletionNotice && <p className="settings-success" role="status">{deletionNotice}</p>}
+      {deletionError && <p className="settings-error" role="alert">{deletionError}</p>}
+    </section>
   </div></div>
 }
 

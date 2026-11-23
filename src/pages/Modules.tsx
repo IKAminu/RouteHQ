@@ -276,8 +276,8 @@ function RecordDocuments({ ownerType, ownerId }: { ownerType: 'traveller' | 'pay
       const record = { agency_id: agency.agency_id, document_type: ownerType === 'traveller' ? 'Travel document' : 'Payment receipt', file_name: file.name, storage_path: storagePath, mime_type: file.type, file_size_bytes: file.size, uploaded_by: userData.user?.id || null, traveller_id: ownerType === 'traveller' ? ownerId : null, payment_id: ownerType === 'payment' ? ownerId : null, customer_id: null, booking_id: null, ocr_status: 'not_configured', ocr_result: {} }
       const { data: savedDocument, error: insertError } = await supabase.from('documents').insert(record).select('id').single()
       if (insertError) throw insertError
-      const related = ownerType === 'traveller' ? travellers.find(item => item.id === ownerId) : payments.find(item => item.id === ownerId)
-      addUploadedDocument({ id: savedDocument.id, name: file.name, category: record.document_type, relatedType: ownerType === 'traveller' ? 'Traveller' : 'Payment', relatedReference: ownerType === 'traveller' ? related?.name || '' : related?.reference || '', url: storagePath, mimeType: file.type, fileSizeBytes: file.size, relatedId: ownerId, recordedAt: new Date().toISOString().slice(0, 10), status: 'Needs Review' })
+      const relatedReference = ownerType === 'traveller' ? travellers.find(item => item.id === ownerId)?.name || '' : payments.find(item => item.id === ownerId)?.reference || ''
+      addUploadedDocument({ id: savedDocument.id, name: file.name, category: record.document_type, relatedType: ownerType === 'traveller' ? 'Traveller' : 'Payment', relatedReference, url: storagePath, mimeType: file.type, fileSizeBytes: file.size, relatedId: ownerId, recordedAt: new Date().toISOString().slice(0, 10), status: 'Needs Review' })
     } catch (reason) {
       if (storagePath) await supabase.storage.from('routehq-documents').remove([storagePath])
       setError(reason instanceof Error ? reason.message : 'The file could not be attached.')

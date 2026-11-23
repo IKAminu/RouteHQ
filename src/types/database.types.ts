@@ -224,6 +224,68 @@ export type Database = {
           },
         ]
       }
+      agency_deletion_requests: {
+        Row: {
+          agency_id: string | null
+          agency_name_snapshot: string
+          agency_slug_snapshot: string
+          completed_at: string | null
+          id: string
+          processing_error: string | null
+          reason: string
+          requester_email_snapshot: string | null
+          requested_at: string
+          requested_by: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id?: string | null
+          agency_name_snapshot: string
+          agency_slug_snapshot: string
+          completed_at?: string | null
+          id?: string
+          processing_error?: string | null
+          reason?: string
+          requester_email_snapshot?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string | null
+          agency_name_snapshot?: string
+          agency_slug_snapshot?: string
+          completed_at?: string | null
+          id?: string
+          processing_error?: string | null
+          reason?: string
+          requester_email_snapshot?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_deletion_requests_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agency_integrations: {
         Row: {
           agency_id: string
@@ -1316,7 +1378,8 @@ export type Database = {
       }
       subscriptions: {
         Row: {
-          agency_id: string
+          agency_id: string | null
+          agency_name_snapshot: string | null
           amount_minor: number | null
           billing_interval: string
           billing_provider: string | null
@@ -1333,7 +1396,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          agency_id: string
+          agency_id: string | null
+          agency_name_snapshot?: string | null
           amount_minor?: number | null
           billing_interval?: string
           billing_provider?: string | null
@@ -1350,7 +1414,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          agency_id?: string
+          agency_id?: string | null
           amount_minor?: number | null
           billing_interval?: string
           billing_provider?: string | null
@@ -1385,7 +1449,7 @@ export type Database = {
       }
       supplier_costs: {
         Row: {
-          agency_id: string
+          agency_id: string | null
           amount_minor: number
           booking_id: string | null
           created_at: string
@@ -1398,7 +1462,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          agency_id: string
+          agency_id: string | null
           amount_minor: number
           booking_id?: string | null
           created_at?: string
@@ -1411,7 +1475,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          agency_id?: string
+          agency_id?: string | null
           amount_minor?: number
           booking_id?: string | null
           created_at?: string
@@ -1449,7 +1513,7 @@ export type Database = {
       }
       supplier_payments: {
         Row: {
-          agency_id: string
+          agency_id: string | null
           amount_minor: number
           created_at: string
           currency_code: string
@@ -1462,7 +1526,7 @@ export type Database = {
           supplier_cost_id: string
         }
         Insert: {
-          agency_id: string
+          agency_id: string | null
           amount_minor: number
           created_at?: string
           currency_code?: string
@@ -1475,7 +1539,7 @@ export type Database = {
           supplier_cost_id: string
         }
         Update: {
-          agency_id?: string
+          agency_id?: string | null
           amount_minor?: number
           created_at?: string
           currency_code?: string

@@ -410,7 +410,7 @@ export function SettingsPage() {
     if (!supabase || !agency?.isOwner) return
     setSubmittingDeletion(true); setDeletionError(''); setDeletionNotice('')
     try {
-      const { data, error } = await supabase.rpc('request_agency_deletion', { _reason: reason.trim() })
+      const { error } = await supabase.rpc('request_agency_deletion', { _reason: reason.trim() })
       if (error) throw error
       setDeletionNotice('Your request has been submitted. Your workspace remains active until RouteHQ reviews and completes it.')
       setReason('')

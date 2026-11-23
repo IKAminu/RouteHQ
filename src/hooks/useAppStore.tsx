@@ -25,6 +25,7 @@ type AppStore = {
   supplierCosts: SupplierCost[]
   supplierPayments: SupplierPayment[]
   documents: DocumentRecord[]
+  addUploadedDocument: (document: DocumentRecord) => void
   action: QuickActionType | null
   setAction: (action: QuickActionType | null, defaults?: Record<string, string>) => void
   actionDefaults: Record<string, string>
@@ -180,6 +181,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       void supabase!.removeChannel(channel)
     }
   }, [dataReady, dataError])
+  const addUploadedDocument = (document: DocumentRecord) => setDocuments((items) => [document, ...items])
+
   const [action, setActionState] = useState<QuickActionType | null>(null)
   const [actionDefaults, setActionDefaults] = useState<Record<string, string>>({})
   const setAction = (nextAction: QuickActionType | null, defaults: Record<string, string> = {}) => { setActionState(nextAction); setActionDefaults(nextAction ? defaults : {}) }
@@ -385,7 +388,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const retrySave = () => { setSaveError(null); setSaveRetry((attempt) => attempt + 1) }
   const retryLoad = () => { setDataError(null); setDataReady(false); setLoadRetry((attempt) => attempt + 1) }
 
-  const value = useMemo(() => ({ mode, saveNotice, saveError, retrySave, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, action, setAction, actionDefaults, deleteRecords, undoAvailable, undoDelete, addRecord, editing, setEditing, updateRecord, convertLead, reversePayment, voidSupplierPayment }), [mode, saveNotice, saveError, undoAvailable, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, action, actionDefaults, editing])
+  const value = useMemo(() => ({ mode, saveNotice, saveError, retrySave, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, addUploadedDocument, action, setAction, actionDefaults, deleteRecords, undoAvailable, undoDelete, addRecord, editing, setEditing, updateRecord, convertLead, reversePayment, voidSupplierPayment }), [mode, saveNotice, saveError, undoAvailable, leads, customers, bookings, packages, payments, travellers, supplierCosts, supplierPayments, documents, action, actionDefaults, editing])
   return <StoreContext.Provider value={value}>{dataError ? <AppErrorScreen kind="database" detail={dataError} onRetry={retryLoad} /> : !dataReady ? (showLoadingSkeleton ? <WorkspaceSkeleton /> : <div className="workspace-loading-pending" role="status" aria-label="Loading workspace" />) : <>{saveError && <div className="data-save-error" role="alert"><div><strong>Some changes haven't reached the database.</strong><span>{saveError}</span></div><button type="button" onClick={retrySave}>Retry save</button></div>}{children}</>}</StoreContext.Provider>
 }
 

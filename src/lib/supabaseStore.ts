@@ -31,7 +31,7 @@ async function rows(table: string, agencyId: string): Promise<Row[]> {
     let query = client().from(table).select('*').eq('agency_id', agencyId).order('id', { ascending: true }).limit(pageSize)
     if (lastId) query = query.gt('id', lastId)
     const { data, error } = await query
-    if (error) throw new Error(`Could not load the ${table.replaceAll('_', ' ')} records: ${error.message}${error.code ? ` (Code: ${error.code})` : ''}${error.details ? ` · ${error.details}` : ''}${error.hint ? ` · ${error.hint}` : ''}`)
+    if (error) throw new Error(`Could not load the ${table.replace(/_/g, ' ')} records: ${error.message}${error.code ? ` (Code: ${error.code})` : ''}${error.details ? ` · ${error.details}` : ''}${error.hint ? ` · ${error.hint}` : ''}`)
     const page = (data ?? []) as Row[]
     records.push(...page)
     if (page.length < pageSize) break

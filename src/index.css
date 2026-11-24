@@ -781,16 +781,16 @@
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --color-brand-50: #202024;
-  --color-brand-100: #252529;
-  --color-brand-500: #f07824;
+  --color-brand-50: var(--accent);
+  --color-brand-100: #38291e;
+  --color-brand-500: var(--primary);
   --color-brand-600: #ff8a36;
-  --color-brand-700: #ffad70;
-  --color-ink: #e8f0fa;
-  --color-muted: #9db2ca;
-  --color-line: #303036;
-  --color-canvas: #09090b;
-  --color-surface: #111114;
+  --color-brand-700: var(--accent-foreground);
+  --color-ink: var(--foreground);
+  --color-muted: var(--muted-foreground);
+  --color-line: var(--border);
+  --color-canvas: var(--background);
+  --color-surface: var(--card);
 }
 :root[data-theme='dark'] body,
 :root[data-theme='dark'] .app-shell { background: var(--color-canvas); color: var(--color-ink); }
@@ -981,16 +981,16 @@
 
 /* RouteHQ visual system refresh: graphite-first, restrained brand accents */
 :root {
-  --color-brand-50: #fff4e9;
+  --color-brand-50: var(--accent);
   --color-brand-100: #ffe4ca;
-  --color-brand-500: #e87924;
+  --color-brand-500: var(--primary);
   --color-brand-600: #cf6417;
-  --color-brand-700: #a94c0d;
-  --color-ink: #18181b;
-  --color-muted: #71717a;
-  --color-line: #e5e5e8;
-  --color-canvas: #f4f4f5;
-  --color-surface: #ffffff;
+  --color-brand-700: var(--accent-foreground);
+  --color-ink: var(--foreground);
+  --color-muted: var(--muted-foreground);
+  --color-line: var(--border);
+  --color-canvas: var(--background);
+  --color-surface: var(--card);
   --rq-radius-card: 12px;
   --rq-radius-control: 8px;
   font-family: Inter, Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

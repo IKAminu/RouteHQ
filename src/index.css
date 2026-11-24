@@ -3891,3 +3891,74 @@
 :root[data-theme='dark'] .platform-delete-name{background:#11161c;border-color:#3b434e}
 :root[data-theme='dark'] .platform-delete-icon{background:#45251f;color:#ff9d87}
 @media(max-width:760px){:root[data-theme='dark'] .platform-sidebar{border-color:#303741}}
+
+
+/* Semantic surface pass: shared application and content surfaces follow the active theme. */
+:root .search-results,
+:root .notifications,
+:root .quick-action-menu,
+:root .account-popover,
+:root .button-secondary,
+:root .date-chip,
+:root .metrics-grid,
+:root .quick-strip,
+:root .content-section,
+:root .settings-section,
+:root .table-shell,
+:root .traveller-security-note,
+:root .traveller-metric,
+:root .finance-summary,
+:root .modal,
+:root .form-actions,
+:root .auth-panel,
+:root .guide-search,
+:root .guide-index a,
+:root .guide-index span,
+:root .guide-section,
+:root .notes-overview > div,
+:root .notes-search,
+:root .notes-create-row button,
+:root .note-card,
+:root .manual-search,
+:root .manual-overview,
+:root .manual-id-section,
+:root .manual-practices,
+:root .manual-toc a,
+:root .manual-chapter,
+:root .lead-followup-trigger,
+:root .lead-followup-panel,
+:root .lead-followup-editor textarea,
+:root .manual-screen-field,
+:root .route-error-card,
+:root .route-error-actions button,
+:root .routehq-search-trigger,
+:root .routehq-search-panel {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+
+:root .field,
+:root .global-search input,
+:root .notes-search input,
+:root .guide-search input,
+:root .manual-search input,
+:root .lead-followup-editor textarea {
+  color: var(--color-ink);
+}
+
+:root .field::placeholder,
+:root .global-search input::placeholder,
+:root .notes-search input::placeholder,
+:root .guide-search input::placeholder,
+:root .manual-search input::placeholder {
+  color: var(--color-muted);
+}
+
+:root .list-row + .list-row,
+:root .settings-section dl > div,
+:root .section-title,
+:root .table-shell th,
+:root .table-shell td {
+  border-color: var(--color-line);
+}

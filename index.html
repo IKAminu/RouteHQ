@@ -1,6 +1,14 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      try {
+        const savedTheme = localStorage.getItem('routehq-theme');
+        document.documentElement.dataset.theme = savedTheme === 'light' ? 'light' : 'dark';
+      } catch {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    </script>
     <meta charset="UTF-8" />
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />

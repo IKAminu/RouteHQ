@@ -67,6 +67,10 @@
   --color-warning-border: #efdfbf;
   --color-danger-soft: #fff1ef;
   --color-danger-border: #efd1cc;
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-surface-muted: var(--secondary);
+  --color-accent-foreground: var(--accent-foreground);
   --color-ink: var(--foreground);
   --color-muted: var(--muted-foreground);
   --color-line: var(--border);

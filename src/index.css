@@ -3940,3 +3940,95 @@
 :root .platform-table-wrap th { background: var(--color-surface-muted); color: var(--color-muted); border-color: var(--color-line); }
 :root .platform-table-wrap td { background: var(--color-surface); color: var(--color-ink); border-color: var(--color-line); }
 :root .platform-table-wrap tr:hover td { background: var(--color-surface-muted); }
+
+
+/* Documentation purpose and explanation panels use the same theme roles. */
+:root .manual-purpose {
+  border-left-color: var(--color-primary);
+  background: var(--color-surface-muted);
+  color: var(--color-ink);
+}
+:root .manual-purpose p { color: var(--color-muted); }
+:root .manual-chapter-header { border-color: var(--color-line); }
+:root .manual-step-list li,
+:root .manual-id-card,
+:root .manual-uuid,
+:root .manual-branch { background: var(--color-surface); border-color: var(--color-line); color: var(--color-ink); }
+:root .manual-step-number,
+:root .manual-chapter-icon,
+:root .manual-hero-icon,
+:root .hero-chip { background: var(--color-accent); border-color: var(--color-accent-border); color: var(--color-accent-foreground); }
+:root .manual-explain-card.automated { background: var(--color-success-soft); border-color: var(--color-success-border); }
+:root .manual-explain-card.operator,
+:root .manual-warning,
+:root .manual-callout { background: var(--color-warning-soft); border-color: var(--color-warning-border); }
+:root .manual-impact { background: var(--color-info-soft); border-color: var(--color-info-border); }
+:root .manual-impact > div { color: var(--color-muted); }
+:root .manual-explain-heading { color: var(--color-success-foreground, var(--color-ink)); }
+:root .manual-explain-card.operator .manual-explain-heading { color: var(--color-accent-foreground); }
+
+/* Shared Untitled UI-inspired data table treatment used by every agency module. */
+:root .table-shell {
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+:root .table-scroll { overflow: auto; overscroll-behavior-inline: contain; }
+:root .table-shell table { width: 100%; min-width: 680px; border-collapse: separate; border-spacing: 0; }
+:root .table-shell thead { background: var(--color-surface-muted); }
+:root .table-shell th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-surface-muted);
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .035em;
+  text-transform: none;
+  white-space: nowrap;
+}
+:root .table-shell td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 12px;
+  line-height: 1.45;
+  vertical-align: middle;
+}
+:root .table-shell tbody tr:last-child td { border-bottom: 0; }
+:root .table-shell tbody tr:hover td { background: var(--color-surface-muted); }
+:root .table-shell td strong { color: var(--color-ink); font-weight: 650; }
+:root .table-shell input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-primary); vertical-align: middle; }
+:root .table-pagination {
+  min-height: 58px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-muted);
+}
+:root .table-pagination-controls button {
+  min-width: 34px;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-ink);
+}
+:root .table-pagination-controls button:hover:not(:disabled),
+:root .table-pagination-controls button[aria-current="page"] {
+  border-color: var(--color-line);
+  background: var(--color-surface-muted);
+}
+:root .table-pagination-controls button:disabled { opacity: .4; cursor: not-allowed; }
+:root .table-pagination > span strong { color: var(--color-ink); }
+
+@media (max-width: 760px) {
+  :root .table-pagination { align-items: flex-start; flex-direction: column; }
+  :root .table-pagination-controls { width: 100%; justify-content: space-between; }
+}

@@ -1,0 +1,69 @@
+/* RouteHQ semantic design tokens.
+   Keep component styling mapped to these roles so both themes stay in sync. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-surface: var(--muted-surface);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  color-scheme: light;
+  --background: #f4f5f7;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --primary: #c95f14;
+  --primary-foreground: #ffffff;
+  --secondary: #eef0f3;
+  --secondary-foreground: #343a40;
+  --muted-surface: #f1f2f4;
+  --muted-foreground: #71717a;
+  --accent: #fff3e8;
+  --accent-foreground: #a84b10;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #d9dce2;
+  --ring: #e87521;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --background: #0b0d10;
+  --foreground: #e8edf4;
+  --card: #14181e;
+  --card-foreground: #e8edf4;
+  --popover: #171c23;
+  --popover-foreground: #e8edf4;
+  --primary: #f07824;
+  --primary-foreground: #17110c;
+  --secondary: #1d232b;
+  --secondary-foreground: #dce3ec;
+  --muted-surface: #1b2027;
+  --muted-foreground: #9aa5b4;
+  --accent: #33251b;
+  --accent-foreground: #ffb16f;
+  --destructive: #f97066;
+  --destructive-foreground: #240b09;
+  --border: #303741;
+  --input: #3a424e;
+  --ring: #f07824;
+}

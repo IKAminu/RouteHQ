@@ -3,14 +3,14 @@ import { Children, cloneElement, isValidElement, useEffect, useMemo, useRef, use
 import type { ButtonHTMLAttributes, InputHTMLAttributes, PointerEvent as ReactPointerEvent, ReactElement, ReactNode, SelectHTMLAttributes } from 'react'
 
 export const Button = ({ className = '', variant = 'primary', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'ghost' | 'danger' }) => (
-  <button className={`button button-${variant} ${className}`} {...props} />
+  <button className={`button button-${variant} ${variant === 'primary' ? 'bg-primary text-primary-foreground border-transparent' : variant === 'secondary' ? 'bg-secondary text-secondary-foreground border-border' : variant === 'danger' ? 'bg-destructive text-destructive-foreground border-transparent' : 'bg-transparent text-muted-foreground'} ${className}`} {...props} />
 )
 
 export const IconButton = ({ label, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { label: string }) => (
-  <button className="icon-button" aria-label={label} title={label} {...props} />
+  <button className="icon-button bg-transparent text-muted-foreground" aria-label={label} title={label} {...props} />
 )
 
-export const Input = (props: InputHTMLAttributes<HTMLInputElement>) => <input className="field" {...props} />
+export const Input = (props: InputHTMLAttributes<HTMLInputElement>) => <input className="field bg-card text-card-foreground border-input placeholder:text-muted-foreground" {...props} />
 export const Select = (props: SelectHTMLAttributes<HTMLSelectElement>) => <select className="field" {...props} />
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
@@ -64,7 +64,7 @@ export function Modal({ title, description, onClose, children }: { title: string
     if (shouldDismiss) onClose()
   }
   return <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
-    <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" style={dragOffset ? { transform: `translateY(${dragOffset}px)`, transition: isDragging ? 'none' : undefined } : undefined} onMouseDown={(event) => event.stopPropagation()}>
+    <section className="modal bg-card text-card-foreground border-border" role="dialog" aria-modal="true" aria-labelledby="modal-title" style={dragOffset ? { transform: `translateY(${dragOffset}px)`, transition: isDragging ? 'none' : undefined } : undefined} onMouseDown={(event) => event.stopPropagation()}>
       <div className="modal-header" onPointerDown={handleDragStart} onPointerMove={handleDragMove} onPointerUp={handleDragEnd} onPointerCancel={handleDragEnd}><div><h2 id="modal-title">{title}</h2>{description && <p>{description}</p>}</div><IconButton label="Close dialog" onClick={onClose}><X size={18} /></IconButton></div>
       {children}
     </section>
@@ -126,7 +126,7 @@ export function TableShell({ children }: { children: ReactNode }) {
   const start = rowCount ? (safePage - 1) * TABLE_PAGE_SIZE + 1 : 0
   const end = Math.min(safePage * TABLE_PAGE_SIZE, rowCount)
   const pages = Array.from({ length: pageCount }, (_, index) => index + 1).filter(value => value === 1 || value === pageCount || Math.abs(value - safePage) <= 1)
-  return <div className="table-shell">
+  return <div className="table-shell bg-card text-card-foreground border-border">
     <div className="table-scroll">{visible}</div>
     {rowCount > TABLE_PAGE_SIZE && <nav className="table-pagination" aria-label="Table pagination">
       <span>Showing <strong>{start}–{end}</strong> of <strong>{rowCount.toLocaleString()}</strong></span>

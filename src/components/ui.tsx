@@ -11,7 +11,7 @@ export const IconButton = ({ label, ...props }: ButtonHTMLAttributes<HTMLButtonE
 )
 
 export const Input = (props: InputHTMLAttributes<HTMLInputElement>) => <input className="field bg-card text-card-foreground border-input placeholder:text-muted-foreground" {...props} />
-export const Select = (props: SelectHTMLAttributes<HTMLSelectElement>) => <select className="field" {...props} />
+export const Select = (props: SelectHTMLAttributes<HTMLSelectElement>) => <select className="field bg-card text-card-foreground border-input" {...props} />
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return <label className="field-group"><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>

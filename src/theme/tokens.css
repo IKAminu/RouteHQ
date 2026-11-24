@@ -43,6 +43,11 @@
   --border: #e4e4e7;
   --input: #d9dce2;
   --ring: #e87521;
+  --color-ink: var(--foreground);
+  --color-muted: var(--muted-foreground);
+  --color-line: var(--border);
+  --color-canvas: var(--background);
+  --color-surface: var(--card);
 }
 
 :root[data-theme='dark'] {
@@ -66,4 +71,9 @@
   --border: #303741;
   --input: #3a424e;
   --ring: #f07824;
+  --color-ink: var(--foreground);
+  --color-muted: var(--muted-foreground);
+  --color-line: var(--border);
+  --color-canvas: var(--background);
+  --color-surface: var(--card);
 }

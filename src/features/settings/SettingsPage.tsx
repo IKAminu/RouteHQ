@@ -99,6 +99,7 @@ export function SettingsPage() {
       const permissionRows = permissionsResult.data ?? []
       const planRows = plansResult.data ?? []
       const invitations = invitationsResult.data ?? []
+      const currentRoleId = memberships.find((member) => member.id === context.membership_id)?.role_id ?? context.role_id
       const roleIds = [...new Set([...roleRows.map((r) => r.id), ...memberships.map((m) => m.role_id)])]
       const rolePermissionsResult = roleIds.length
         ? await supabase.from('role_permissions').select('role_id,permission_code').in('role_id', roleIds)
@@ -110,7 +111,7 @@ export function SettingsPage() {
         if (context.is_owner) return true
         const override = overrides.find((item) => item.permission_code === code)
         if (override) return override.is_allowed
-        return rolePermissions.some((item) => item.role_id === context.role_id && item.permission_code === code)
+        return rolePermissions.some((item) => item.role_id === currentRoleId && item.permission_code === code)
       }
 
       const metadata = user.user_metadata ?? {}
@@ -227,7 +228,7 @@ export function SettingsPage() {
           country: agency.country_code ?? 'NG',
           state: '',
           website: agency.website_url ?? '',
-          description: '',
+          description: agency.legal_name ?? '',
           registration: agency.registration_number ?? undefined,
           logoUrl: undefined,
         },
@@ -305,6 +306,7 @@ export function SettingsPage() {
         name: agency.name.trim(),
         email: agency.email.trim() || null,
         phone: agency.phone.trim() || null,
+        legal_name: agency.description.trim() || null,
         website_url: agency.website.trim() || null,
         country_code: agency.country.trim().toUpperCase().slice(0, 2) || 'NG',
         updated_at: new Date().toISOString(),

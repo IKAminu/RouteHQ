@@ -109,6 +109,16 @@ export function Dashboard() {
 
   return <div className="page">
     <PageHeader title={`${greeting}, ${greetingName}`} description="Here is what needs attention across your agency today." action={<div className="date-chip"><CalendarDays size={16} /> {shortDate(todayDate())}</div>} />
+    {mode !== 'demo' && leads.length === 0 && customers.length === 0 && bookings.length === 0 && <section className="content-section onboarding-first-run">
+      <div className="section-title"><div><span className="eyebrow">GETTING STARTED</span><h2>Let’s get your agency ready</h2><p>Your workspace is ready. Complete a few essentials and add your first record to get value from RouteHQ.</p></div></div>
+      <div className="onboarding-checklist">
+        <Link to="/settings" className="onboarding-step"><span className="onboarding-step-number">01</span><span><strong>Complete your personal profile</strong><small>Add your name, contact details and preferences.</small></span><ArrowRight size={17} /></Link>
+        <Link to="/settings" className="onboarding-step"><span className="onboarding-step-number">02</span><span><strong>Set up your agency details</strong><small>Add your agency name, business contact and website.</small></span><ArrowRight size={17} /></Link>
+        <Link to="/leads" className="onboarding-step"><span className="onboarding-step-number">03</span><span><strong>Add your first lead</strong><small>Bring an enquiry into RouteHQ and start tracking its progress.</small></span><ArrowRight size={17} /></Link>
+        <Link to="/customers" className="onboarding-step"><span className="onboarding-step-number">04</span><span><strong>Add your first customer</strong><small>Create a customer record when you are ready.</small></span><ArrowRight size={17} /></Link>
+        <Link to="/packages" className="onboarding-step"><span className="onboarding-step-number">05</span><span><strong>Set up your travel packages</strong><small>Build your catalogue before creating bookings.</small></span><ArrowRight size={17} /></Link>
+      </div>
+    </section>}
     {mode === 'demo' && <section className="demo-banner"><div><strong>Demo workspace</strong><span>Sample records only. Changes stay in this session and are discarded when you leave.</span></div><Link to="/settings">View workspace settings <ArrowRight size={15} /></Link></section>}
     <section className="metrics-grid">{metrics.map(({ label, value, detail, icon: Icon, to }) => <Link className="metric" to={to} key={label}><div className="metric-head"><span>{label}</span><Icon size={18} /></div><strong>{value}</strong><p>{detail}</p></Link>)}</section>
     <section className="revenue-panel">

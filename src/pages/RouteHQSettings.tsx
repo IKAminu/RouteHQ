@@ -65,7 +65,7 @@ export interface RouteHQSettingsProps { data: SettingsData; actions: Partial<Set
 export type Tab = "personal" | "agency" | "team";
 const NAV: Record<Tab, { label: string; sections: { id: string; label: string }[] }> = {
   personal: { label: "Personal", sections: [{ id: "profile", label: "Profile" }, { id: "security", label: "Security" }, { id: "preferences", label: "Preferences" }, { id: "notifications", label: "Notifications" }, { id: "account", label: "Account" }] },
-  agency: { label: "Agency", sections: [{ id: "profile", label: "Agency profile" }, { id: "website", label: "Website" }, { id: "operations", label: "Operations" }, { id: "subscription", label: "Subscription" }, { id: "danger", label: "Danger zone" }] },
+  agency: { label: "Agency", sections: [{ id: "profile", label: "Agency profile" }, { id: "website", label: "Website" }, { id: "operations", label: "Operations" }, { id: "subscription", label: "Billing" }, { id: "danger", label: "Danger zone" }] },
   team: { label: "Team", sections: [{ id: "members", label: "Members" }, { id: "roles", label: "Roles & permissions" }] },
 };
 
@@ -387,25 +387,32 @@ function Seats({ used, limit }: { used: number; limit: number }) {
     <p className="mt-2 text-xs text-neutral-500">The agency owner doesn’t count toward your seat limit.</p></div>);
 }
 
-function Subscription({ d, act }: Ctx) {
-  const b = d.billing; const co = useAction(); const bp = useAction(); const [pending, setPending] = useState<string>();
-  if (!b) return (<><Header title="Subscription" /><Unavailable what="Subscription details" /></>);
-  const cur = b.plans.find((p) => p.id === b.plan); const rank = ["basic", "growth", "pro"];
-  const can = d.viewer.canManageBilling; const un = d.unsupported ?? [];
-  return (<><Header title="Subscription" desc="Your plan, usage and billing." right={act.openBillingPortal && can && <Button loading={bp.busy} onClick={() => bp.run(act.openBillingPortal)}>Manage billing</Button>} />
-    {(co.error || bp.error) && <div className="mb-6"><Notice tone="warn">{co.error ?? bp.error}</Notice></div>}
+function Subscription({ d }: Ctx) {
+  const b = d.billing;
+  if (!b) return (<><Header title="Billing" desc="Your RouteHQ account and plan." /><Unavailable what="Billing details" /></>);
+  const currentPlan = b.plans.find((p) => p.id === b.plan);
+  const status = b.status.replace(/[_-]/g, " ");
+  return (<>
+    <Header title="Billing" desc="Your RouteHQ account, current plan and billing status." />
     <Group>
-      <Row label="Current plan" desc={`Status: ${b.status}`}><div className="text-sm"><div className="text-lg font-semibold text-neutral-900 dark:text-white">{cur?.name ?? b.plan}</div><div className="mt-1 text-neutral-500">{b.period}{b.renewsAt && ` · Renews ${b.renewsAt}`}{b.startedAt && ` · Since ${b.startedAt}`}</div></div></Row>
-      {d.team && <Row label="Team seats"><Seats used={d.team.seatsUsed} limit={d.team.seatLimit} /></Row>}
-      <Row label="Plans" desc="Compare what each plan includes.">
-        <div className="space-y-3">{b.plans.map((p) => { const isCur = p.id === b.plan; const up = rank.indexOf(p.id) > rank.indexOf(b.plan); return (
-          <div key={p.id} className={cx("rounded-xl p-4 transition-colors duration-200", isCur ? "bg-neutral-100 dark:bg-neutral-900" : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50")}>
-            <div className="flex items-center justify-between gap-4"><div><span className="text-sm font-semibold text-neutral-900 dark:text-white">{p.name}</span><span className="ml-2 text-sm text-neutral-500">{p.price}</span></div>
-              {isCur ? <span className="text-xs font-medium text-orange-500">Current plan</span> : up && <Button variant="primary" loading={co.busy && pending === p.id} disabled={!act.startCheckout || !can} title={!act.startCheckout ? "Checkout " + NC.toLowerCase() : !can ? "Only the owner can change plans" : undefined} onClick={() => { setPending(p.id); co.run(() => act.startCheckout!(p.id)); }}>Upgrade</Button>}</div>
-            <ul className="mt-3 grid gap-1.5 text-[13px] text-neutral-600 dark:text-neutral-400 sm:grid-cols-2">{p.features.map((f) => <li key={f} className="flex gap-2"><Icon d={I.check} className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />{f}</li>)}</ul></div>); })}</div>
-        {!act.startCheckout && <div className="mt-4"><Notice>Checkout isn’t connected yet, so plan changes can’t be made here.</Notice></div>}</Row>
-      <Row label="Invoices">{un.includes("invoices") || !b.invoices ? <Unavailable what="Billing history" /> : b.invoices.length === 0 ? <p className="text-sm text-neutral-500">No invoices yet.</p> : <ul className="space-y-3 text-sm">{b.invoices.map((i) => <li key={i.id} className="flex justify-between"><span>{i.date}</span><span className="flex gap-4"><span className="text-neutral-500">{i.amount}</span>{i.url && <a className="text-blue-500 hover:underline" href={i.url} target="_blank" rel="noreferrer">Download</a>}</span></li>)}</ul>}</Row>
-      <Row label="Payment method">{b.paymentMethod ? <span className="text-sm">{b.paymentMethod}</span> : <Unavailable what="Payment method management" />}</Row></Group></>);
+      <Row label="Account" desc={d.agency?.name || "Your RouteHQ agency workspace"}>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="text-lg font-semibold capitalize text-neutral-900 dark:text-white">{currentPlan?.name ?? b.plan}</div>
+            <div className="mt-1 text-sm capitalize text-neutral-500">{status}{b.period ? ` · ${b.period}` : ""}</div>
+            {b.renewsAt && <div className="mt-1 text-xs text-neutral-500">Next billing date: {b.renewsAt}</div>}
+          </div>
+          <Button disabled variant="primary" title="Plan upgrades are not available yet">Upgrade plan</Button>
+        </div>
+      </Row>
+      <Row label="Contact RouteHQ" desc="Need to upgrade, discuss your account or get help with billing? The RouteHQ team can assist.">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <p className="max-w-md text-sm text-neutral-500">Contact the RouteHQ team for help with your subscription and account.</p>
+          <span className="inline-flex items-center rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-500 dark:bg-neutral-900">RouteHQ team</span>
+        </div>
+      </Row>
+    </Group>
+  </>);
 }
 
 function Danger({ d, act, confirm }: Ctx) {
@@ -480,7 +487,7 @@ export default function RouteHQSettings({ data, actions, initialTab = "personal"
     <div className="min-h-full bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
       <style>{`@keyframes rhq-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.rhq-in{animation:rhq-in .35s cubic-bezier(.32,.72,0,1)}@media(prefers-reduced-motion:reduce){.rhq-in{animation:none}*{transition-duration:.01ms!important}}`}</style>
       <div className="mx-auto max-w-5xl px-5 pb-24 pt-10 sm:px-8">
-        <div className="flex items-center gap-3"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="h-9 w-9 rounded-xl" /><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-500">RouteHQ</p><div className="flex items-center gap-3"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="h-9 w-9 rounded-xl" /><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-500">RouteHQ</p><h1 className="text-2xl font-semibold tracking-tight">Settings</h1></div></div></div></div>
+        <div className="flex items-center gap-3"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" aria-hidden="true" className="h-9 w-9 rounded-xl" /><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-500">RouteHQ</p><h1 className="text-2xl font-semibold tracking-tight">Settings</h1></div></div>
 
         <div className="relative mt-6 inline-flex rounded-xl bg-neutral-100 p-1 dark:bg-neutral-900" role="tablist" aria-label="Settings categories">
           <span aria-hidden className={cx("absolute top-1 h-[calc(100%-0.5rem)] rounded-lg bg-white shadow-sm transition-all duration-300 dark:bg-neutral-700/80", EASE)} style={{ left: ind.x, width: ind.w }} />

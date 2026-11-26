@@ -47,7 +47,7 @@ jobs:
       - name: Build RouteHQ application
         run: pnpm build
         env:
-          VITE_BASE_PATH: /RouteHQ/
+          VITE_BASE_PATH: /
           VITE_USE_MOCK_DATA: "false"
           VITE_SUPABASE_URL: https://viohesitrhrtkulcdnqk.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_MCGMXtcnCTL5nuSoq8WOwA_-sQI3uVu

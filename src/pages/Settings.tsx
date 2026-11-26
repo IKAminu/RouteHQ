@@ -77,7 +77,9 @@ export function SettingsPage() {
   const [agencyDraft, setAgencyDraft] = useState<AgencyRecord | null>(null)
   const [context, setContext] = useState<{ membership_id: string; is_owner: boolean; role_code: string; plan_code: string; plan_name: string; subscription_status: string; max_additional_members: number } | null>(null)
   const [members, setMembers] = useState<Member[]>([])
+  const [selectedMemberId, setSelectedMemberId] = useState('')
   const [permissions, setPermissions] = useState<Permission[]>([])
+  const [rolePermissions, setRolePermissions] = useState<Array<{ role_id: string; permission_code: string }>>([])
   const [memberOverrides, setMemberOverrides] = useState<Array<{ membership_id: string; permission_code: string; is_allowed: boolean }>>([])
   const [plans, setPlans] = useState<Plan[]>([])
   const [subscription, setSubscription] = useState<{ status: string; billing_interval: string; current_period_end: string | null } | null>(null)
@@ -126,9 +128,17 @@ export function SettingsPage() {
       if (membersResult.error) throw membersResult.error
       setAgency(agencyResult.data as AgencyRecord)
       setAgencyDraft(agencyResult.data as AgencyRecord)
-      setMembers((membersResult.data || []) as unknown as Member[])
+      const loadedMembers = (membersResult.data || []) as unknown as Member[]
+      setMembers(loadedMembers)
+      setSelectedMemberId((currentId) => currentId && loadedMembers.some((member) => member.id === currentId) ? currentId : loadedMembers.find((member) => !member.is_owner && member.status === 'active')?.id || '')
       setPermissions((permissionsResult.data || []) as Permission[])
       setMemberOverrides((overridesResult.data || []) as typeof memberOverrides)
+      const roleIds = [...new Set(loadedMembers.map((member) => member.role_id))]
+      if (roleIds.length) {
+        const { data: rolePermissionData, error: rolePermissionError } = await supabase.from('role_permissions').select('role_id,permission_code').in('role_id', roleIds)
+        if (rolePermissionError) throw rolePermissionError
+        setRolePermissions((rolePermissionData || []) as typeof rolePermissions)
+      } else setRolePermissions([])
       setPlans((plansResult.data || []) as Plan[])
       setSubscription(subscriptionResult.data)
       setDeletionStatus(deletionResult.data as typeof deletionStatus)
@@ -213,7 +223,7 @@ export function SettingsPage() {
     groups[item.module] = [...(groups[item.module] || []), item]
     return groups
   }, {}), [permissions])
-  const selectedMember = members.find((member) => !member.is_owner && member.status === 'active') || null
+  const selectedMember = members.find((member) => member.id === selectedMemberId && !member.is_owner && member.status === 'active') || null
 
   const renderPersonal = () => <div className="rh-settings-content">
     <div className="rh-settings-heading"><div><h2>Personal profile</h2><p>Manage the details attached to your RouteHQ login.</p></div><Button onClick={() => void saveProfile()} disabled={saving}><Save size={15}/>{saving ? 'Saving…' : 'Save changes'}</Button></div>
@@ -277,7 +287,7 @@ export function SettingsPage() {
       <SettingsNotice>Invitations, resend, and member removal require the secure invitation and membership-management workflow. Those actions are not enabled yet, so no member can be added or removed from this screen today.</SettingsNotice>
     </div> : <div className="rh-settings-card">
       {!canManageTeam && <SettingsNotice>Your role does not have permission to manage team permissions.</SettingsNotice>}
-      {activeMembers.length === 0 ? <p className="rh-empty">There are no additional active team members yet.</p> : <div className="rh-permission-editor"><div className="rh-permission-member-select"><label htmlFor="rh-permission-member">Team member</label><select id="rh-permission-member" value={selectedMember?.id || ''} onChange={(event) => { const member = members.find((item) => item.id === event.target.value); if (member) setMembers((items) => [...items.filter((item) => item.id !== member.id), member]) }}><option value={selectedMember?.id || ''}>{selectedMember ? (selectedMember.roles?.name || 'Team member') + ' · ' + selectedMember.user_id.slice(0, 8) : 'Select member'}</option></select></div>{selectedMember && Object.entries(permissionGroups).map(([group, items]) => <div className="rh-permission-group" key={group}><h3>{group.replaceAll('_', ' ')}</h3>{items.map((permission) => { const override = memberOverrides.find((item) => item.membership_id === selectedMember.id && item.permission_code === permission.code); const checked = override?.is_allowed ?? false; return <label className="rh-permission-row" key={permission.code}><span><strong>{permission.action.replaceAll('_', ' ')}</strong><small>{permission.description}</small></span><input type="checkbox" checked={checked} disabled={!canManageTeam} onChange={(event) => void setMemberPermission(selectedMember.id, permission.code, event.target.checked)}/></label> })}</div>)}</div>}
+      {activeMembers.length === 0 ? <p className="rh-empty">There are no additional active team members yet.</p> : <div className="rh-permission-editor"><div className="rh-permission-member-select"><label htmlFor="rh-permission-member">Team member</label><select id="rh-permission-member" value={selectedMemberId} onChange={(event) => setSelectedMemberId(event.target.value)}>{activeMembers.map((member) => <option key={member.id} value={member.id}>{(member.roles?.name || 'Team member') + ' · ' + member.user_id.slice(0, 8)}</option>)}</select></div>{selectedMember && Object.entries(permissionGroups).map(([group, items]) => <div className="rh-permission-group" key={group}><h3>{group.replaceAll('_', ' ')}</h3>{items.map((permission) => { const override = memberOverrides.find((item) => item.membership_id === selectedMember.id && item.permission_code === permission.code); const inherited = rolePermissions.some((item) => item.role_id === selectedMember.role_id && item.permission_code === permission.code); const checked = override?.is_allowed ?? inherited; return <label className="rh-permission-row" key={permission.code}><span><strong>{permission.action.replaceAll('_', ' ')}</strong><small>{permission.description}</small></span><input type="checkbox" checked={checked} disabled={!canManageTeam} onChange={(event) => void setMemberPermission(selectedMember.id, permission.code, event.target.checked)}/></label> })}</div>)}</div>}
     </div>}
   </div>
 

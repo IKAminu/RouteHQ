@@ -11,6 +11,10 @@ type AuthStep = 'login' | 'mfa' | 'enroll' | 'forgot' | 'recover'
 
 type AuthVisualVariant = 'dashboard' | 'motion' | 'quote'
 
+const authRedirectUrl = () => new URLSearchParams(window.location.search).has('invite')
+  ? window.location.href
+  : authRedirectUrl()
+
 function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
   return <aside className={"auth-visual auth-visual-" + variant} aria-label="RouteHQ product introduction">
     {variant === 'dashboard' && <div className="auth-dashboard-preview" aria-hidden="true">
@@ -111,6 +115,26 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered, initia
   const verifyFormRef = useRef<HTMLFormElement>(null)
   const verifyInFlight = useRef(false)
   const secondFactorStarted = useRef(false)
+
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get('invite')
+    if (!token || !supabase) return
+    let active = true
+    void (async () => {
+      try {
+        const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token))
+        const tokenHash = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+        const { data, error } = await supabase.rpc('preview_agency_invitation', { _token_hash: tokenHash })
+        if (error) throw error
+        if (!active) return
+        setEmail(String(data.invited_email ?? ''))
+        setInfo(`You've been invited to join ${data.agency_name} as ${data.role_name}. Sign in or create an account using the invited email address.`)
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : 'This invitation link could not be verified.')
+      }
+    })()
+    return () => { active = false }
+  }, [])
 
   const beginSecondFactor = async () => {
     const { data: factors, error: factorsError } = await supabase!.auth.mfa.listFactors()
@@ -255,7 +279,7 @@ function AuthScreen({ onAuthenticated, recoveryMode, onPasswordRecovered, initia
         setInfo('Your account has been created. Secure it with an authenticator to continue.')
         await beginSecondFactor()
       } else {
-        setInfo('Account created. Check your email to confirm your address, then sign in to submit your agency application.')
+        setInfo(new URLSearchParams(window.location.search).has('invite') ? 'Account created. Confirm your email, then sign in with the invited address to accept the invitation.' : 'Account created. Check your email to confirm your address, then sign in to submit your agency application.')
         setAuthMode('login')
       }
     } catch (err) {

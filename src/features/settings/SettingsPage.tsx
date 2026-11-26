@@ -19,7 +19,7 @@ const timezones = [
   'Africa/Lagos', 'Africa/Abidjan', 'Africa/Cairo', 'Africa/Johannesburg',
   'Europe/London', 'Europe/Paris', 'America/New_York', 'America/Los_Angeles',
   'Asia/Dubai', 'Asia/Riyadh', 'Asia/Kolkata', 'Asia/Singapore',
-].map((value) => ({ value, label: value.replaceAll('_', ' ') }))
+].map((value) => ({ value, label: value.replace(/_/g, ' ') }))
 const dateFormats = [
   { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
   { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
@@ -69,7 +69,7 @@ export function SettingsPage() {
           .select('id,name,legal_name,registration_number,email,phone,website_url,country_code,timezone,currency_code')
           .eq('id', context.agency_id).single(),
         supabase.from('agency_memberships')
-          .select('id,user_id,role_id,status,is_owner,joined_at')
+          .select('id,user_id,role_id,status,is_owner,joined_at,created_at')
           .eq('agency_id', context.agency_id).order('created_at', { ascending: true }),
         supabase.from('roles')
           .select('id,agency_id,code,name,description,is_system,is_owner_role')
@@ -93,6 +93,7 @@ export function SettingsPage() {
       }
 
       const agency = agencyResult.data
+      if (!agency) throw new Error('Agency details could not be found for this workspace.')
       const memberships = membersResult.data ?? []
       const roleRows = rolesResult.data ?? []
       const permissionRows = permissionsResult.data ?? []

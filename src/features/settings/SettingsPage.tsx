@@ -326,5 +326,11 @@ export function SettingsPage() {
     return <div className="mx-auto max-w-3xl px-6 py-12"><div className="rounded-xl border border-red-500/20 bg-red-500/5 p-5 text-sm text-red-700 dark:text-red-300" role="alert"><strong className="block">Settings could not be loaded</strong><p className="mt-2">{loadError}</p><button className="mt-4 rounded-lg bg-neutral-900 px-3 py-2 text-white dark:bg-white dark:text-neutral-900" onClick={() => void refresh()}>Try again</button></div></div>
   }
 
-  return <RouteHQSettings data={data} actions={actions} />
+  const params = new URLSearchParams(window.location.search)
+  const requestedTab = params.get('tab')
+  const requestedSection = params.get('section')
+  const initialTab = requestedTab === 'agency' || requestedTab === 'team' || requestedTab === 'integrations'
+    ? requestedTab
+    : 'personal'
+  return <RouteHQSettings data={data} actions={actions} initialTab={initialTab} initialSection={requestedSection || undefined} />
 }

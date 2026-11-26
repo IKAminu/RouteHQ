@@ -62,11 +62,12 @@ export interface SettingsActions {
 export interface RouteHQSettingsProps { data: SettingsData; actions: Partial<SettingsActions>; initialTab?: Tab; initialSection?: string; onNavigate?(tab: Tab, section: string): void }
 
 /* ───────────── Navigation model ───────────── */
-export type Tab = "personal" | "agency" | "team";
+export type Tab = "personal" | "agency" | "team" | "integrations";
 const NAV: Record<Tab, { label: string; sections: { id: string; label: string }[] }> = {
   personal: { label: "Personal", sections: [{ id: "profile", label: "Profile" }, { id: "security", label: "Security" }, { id: "preferences", label: "Preferences" }, { id: "notifications", label: "Notifications" }, { id: "account", label: "Account" }] },
   agency: { label: "Agency", sections: [{ id: "profile", label: "Agency profile" }, { id: "website", label: "Website" }, { id: "operations", label: "Operations" }, { id: "subscription", label: "Billing" }, { id: "danger", label: "Danger zone" }] },
   team: { label: "Team", sections: [{ id: "members", label: "Members" }, { id: "roles", label: "Roles & permissions" }] },
+  integrations: { label: "Integrations", sections: [{ id: "connections", label: "Connections" }] },
 };
 
 /* ───────────── Tiny utilities ───────────── */
@@ -463,10 +464,29 @@ function Roles({ d, act }: Ctx) {
         <Collapse open={o}><ul className="space-y-4 pb-5">{g.items.map((i) => <li key={i.id} className="flex items-center justify-between gap-6"><div><div className="text-sm text-neutral-800 dark:text-neutral-200">{i.label}</div><div className="text-[13px] text-neutral-500">{i.description}</div></div><Toggle label={i.label} checked={!!r?.permissions.includes(i.id)} disabled={!edit} onChange={async (v) => { setErr(undefined); const x = await act.setRolePermission!(r!.id, i.id, v); if (x && x.error) setErr(x.error); }} /></li>)}</ul></Collapse></div>); })}</div></>);
 }
 
+function Integrations() {
+  const integrations = [
+    { name: "Agency website", description: "Connect your RouteHQ website or request integration with an existing agency website.", details: ["Website connection", "Lead form synchronisation", "Agency domain and publishing"], icon: "W" },
+    { name: "Meta Ads", description: "Connect your Meta Business account and advertising assets.", details: ["Meta Pixel", "Conversions API (CAPI)", "Lead event and conversion tracking"], icon: "M" },
+    { name: "Other services", description: "Additional connections can be configured as RouteHQ expands.", details: ["Google Analytics", "WhatsApp and messaging", "Booking and supplier APIs"], icon: "+" },
+  ];
+  return (<><Header title="Integrations" desc="Connect the tools and services your agency uses. Integration setup is currently handled by the RouteHQ team." />
+    <div className="space-y-4">{integrations.map((item) => <section key={item.name} className="rounded-2xl border border-neutral-200/80 p-5 dark:border-white/[0.08] sm:p-6">
+      <div className="flex items-start gap-4"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-sm font-semibold text-neutral-700 dark:bg-neutral-900 dark:text-neutral-200">{item.icon}</div>
+        <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-semibold text-neutral-900 dark:text-white">{item.name}</h3><span className="rounded-full bg-neutral-500/10 px-2.5 py-1 text-[11px] font-medium text-neutral-500">Not connected</span></div>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500 dark:text-neutral-400">{item.description}</p>
+          <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2">{item.details.map((detail) => <li key={detail} className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400"><span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />{detail}</li>)}</ul>
+          <div className="mt-5 flex flex-wrap items-center gap-3"><Button disabled title="Integration requests will be enabled when backend support is ready">Request integration</Button><span className="text-xs text-neutral-500">Not connected yet. Contact the RouteHQ / Web4 team for setup.</span></div>
+        </div>
+      </div></section>)}</div>
+  </>);
+}
+
 const VIEWS: Record<Tab, Record<string, (c: Ctx) => ReactElement>> = {
   personal: { profile: PersonalProfile, security: Security, preferences: Preferences, notifications: Notifications, account: Account },
   agency: { profile: AgencyProfile, website: Website, operations: Operations, subscription: Subscription, danger: Danger },
   team: { members: Members, roles: Roles },
+  integrations: { connections: Integrations },
 };
 
 /* ───────────── Shell ───────────── */
@@ -487,7 +507,7 @@ export default function RouteHQSettings({ data, actions, initialTab = "personal"
     <div className="min-h-full bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
       <style>{`@keyframes rhq-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.rhq-in{animation:rhq-in .35s cubic-bezier(.32,.72,0,1)}@media(prefers-reduced-motion:reduce){.rhq-in{animation:none}*{transition-duration:.01ms!important}}`}</style>
       <div className="mx-auto max-w-5xl px-5 pb-24 pt-10 sm:px-8">
-        <div className="flex items-center gap-3"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" aria-hidden="true" className="h-9 w-9 rounded-xl" /><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-500">RouteHQ</p><h1 className="text-2xl font-semibold tracking-tight">Settings</h1></div></div>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-white">Settings</h1>
 
         <div className="relative mt-6 inline-flex rounded-xl bg-neutral-100 p-1 dark:bg-neutral-900" role="tablist" aria-label="Settings categories">
           <span aria-hidden className={cx("absolute top-1 h-[calc(100%-0.5rem)] rounded-lg bg-white shadow-sm transition-all duration-300 dark:bg-neutral-700/80", EASE)} style={{ left: ind.x, width: ind.w }} />

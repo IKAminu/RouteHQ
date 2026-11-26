@@ -314,6 +314,30 @@ export function SettingsPage() {
       if (error) return { error: error.message }
       await refresh()
     },
+    invite: async (email, role) => {
+      if (!supabase) return { error: 'Database connection unavailable.' }
+      const { error } = await supabase.functions.invoke('agency-invitations', {
+        body: { action: 'invite', email: email.trim().toLowerCase(), role_id: role },
+      })
+      if (error) return { error: error.message }
+      await refresh()
+    },
+    resendInvite: async (id) => {
+      if (!supabase) return { error: 'Database connection unavailable.' }
+      const { error } = await supabase.functions.invoke('agency-invitations', {
+        body: { action: 'resend', invitation_id: id },
+      })
+      if (error) return { error: error.message }
+      await refresh()
+    },
+    cancelInvite: async (id) => {
+      if (!supabase) return { error: 'Database connection unavailable.' }
+      const { error } = await supabase.functions.invoke('agency-invitations', {
+        body: { action: 'cancel', invitation_id: id },
+      })
+      if (error) return { error: error.message }
+      await refresh()
+    },
     deleteAgency: async () => {
       if (!supabase) return { error: 'Database connection unavailable.' }
       const { error } = await supabase.rpc('request_agency_deletion', { _reason: 'Requested by the agency owner from RouteHQ settings.' })

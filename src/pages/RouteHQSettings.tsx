@@ -16,7 +16,7 @@ export type SaveResult = void | { error?: string };
 export type Member = { id: string; name: string; email: string; role: string; status: "active" | "pending" | "expired"; date: string; isOwner?: boolean; avatarUrl?: string };
 export type Role = { id: string; label: string; description: string; permissions: string[]; editable?: boolean };
 export type PermissionGroup = { label: string; items: { id: string; label: string; description: string }[] };
-export type Plan = { id: "starter" | "growth" | "pro"; name: string; price: string; seatLimit: number; features: string[] };
+export type Plan = { id: "basic" | "growth" | "pro"; name: string; price: string; seatLimit: number; features: string[] };
 export type NotifItem = { id: string; label: string; description: string; personal?: boolean; agency?: boolean };
 export type Option = { value: string; label: string };
 
@@ -350,9 +350,9 @@ function AgencyProfile({ d, act }: Ctx) {
     <FormSection initial={d.agency} onSave={ro ? undefined : act.saveAgency} validate={(v) => ({ ...(!v.name.trim() && { name: "Agency name is required" }), ...(!emailOk(v.email) && { email: "Enter a valid email" }), ...(!phoneOk(v.phone) && { phone: "Enter a valid phone number" }), ...(v.website && !/^https?:\/\/.+\..+/.test(v.website) && { website: "Start with https://" }) })}>
       {({ v, set, errors, locked }) => (<Group>
         <Row label="Logo" desc="Appears on documents and your website."><Upload label="Upload logo" name={v.name} src={v.logoUrl} onFile={ro ? undefined : act.uploadLogo} /></Row>
-        <Row label="Business"><div className="space-y-4"><Field label="Agency name" value={v.name} onChange={(x) => set("name", x)} error={errors.name} disabled={locked} /><Field label="Description" multiline value={v.description} onChange={(x) => set("description", x)} disabled={locked} />{v.registration !== undefined && <Field label="Registration number" value={v.registration} disabled hint="Contact support to change this." />}</div></Row>
+        <Row label="Business"><div className="space-y-4"><Field label="Agency name" value={v.name} onChange={(x) => set("name", x)} error={errors.name} disabled={locked} />{v.registration !== undefined && <Field label="Registration number" value={v.registration} disabled hint="Contact support to change this." />}</div></Row>
         <Row label="Contact"><div className="space-y-4"><Field label="Business email" type="email" value={v.email} onChange={(x) => set("email", x)} error={errors.email} disabled={locked} /><Field label="Business phone" type="tel" value={v.phone} onChange={(x) => set("phone", x)} error={errors.phone} disabled={locked} /><Field label="Website" value={v.website} onChange={(x) => set("website", x)} error={errors.website} disabled={locked} /></div></Row>
-        <Row label="Address"><div className="space-y-4"><Field label="Street address" value={v.address} onChange={(x) => set("address", x)} disabled={locked} /><div className="grid grid-cols-2 gap-4"><Field label="State" value={v.state} onChange={(x) => set("state", x)} disabled={locked} /><Field label="Country" value={v.country} onChange={(x) => set("country", x)} disabled={locked} /></div></div></Row></Group>)}
+        </Group>)}
     </FormSection></>);
 }
 
@@ -390,7 +390,7 @@ function Seats({ used, limit }: { used: number; limit: number }) {
 function Subscription({ d, act }: Ctx) {
   const b = d.billing; const co = useAction(); const bp = useAction(); const [pending, setPending] = useState<string>();
   if (!b) return (<><Header title="Subscription" /><Unavailable what="Subscription details" /></>);
-  const cur = b.plans.find((p) => p.id === b.plan); const rank = ["starter", "growth", "pro"];
+  const cur = b.plans.find((p) => p.id === b.plan); const rank = ["basic", "growth", "pro"];
   const can = d.viewer.canManageBilling; const un = d.unsupported ?? [];
   return (<><Header title="Subscription" desc="Your plan, usage and billing." right={act.openBillingPortal && can && <Button loading={bp.busy} onClick={() => bp.run(act.openBillingPortal)}>Manage billing</Button>} />
     {(co.error || bp.error) && <div className="mb-6"><Notice tone="warn">{co.error ?? bp.error}</Notice></div>}
@@ -410,7 +410,7 @@ function Subscription({ d, act }: Ctx) {
 
 function Danger({ d, act, confirm }: Ctx) {
   return (<><Header title="Danger zone" desc="Irreversible actions for this agency." /><Group>
-    <Row label="Request agency removal" desc="Submit a request to remove this agency workspace. RouteHQ reviews the request before any data is removed."><Button variant="danger" disabled={!d.viewer.isOwner || !act.deleteAgency} title={!d.viewer.isOwner ? "Only the owner can delete the agency" : !act.deleteAgency ? NC : undefined} onClick={() => confirm({ title: "Request agency removal?", body: "This submits a removal request for review. Your agency workspace will not be deleted immediately.", confirm: "Submit request", typeToConfirm: d.agency?.name ?? "DELETE", run: act.deleteAgency })}>Delete agency</Button></Row></Group></>);
+    <Row label="Request agency removal" desc="Submit a request to remove this agency workspace. RouteHQ reviews the request before any data is removed."><Button variant="danger" disabled={!d.viewer.isOwner || !act.deleteAgency} title={!d.viewer.isOwner ? "Only the owner can delete the agency" : !act.deleteAgency ? NC : undefined} onClick={() => confirm({ title: "Request agency removal?", body: "This submits a removal request for review. Your agency workspace will not be deleted immediately.", confirm: "Submit request", typeToConfirm: d.agency?.name ?? "DELETE", run: act.deleteAgency })}>Request agency removal</Button></Row></Group></>);
 }
 
 /* Team */
@@ -480,7 +480,7 @@ export default function RouteHQSettings({ data, actions, initialTab = "personal"
     <div className="min-h-full bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
       <style>{`@keyframes rhq-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.rhq-in{animation:rhq-in .35s cubic-bezier(.32,.72,0,1)}@media(prefers-reduced-motion:reduce){.rhq-in{animation:none}*{transition-duration:.01ms!important}}`}</style>
       <div className="mx-auto max-w-5xl px-5 pb-24 pt-10 sm:px-8">
-        <div className="flex items-center gap-3"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="h-9 w-9 rounded-xl" /><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-500">RouteHQ</p><h1 className="text-2xl font-semibold tracking-tight">Settings</h1></div></div>
+        <div className="flex items-center gap-3"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="h-9 w-9 rounded-xl" /><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-500">RouteHQ</p><div className="flex items-center gap-3"><img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="RouteHQ" className="h-9 w-9 rounded-xl" /><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-500">RouteHQ</p><h1 className="text-2xl font-semibold tracking-tight">Settings</h1></div></div></div></div>
 
         <div className="relative mt-6 inline-flex rounded-xl bg-neutral-100 p-1 dark:bg-neutral-900" role="tablist" aria-label="Settings categories">
           <span aria-hidden className={cx("absolute top-1 h-[calc(100%-0.5rem)] rounded-lg bg-white shadow-sm transition-all duration-300 dark:bg-neutral-700/80", EASE)} style={{ left: ind.x, width: ind.w }} />

@@ -13,7 +13,7 @@ type AuthVisualVariant = 'dashboard' | 'motion' | 'quote'
 
 const authRedirectUrl = () => new URLSearchParams(window.location.search).has('invite')
   ? window.location.href
-  : authRedirectUrl()
+  : new URL(import.meta.env.BASE_URL, window.location.origin).toString()
 
 function AuthVisual({ variant }: { variant: AuthVisualVariant }) {
   return <aside className={"auth-visual auth-visual-" + variant} aria-label="RouteHQ product introduction">

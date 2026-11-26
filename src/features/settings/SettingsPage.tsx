@@ -139,7 +139,7 @@ export function SettingsPage() {
       const activePlanCode = activePlan?.code === 'growth' ? 'growth' : activePlan?.code === 'pro' ? 'pro' : 'basic'
       const activePlanLimit = activePlan?.max_additional_members ?? 0
 
-      const roles: Role[] = roleRows.map((role) => ({
+      const roles: Role[] = roleRows.filter((role) => !role.is_owner_role && role.code !== 'agency_owner').map((role) => ({
         id: role.id,
         label: role.name,
         description: role.description ?? '',

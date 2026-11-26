@@ -9,7 +9,7 @@
  * - Needs no new dependencies (React + Tailwind only). Dark mode uses Tailwind's `dark:` variant.
  * - Missing backend pieces are surfaced in the UI via `data.unsupported` (e.g. ["2fa","sessions","invoices"]).
  */
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type ReactElement } from "react";
 
 /* ───────────── Types (map your Supabase rows onto these) ───────────── */
 export type SaveResult = void | { error?: string };
@@ -456,7 +456,7 @@ function Roles({ d, act }: Ctx) {
         <Collapse open={o}><ul className="space-y-4 pb-5">{g.items.map((i) => <li key={i.id} className="flex items-center justify-between gap-6"><div><div className="text-sm text-neutral-800 dark:text-neutral-200">{i.label}</div><div className="text-[13px] text-neutral-500">{i.description}</div></div><Toggle label={i.label} checked={!!r?.permissions.includes(i.id)} disabled={!edit} onChange={async (v) => { setErr(undefined); const x = await act.setRolePermission!(r!.id, i.id, v); if (x && x.error) setErr(x.error); }} /></li>)}</ul></Collapse></div>); })}</div></>);
 }
 
-const VIEWS: Record<Tab, Record<string, (c: Ctx) => JSX.Element>> = {
+const VIEWS: Record<Tab, Record<string, (c: Ctx) => ReactElement>> = {
   personal: { profile: PersonalProfile, security: Security, preferences: Preferences, notifications: Notifications, account: Account },
   agency: { profile: AgencyProfile, website: Website, operations: Operations, subscription: Subscription, danger: Danger },
   team: { members: Members, roles: Roles },

@@ -121,6 +121,18 @@ export function WorkspaceGate() {
       const {data:{user},error:userError}=await supabase.auth.getUser()
       if(userError||!user)throw userError||new Error('Please sign in again.')
       setEmail(user.email||'')
+      const inviteToken = new URLSearchParams(window.location.search).get('invite')
+      if (inviteToken) {
+        const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(inviteToken))
+        const tokenHash = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+        const { error: previewError } = await supabase.rpc('preview_agency_invitation', { _token_hash: tokenHash })
+        if (previewError) throw previewError
+        const { error: acceptError } = await supabase.rpc('accept_agency_invitation', { _token_hash: tokenHash })
+        if (acceptError) throw acceptError
+        const cleanUrl = new URL(window.location.href)
+        cleanUrl.searchParams.delete('invite')
+        window.history.replaceState({}, '', cleanUrl.toString())
+      }
       const {data:admin,error:adminError}=await supabase.from('platform_admins').select('is_active').eq('user_id',user.id).maybeSingle()
       if(adminError)throw adminError
       if(admin?.is_active){setIsAdmin(true);setAgency(null);setApplication(null);return}
